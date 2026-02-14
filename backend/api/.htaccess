@@ -1,0 +1,7 @@
+DirectorySlash Off
+RewriteEngine On
+RewriteBase /MRMS/backend/api/
+
+# Route all requests (except index.php itself) to index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php [QSA,L]

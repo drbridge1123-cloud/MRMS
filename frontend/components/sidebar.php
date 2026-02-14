@@ -1,0 +1,81 @@
+<aside class="sidebar fixed left-0 top-0 bg-slate-800 text-white z-30 flex flex-col"
+       :class="{ 'collapsed': $store.sidebar.collapsed }">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-3 px-5 py-4 border-b border-slate-700">
+        <div class="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0">
+            MR
+        </div>
+        <span class="sidebar-text font-semibold text-lg">MRMS</span>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 py-4 overflow-y-auto">
+        <ul class="space-y-1 px-3">
+            <li>
+                <a href="/MRMS/frontend/pages/dashboard/index.php"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'dashboard' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/MRMS/frontend/pages/cases/index.php"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'cases' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="sidebar-text">Cases</span>
+                </a>
+            </li>
+            <li>
+                <a href="/MRMS/frontend/pages/providers/index.php"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'providers' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span class="sidebar-text">Providers</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Divider -->
+        <div class="border-t border-slate-700 my-4 mx-3"></div>
+
+        <ul class="space-y-1 px-3">
+            <li>
+                <a href="/MRMS/frontend/pages/reports/index.php"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors text-slate-400">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <span class="sidebar-text text-sm">Reports <span class="text-xs text-slate-500">(Coming Soon)</span></span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- User info at bottom -->
+    <div class="border-t border-slate-700 px-4 py-3" x-data>
+        <template x-if="$store.auth.user">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-sm font-semibold flex-shrink-0"
+                     x-text="$store.auth.user.full_name.charAt(0)"></div>
+                <div class="sidebar-text flex-1 min-w-0">
+                    <div class="text-sm font-medium truncate" x-text="$store.auth.user.full_name"></div>
+                    <div class="text-xs text-slate-400 capitalize" x-text="$store.auth.user.role"></div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Collapse toggle -->
+    <button @click="$store.sidebar.toggle()"
+            class="absolute -right-3 top-20 w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-slate-300 hover:bg-slate-600 shadow-md">
+        <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': $store.sidebar.collapsed }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </button>
+</aside>

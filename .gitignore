@@ -1,0 +1,27 @@
+# Storage
+storage/logs/*
+storage/temp/*
+!storage/logs/.gitkeep
+!storage/temp/.gitkeep
+
+# Environment / Config overrides
+backend/config/database.local.php
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Dependencies (if added later)
+node_modules/
+vendor/
+
+# Session & cache
+*.log
+cookies.txt
