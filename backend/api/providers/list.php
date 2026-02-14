@@ -33,6 +33,19 @@ if (!empty($_GET['search'])) {
     $params[] = '%' . $_GET['search'] . '%';
 }
 
+// Sorting
+$sortColumns = [
+    'name' => 'p.name',
+    'type' => 'p.type',
+    'phone' => 'p.phone',
+    'fax' => 'p.fax',
+    'preferred_method' => 'p.preferred_method',
+    'difficulty_level' => 'p.difficulty_level',
+    'avg_response_days' => 'p.avg_response_days',
+];
+$sortBy = $sortColumns[$_GET['sort_by'] ?? ''] ?? 'p.name';
+$sortDir = ($_GET['sort_dir'] ?? 'asc') === 'desc' ? 'DESC' : 'ASC';
+
 // Get total count
 $total = dbFetchOne("SELECT COUNT(*) as cnt FROM providers p WHERE {$where}", $params);
 $totalCount = (int)$total['cnt'];
@@ -49,7 +62,7 @@ $providers = dbFetchAll(
             p.created_at, p.updated_at
      FROM providers p
      WHERE {$where}
-     ORDER BY p.name ASC
+     ORDER BY {$sortBy} {$sortDir}
      LIMIT ? OFFSET ?",
     $params
 );

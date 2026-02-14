@@ -46,14 +46,14 @@ ob_start();
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Case #</th>
-                        <th>Client Name</th>
-                        <th>DOB</th>
-                        <th>DOI</th>
-                        <th>Attorney</th>
-                        <th>Assigned To</th>
-                        <th>Status</th>
-                        <th>Created</th>
+                        <th class="cursor-pointer select-none" @click="sort('case_number')"><div class="flex items-center gap-1">Case # <template x-if="sortBy==='case_number'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('client_name')"><div class="flex items-center gap-1">Client Name <template x-if="sortBy==='client_name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('client_dob')"><div class="flex items-center gap-1">DOB <template x-if="sortBy==='client_dob'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('doi')"><div class="flex items-center gap-1">DOI <template x-if="sortBy==='doi'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('attorney_name')"><div class="flex items-center gap-1">Attorney <template x-if="sortBy==='attorney_name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('assigned_name')"><div class="flex items-center gap-1">Assigned To <template x-if="sortBy==='assigned_name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('status')"><div class="flex items-center gap-1">Status <template x-if="sortBy==='status'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('created_at')"><div class="flex items-center gap-1">Created <template x-if="sortBy==='created_at'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -175,6 +175,8 @@ function casesListPage() {
         loading: true,
         searchQuery: '',
         statusFilter: '',
+        sortBy: '',
+        sortDir: 'desc',
         showCreateModal: false,
         saving: false,
         users: [],
@@ -185,7 +187,9 @@ function casesListPage() {
             const params = buildQueryString({
                 page,
                 search: this.searchQuery,
-                status: this.statusFilter
+                status: this.statusFilter,
+                sort_by: this.sortBy,
+                sort_dir: this.sortDir
             });
             try {
                 const res = await api.get('cases' + params);
@@ -193,6 +197,16 @@ function casesListPage() {
                 this.pagination = res.pagination || null;
             } catch (e) {}
             this.loading = false;
+        },
+
+        sort(column) {
+            if (this.sortBy === column) {
+                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortBy = column;
+                this.sortDir = 'asc';
+            }
+            this.loadData(1);
         },
 
         async createCase() {

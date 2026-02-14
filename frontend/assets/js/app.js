@@ -46,6 +46,24 @@ const api = {
     post: (endpoint, body) => apiCall(endpoint, { method: 'POST', body }),
     put: (endpoint, body) => apiCall(endpoint, { method: 'PUT', body }),
     delete: (endpoint) => apiCall(endpoint, { method: 'DELETE' }),
+    upload: async (endpoint, formData) => {
+        const url = `${API_BASE}/${endpoint}`;
+        try {
+            const response = await fetch(url, { method: 'POST', body: formData });
+            const data = await response.json();
+            if (response.status === 401) {
+                window.location.href = '/MRMS/frontend/pages/auth/login.php';
+                return null;
+            }
+            if (!response.ok) throw { response, data };
+            return data;
+        } catch (error) {
+            if (error.data) throw error;
+            console.error('Upload failed:', error);
+            showToast('Upload failed. Please try again.', 'error');
+            throw error;
+        }
+    },
 };
 
 // Toast notification

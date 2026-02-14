@@ -33,6 +33,7 @@ $data = [
 if (isset($input['sent_to'])) $data['sent_to'] = sanitizeString($input['sent_to']);
 if (isset($input['authorization_sent'])) $data['authorization_sent'] = $input['authorization_sent'] ? 1 : 0;
 if (isset($input['notes'])) $data['notes'] = sanitizeString($input['notes']);
+$data['send_status'] = 'draft';
 
 $data['next_followup_date'] = !empty($input['next_followup_date'])
     ? $input['next_followup_date']

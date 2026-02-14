@@ -1,0 +1,13 @@
+{
+    "name": "bridge-law/mrms",
+    "type": "project",
+    "authors": [
+        {
+            "name": "drbridge1123-cloud",
+            "email": "drbridge1123-cloud@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "phpmailer/phpmailer": "^7.0"
+    }
+}

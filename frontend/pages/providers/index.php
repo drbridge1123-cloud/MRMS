@@ -55,13 +55,13 @@ ob_start();
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>Provider Name</th>
-                        <th>Type</th>
+                        <th class="cursor-pointer select-none" @click="sort('name')"><div class="flex items-center gap-1">Provider Name <template x-if="sortBy==='name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('type')"><div class="flex items-center gap-1">Type <template x-if="sortBy==='type'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th>Phone</th>
                         <th>Fax</th>
-                        <th>Preferred Method</th>
-                        <th>Difficulty</th>
-                        <th>Avg Response</th>
+                        <th class="cursor-pointer select-none" @click="sort('preferred_method')"><div class="flex items-center gap-1">Preferred Method <template x-if="sortBy==='preferred_method'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('difficulty_level')"><div class="flex items-center gap-1">Difficulty <template x-if="sortBy==='difficulty_level'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th class="cursor-pointer select-none" @click="sort('avg_response_days')"><div class="flex items-center gap-1">Avg Response <template x-if="sortBy==='avg_response_days'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -330,6 +330,8 @@ function providersListPage() {
         searchQuery: '',
         typeFilter: '',
         difficultyFilter: '',
+        sortBy: '',
+        sortDir: 'asc',
         showCreateModal: false,
         showDetailModal: false,
         saving: false,
@@ -346,7 +348,9 @@ function providersListPage() {
                 page,
                 search: this.searchQuery,
                 type: this.typeFilter,
-                difficulty_level: this.difficultyFilter
+                difficulty_level: this.difficultyFilter,
+                sort_by: this.sortBy,
+                sort_dir: this.sortDir
             });
             try {
                 const res = await api.get('providers' + params);
@@ -354,6 +358,16 @@ function providersListPage() {
                 this.pagination = res.pagination || null;
             } catch (e) {}
             this.loading = false;
+        },
+
+        sort(column) {
+            if (this.sortBy === column) {
+                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortBy = column;
+                this.sortDir = 'asc';
+            }
+            this.loadData(1);
         },
 
         async viewProvider(id) {

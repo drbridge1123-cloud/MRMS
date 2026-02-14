@@ -71,6 +71,51 @@ ob_start();
         </div>
     </div>
 
+    <!-- Escalation Alert Banner -->
+    <template x-if="escalations.length > 0">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
+                    </div>
+                    <h2 class="font-semibold text-gray-800">Escalated Items</h2>
+                </div>
+                <div class="flex gap-2">
+                    <template x-if="summary.escalation_admin > 0">
+                        <span class="escalation-badge escalation-admin escalation-pulse" x-text="summary.escalation_admin + ' Admin'"></span>
+                    </template>
+                    <template x-if="summary.escalation_manager > 0">
+                        <span class="escalation-badge escalation-manager" x-text="summary.escalation_manager + ' Manager'"></span>
+                    </template>
+                    <template x-if="summary.escalation_action_needed > 0">
+                        <span class="escalation-badge escalation-action-needed" x-text="summary.escalation_action_needed + ' Action Needed'"></span>
+                    </template>
+                </div>
+            </div>
+            <div class="divide-y divide-gray-50">
+                <template x-for="item in escalations" :key="item.id">
+                    <a :href="'/MRMS/frontend/pages/cases/detail.php?id=' + item.case_id"
+                       class="block px-6 py-3 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <span class="escalation-badge" :class="item.escalation_css"
+                                      x-text="item.escalation_label"></span>
+                                <span class="text-sm font-medium text-gray-800" x-text="item.provider_name"></span>
+                                <span class="text-xs text-gray-400" x-text="item.case_number + ' - ' + item.client_name"></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-gray-500" x-text="item.assigned_name || 'Unassigned'"></span>
+                                <span class="text-xs font-semibold" :class="item.escalation_tier === 'admin' ? 'text-red-600' : (item.escalation_tier === 'manager' ? 'text-orange-600' : 'text-yellow-600')"
+                                      x-text="item.days_since_first_request + ' days'"></span>
+                            </div>
+                        </div>
+                    </a>
+                </template>
+            </div>
+        </div>
+    </template>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Follow-ups Due -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -171,6 +216,7 @@ function dashboardPage() {
         summary: {},
         followups: [],
         overdueItems: [],
+        escalations: [],
         cases: [],
         loading: true,
 
@@ -179,6 +225,7 @@ function dashboardPage() {
                 this.loadSummary(),
                 this.loadFollowups(),
                 this.loadOverdue(),
+                this.loadEscalations(),
                 this.loadCases()
             ]);
             this.loading = false;
@@ -202,6 +249,13 @@ function dashboardPage() {
             try {
                 const res = await api.get('dashboard/overdue');
                 this.overdueItems = res.data || [];
+            } catch (e) {}
+        },
+
+        async loadEscalations() {
+            try {
+                const res = await api.get('dashboard/escalations');
+                this.escalations = res.data || [];
             } catch (e) {}
         },
 

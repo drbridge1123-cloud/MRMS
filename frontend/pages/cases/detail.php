@@ -77,14 +77,14 @@ ob_start();
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>Provider</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Request Date</th>
-                                <th>Last Follow-up</th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('provider_name')"><div class="flex items-center gap-1">Provider <template x-if="provSortBy==='provider_name'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('provider_type')"><div class="flex items-center gap-1">Type <template x-if="provSortBy==='provider_type'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('overall_status')"><div class="flex items-center gap-1">Status <template x-if="provSortBy==='overall_status'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('first_request_date')"><div class="flex items-center gap-1">Request Date <template x-if="provSortBy==='first_request_date'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('last_request_date')"><div class="flex items-center gap-1">Last Follow-up <template x-if="provSortBy==='last_request_date'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                                 <th>Days Elapsed</th>
-                                <th>Deadline</th>
-                                <th>Assigned</th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('deadline')"><div class="flex items-center gap-1">Deadline <template x-if="provSortBy==='deadline'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                                <th class="cursor-pointer select-none" @click="sortProviders('assigned_name')"><div class="flex items-center gap-1">Assigned <template x-if="provSortBy==='assigned_name'"><svg class="w-3 h-3" :class="provSortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -93,8 +93,13 @@ ob_start();
                                 <tr><td colspan="9" class="text-center text-gray-400 py-8">No providers added yet</td></tr>
                             </template>
                             <template x-for="p in providers" :key="p.id">
-                                <tr>
-                                    <td class="font-medium" x-text="p.provider_name"></td>
+                                <tr @click="toggleRequestHistory(p.id)" class="cursor-pointer">
+                                    <td class="font-medium">
+                                        <div class="flex items-center gap-1">
+                                            <svg class="w-3 h-3 text-gray-400 transition-transform" :class="expandedProvider === p.id ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                            <span x-text="p.provider_name"></span>
+                                        </div>
+                                    </td>
                                     <td><span class="text-xs text-gray-500" x-text="getProviderTypeLabel(p.provider_type)"></span></td>
                                     <td>
                                         <span class="status-badge" :class="'status-' + p.overall_status" x-text="getStatusLabel(p.overall_status)"></span>
@@ -106,12 +111,22 @@ ob_start();
                                               x-text="p.days_since_request != null ? p.days_since_request + 'd' : '-'"></span>
                                     </td>
                                     <td>
-                                        <span :class="p.days_until_deadline < 0 ? 'text-red-600 font-semibold' : (p.days_until_deadline <= 7 ? 'text-yellow-600' : '')"
-                                              x-text="formatDate(p.deadline) || '-'"></span>
+                                        <div class="flex items-center gap-1">
+                                            <span :class="p.days_until_deadline < 0 ? 'text-red-600 font-semibold' : (p.days_until_deadline <= 7 ? 'text-yellow-600' : '')"
+                                                  x-text="formatDate(p.deadline) || '-'"></span>
+                                            <button @click.stop="openDeadlineModal(p)" title="Change Deadline"
+                                                    class="p-0.5 text-gray-400 hover:text-blue-600 rounded">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                            </button>
+                                            <template x-if="p.escalation_tier && p.escalation_tier !== 'normal'">
+                                                <span class="escalation-badge" :class="p.escalation_css + (p.escalation_tier === 'admin' ? ' escalation-pulse' : '')"
+                                                      x-text="p.escalation_label"></span>
+                                            </template>
+                                        </div>
                                     </td>
                                     <td x-text="p.assigned_name || '-'"></td>
                                     <td>
-                                        <div class="flex gap-1">
+                                        <div class="flex gap-1" @click.stop>
                                             <button @click="openRequestModal(p)" title="New Request"
                                                     class="p-1.5 text-blue-600 hover:bg-blue-50 rounded">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
@@ -128,26 +143,90 @@ ob_start();
                                     </td>
                                 </tr>
                             </template>
+                            <!-- Expanded request history (rendered outside x-for to avoid Alpine nesting issues) -->
+                            <template x-for="p in providers" :key="'hist-' + p.id">
+                                <tr x-show="expandedProvider === p.id" x-transition>
+                                    <td colspan="9" class="bg-gray-50 px-6 py-4">
+                                        <div class="text-sm font-medium text-gray-700 mb-3">Request History</div>
+                                        <template x-if="requestHistory.length === 0 && expandedProvider === p.id">
+                                            <p class="text-sm text-gray-400">No requests yet</p>
+                                        </template>
+                                        <div class="space-y-2">
+                                            <template x-for="req in (expandedProvider === p.id ? requestHistory : [])" :key="req.id">
+                                                <div class="flex items-center justify-between bg-white rounded-lg border px-4 py-2">
+                                                    <div class="flex items-center gap-4 text-xs">
+                                                        <span class="text-gray-500" x-text="formatDate(req.request_date)"></span>
+                                                        <span class="px-2 py-0.5 rounded-full bg-gray-100" x-text="getRequestMethodLabel(req.request_method)"></span>
+                                                        <span x-text="getRequestTypeLabel(req.request_type)"></span>
+                                                        <span class="text-gray-400" x-text="req.sent_to || ''"></span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="send-status-badge"
+                                                              :class="'send-status-' + (req.send_status || 'draft')"
+                                                              x-text="getSendStatusLabel(req.send_status || 'draft')"></span>
+                                                        <template x-if="['email','fax'].includes(req.request_method) && req.send_status !== 'sent'">
+                                                            <button @click.stop="openPreviewModal(req)"
+                                                                    class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700">
+                                                                Preview & Send
+                                                            </button>
+                                                        </template>
+                                                        <template x-if="req.send_status === 'sent'">
+                                                            <span class="text-xs text-green-600" x-text="'Sent ' + formatDate(req.sent_at)"></span>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- Notes section -->
+            <!-- Activity Log section -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div class="px-6 py-4 border-b border-gray-100">
-                    <h3 class="font-semibold text-gray-800">Notes & Activity</h3>
+                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-800">Activity Log</h3>
+                    <select x-model="noteFilterProvider" @change="loadNotes()"
+                            class="border border-gray-300 rounded-lg px-2 py-1.5 text-xs">
+                        <option value="">All Providers</option>
+                        <template x-for="prov in providers" :key="prov.id">
+                            <option :value="prov.id" x-text="prov.provider_name"></option>
+                        </template>
+                    </select>
                 </div>
                 <div class="p-6">
                     <!-- Add note form -->
-                    <form @submit.prevent="addNote()" class="mb-6">
-                        <div class="flex gap-3">
+                    <form @submit.prevent="addNote()" class="mb-6 space-y-3">
+                        <div class="flex flex-wrap gap-2">
                             <select x-model="newNote.note_type" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
                                 <option value="general">General</option>
                                 <option value="follow_up">Follow-Up</option>
                                 <option value="issue">Issue</option>
                                 <option value="handoff">Handoff</option>
                             </select>
+                            <select x-model="newNote.case_provider_id" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                <option value="">No Provider</option>
+                                <template x-for="prov in providers" :key="prov.id">
+                                    <option :value="prov.id" x-text="prov.provider_name"></option>
+                                </template>
+                            </select>
+                            <select x-model="newNote.contact_method" class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                <option value="">No Contact</option>
+                                <option value="phone">Phone</option>
+                                <option value="fax">Fax</option>
+                                <option value="email">Email</option>
+                                <option value="portal">Portal</option>
+                                <option value="mail">Mail</option>
+                                <option value="in_person">In Person</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <input type="datetime-local" x-model="newNote.contact_date"
+                                   class="border border-gray-300 rounded-lg px-3 py-2 text-sm" title="Contact date/time">
+                        </div>
+                        <div class="flex gap-3">
                             <input type="text" x-model="newNote.content" placeholder="Add a note..."
                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                             <button type="submit" :disabled="!newNote.content.trim()"
@@ -158,11 +237,27 @@ ob_start();
                     <!-- Notes list -->
                     <div class="space-y-0">
                         <template x-for="note in notes" :key="note.id">
-                            <div class="timeline-item">
-                                <div class="flex items-center gap-2 mb-1">
+                            <div class="timeline-item group">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <span class="text-sm font-medium text-gray-800" x-text="note.author_name"></span>
                                     <span class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500" x-text="note.note_type"></span>
-                                    <span class="text-xs text-gray-400" x-text="timeAgo(note.created_at)"></span>
+                                    <template x-if="note.provider_name">
+                                        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 font-medium" x-text="note.provider_name"></span>
+                                    </template>
+                                    <template x-if="note.contact_method">
+                                        <span class="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700" x-text="getContactMethodLabel(note.contact_method)"></span>
+                                    </template>
+                                    <template x-if="note.contact_date">
+                                        <span class="text-xs text-gray-500" x-text="formatDateTime(note.contact_date)"></span>
+                                    </template>
+                                    <template x-if="!note.contact_date">
+                                        <span class="text-xs text-gray-400" x-text="timeAgo(note.created_at)"></span>
+                                    </template>
+                                    <button @click="deleteNote(note.id)" class="ml-auto text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Delete note">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
                                 </div>
                                 <p class="text-sm text-gray-600" x-text="note.content"></p>
                             </div>
@@ -359,6 +454,114 @@ ob_start();
         </div>
     </div>
 
+    <!-- Preview & Send Modal -->
+    <div x-show="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+        <div class="modal-overlay fixed inset-0" @click="showPreviewModal = false"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] z-10 flex flex-col" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold">Preview Request Letter</h3>
+                    <p class="text-sm text-gray-500">
+                        Sending via <span class="font-medium" x-text="previewData.method === 'email' ? 'Email' : 'Fax'"></span>
+                        to <span class="font-medium" x-text="previewData.provider_name"></span>
+                    </p>
+                </div>
+                <button @click="showPreviewModal = false" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="px-6 py-3 border-b border-gray-100 bg-gray-50">
+                <label class="block text-sm font-medium text-gray-700 mb-1"
+                       x-text="previewData.method === 'email' ? 'Recipient Email' : 'Recipient Fax Number'"></label>
+                <input type="text" x-model="previewData.recipient"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                       :placeholder="previewData.method === 'email' ? 'provider@example.com' : '(212) 555-1234'">
+            </div>
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <div class="border rounded-lg bg-white shadow-inner">
+                    <iframe :srcdoc="previewData.letter_html"
+                            class="w-full border-0" style="min-height: 600px;"
+                            sandbox="allow-same-origin"></iframe>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                <div class="text-sm text-gray-500">
+                    <template x-if="previewData.send_status === 'failed'">
+                        <span class="text-red-600">Previous attempt failed. You can retry.</span>
+                    </template>
+                </div>
+                <div class="flex gap-3">
+                    <button @click="showPreviewModal = false"
+                            class="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button @click="confirmAndSend()"
+                            :disabled="sending || !previewData.recipient"
+                            class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                        <template x-if="sending">
+                            <div class="spinner" style="width:16px;height:16px;border-width:2px;"></div>
+                        </template>
+                        <span x-text="sending ? 'Sending...' : (previewData.method === 'email' ? 'Send Email' : 'Send Fax')"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deadline Change Modal -->
+    <div x-show="showDeadlineModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+        <div class="modal-overlay fixed inset-0" @click="showDeadlineModal = false"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-100">
+                <h3 class="text-lg font-semibold">Change Deadline</h3>
+                <p class="text-sm text-gray-500" x-text="deadlineProvider?.provider_name"></p>
+            </div>
+            <form @submit.prevent="submitDeadlineChange()" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Deadline</label>
+                    <p class="text-sm text-gray-600" x-text="formatDate(deadlineProvider?.deadline) || 'Not set'"></p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Deadline *</label>
+                    <input type="date" x-model="deadlineForm.deadline" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Reason for Change * <span class="text-gray-400 font-normal">(min 5 chars)</span></label>
+                    <textarea x-model="deadlineForm.reason" rows="3" required minlength="5"
+                              placeholder="Why is the deadline being changed?"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                </div>
+
+                <!-- Deadline History -->
+                <template x-if="deadlineHistory.length > 0">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 mb-2">Change History</p>
+                        <div class="max-h-32 overflow-y-auto space-y-1.5">
+                            <template x-for="dh in deadlineHistory" :key="dh.id">
+                                <div class="text-xs bg-gray-50 rounded px-3 py-2">
+                                    <div class="flex justify-between text-gray-500">
+                                        <span x-text="dh.changed_by_name"></span>
+                                        <span x-text="timeAgo(dh.created_at)"></span>
+                                    </div>
+                                    <p class="text-gray-700 mt-0.5">
+                                        <span x-text="formatDate(dh.old_deadline)"></span> &rarr; <span x-text="formatDate(dh.new_deadline)"></span>
+                                    </p>
+                                    <p class="text-gray-500 mt-0.5" x-text="dh.reason"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="showDeadlineModal = false"
+                            class="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" :disabled="saving || !deadlineForm.deadline || deadlineForm.reason.length < 5"
+                            class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">Update Deadline</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Edit Case Modal -->
     <div x-show="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="modal-overlay fixed inset-0" @click="showEditModal = false"></div>
@@ -438,9 +641,20 @@ function caseDetailPage() {
         showAddProviderModal: false,
         showRequestModal: false,
         showReceiptModal: false,
+        showPreviewModal: false,
+        showDeadlineModal: false,
 
         editData: {},
         currentProvider: null,
+        provSortBy: '',
+        provSortDir: 'asc',
+        expandedProvider: null,
+        requestHistory: [],
+        previewData: { method: '', recipient: '', provider_name: '', client_name: '', send_status: '', letter_html: '', request_id: null },
+        sending: false,
+        deadlineProvider: null,
+        deadlineForm: { deadline: '', reason: '' },
+        deadlineHistory: [],
 
         providerSearch: '',
         providerResults: [],
@@ -448,7 +662,8 @@ function caseDetailPage() {
         newProvider: { treatment_start_date: '', treatment_end_date: '', record_types: [], deadline: '' },
         newRequest: { request_date: new Date().toISOString().split('T')[0], request_method: 'fax', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '' },
         newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, has_op_report: false, is_complete: false, incomplete_reason: '', file_location: '' },
-        newNote: { note_type: 'general', content: '' },
+        newNote: { note_type: 'general', content: '', case_provider_id: '', contact_method: '', contact_date: '' },
+        noteFilterProvider: '',
 
         async init() {
             if (!this.caseId) {
@@ -471,14 +686,28 @@ function caseDetailPage() {
 
         async loadProviders() {
             try {
-                const res = await api.get('case-providers?case_id=' + this.caseId);
+                let url = 'case-providers?case_id=' + this.caseId;
+                if (this.provSortBy) url += '&sort_by=' + this.provSortBy + '&sort_dir=' + this.provSortDir;
+                const res = await api.get(url);
                 this.providers = res.data || [];
             } catch (e) {}
         },
 
+        sortProviders(column) {
+            if (this.provSortBy === column) {
+                this.provSortDir = this.provSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.provSortBy = column;
+                this.provSortDir = 'asc';
+            }
+            this.loadProviders();
+        },
+
         async loadNotes() {
             try {
-                const res = await api.get('notes?case_id=' + this.caseId);
+                let url = 'notes?case_id=' + this.caseId;
+                if (this.noteFilterProvider) url += '&case_provider_id=' + this.noteFilterProvider;
+                const res = await api.get(url);
                 this.notes = res.data || [];
             } catch (e) {}
         },
@@ -545,7 +774,11 @@ function caseDetailPage() {
 
         openRequestModal(p) {
             this.currentProvider = p;
-            this.newRequest = { request_date: new Date().toISOString().split('T')[0], request_method: 'fax', request_type: p.overall_status === 'not_started' ? 'initial' : 'follow_up', sent_to: '', authorization_sent: true, notes: '' };
+            const defaultMethod = p.preferred_method || 'fax';
+            let sentTo = '';
+            if (defaultMethod === 'email' && p.provider_email) sentTo = p.provider_email;
+            if (defaultMethod === 'fax' && p.provider_fax) sentTo = p.provider_fax;
+            this.newRequest = { request_date: new Date().toISOString().split('T')[0], request_method: defaultMethod, request_type: p.overall_status === 'not_started' ? 'initial' : 'follow_up', sent_to: sentTo, authorization_sent: true, notes: '' };
             this.showRequestModal = true;
         },
 
@@ -609,15 +842,138 @@ function caseDetailPage() {
         async addNote() {
             if (!this.newNote.content.trim()) return;
             try {
-                await api.post('notes', {
+                const payload = {
                     case_id: parseInt(this.caseId),
-                    ...this.newNote
-                });
-                this.newNote.content = '';
+                    note_type: this.newNote.note_type,
+                    content: this.newNote.content
+                };
+                if (this.newNote.case_provider_id) payload.case_provider_id = parseInt(this.newNote.case_provider_id);
+                if (this.newNote.contact_method) payload.contact_method = this.newNote.contact_method;
+                if (this.newNote.contact_date) payload.contact_date = this.newNote.contact_date;
+                await api.post('notes', payload);
+                this.newNote = { note_type: 'general', content: '', case_provider_id: '', contact_method: '', contact_date: '' };
                 await this.loadNotes();
             } catch (e) {
                 showToast('Failed to add note', 'error');
             }
+        },
+
+        async deleteNote(noteId) {
+            if (!await confirmAction('Delete this note?')) return;
+            try {
+                await api.delete('notes/' + noteId);
+                await this.loadNotes();
+                showToast('Note deleted', 'success');
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to delete note', 'error');
+            }
+        },
+
+        openDeadlineModal(p) {
+            this.deadlineProvider = p;
+            this.deadlineForm = { deadline: p.deadline || '', reason: '' };
+            this.deadlineHistory = [];
+            this.showDeadlineModal = true;
+            this.loadDeadlineHistory(p.id);
+        },
+
+        async loadDeadlineHistory(cpId) {
+            try {
+                const res = await api.get('case-providers/' + cpId + '/deadline-history');
+                this.deadlineHistory = res.data || [];
+            } catch (e) {}
+        },
+
+        async submitDeadlineChange() {
+            if (!this.deadlineForm.deadline || this.deadlineForm.reason.length < 5) return;
+            this.saving = true;
+            try {
+                await api.put('case-providers/' + this.deadlineProvider.id + '/deadline', this.deadlineForm);
+                showToast('Deadline updated');
+                this.showDeadlineModal = false;
+                await this.loadProviders();
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to update deadline', 'error');
+            }
+            this.saving = false;
+        },
+
+        toggleRequestHistory(cpId) {
+            if (this.expandedProvider === cpId) {
+                this.expandedProvider = null;
+                return;
+            }
+            this.expandedProvider = cpId;
+            this.loadRequestHistory(cpId);
+        },
+
+        async loadRequestHistory(cpId) {
+            try {
+                const res = await api.get('requests?case_provider_id=' + cpId);
+                this.requestHistory = res.data || [];
+            } catch (e) {
+                this.requestHistory = [];
+            }
+        },
+
+        async openPreviewModal(req) {
+            try {
+                const res = await api.get('requests/' + req.id + '/preview');
+                this.previewData = res.data;
+                this.showPreviewModal = true;
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to load preview', 'error');
+            }
+        },
+
+        async confirmAndSend() {
+            if (!this.previewData.recipient) {
+                showToast('Please enter a recipient', 'error');
+                return;
+            }
+            if (!await confirmAction(
+                'Send this request via ' + (this.previewData.method === 'email' ? 'email' : 'fax') + ' to ' + this.previewData.recipient + '?'
+            )) return;
+
+            this.sending = true;
+            try {
+                const res = await api.post('requests/' + this.previewData.request_id + '/send', {
+                    recipient: this.previewData.recipient
+                });
+                showToast(res.message || 'Sent successfully!');
+                this.showPreviewModal = false;
+                if (this.expandedProvider) {
+                    await this.loadRequestHistory(this.expandedProvider);
+                }
+                await this.loadProviders();
+            } catch (e) {
+                showToast(e.data?.message || 'Send failed', 'error');
+            }
+            this.sending = false;
+        },
+
+        getSendStatusLabel(status) {
+            const labels = { draft: 'Draft', sending: 'Sending...', sent: 'Sent', failed: 'Failed' };
+            return labels[status] || status;
+        },
+
+        getRequestMethodLabel(method) {
+            return REQUEST_METHODS[method] || method;
+        },
+
+        getRequestTypeLabel(type) {
+            return REQUEST_TYPES[type] || type;
+        },
+
+        getContactMethodLabel(method) {
+            const labels = { phone: 'Phone', fax: 'Fax', email: 'Email', portal: 'Portal', mail: 'Mail', in_person: 'In Person', other: 'Other' };
+            return labels[method] || method;
+        },
+
+        formatDateTime(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
     };
 }

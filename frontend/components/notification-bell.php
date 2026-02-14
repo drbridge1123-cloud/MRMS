@@ -29,8 +29,16 @@
             </template>
 
             <template x-for="notification in $store.notifications.items" :key="notification.id">
-                <div class="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 flex items-start gap-3">
+                <div class="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 flex items-start gap-3"
+                     :class="notification.type?.startsWith('escalation_') ? 'notif-' + notification.type : 'notif-default'">
                     <div class="flex-1 min-w-0">
+                        <template x-if="notification.type?.startsWith('escalation_')">
+                            <span class="escalation-badge mb-1" :class="{
+                                'escalation-action-needed': notification.type === 'escalation_action_needed',
+                                'escalation-manager': notification.type === 'escalation_manager',
+                                'escalation-admin escalation-pulse': notification.type === 'escalation_admin'
+                            }" x-text="notification.type === 'escalation_admin' ? 'Admin' : (notification.type === 'escalation_manager' ? 'Manager' : 'Action Needed')"></span>
+                        </template>
                         <p class="text-sm text-gray-800" x-text="notification.message"></p>
                         <p class="text-xs text-gray-400 mt-1" x-text="timeAgo(notification.created_at)"></p>
                     </div>

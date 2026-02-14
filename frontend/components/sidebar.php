@@ -39,6 +39,15 @@
                     <span class="sidebar-text">Providers</span>
                 </a>
             </li>
+            <li>
+                <a href="/MRMS/frontend/pages/tracker/index.php"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'tracker' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                    <span class="sidebar-text">Records Tracker</span>
+                </a>
+            </li>
         </ul>
 
         <!-- Divider -->
@@ -55,6 +64,45 @@
                 </a>
             </li>
         </ul>
+
+        <!-- Admin Section (admin only) -->
+        <template x-if="$store.auth.isAdmin">
+            <div>
+                <div class="border-t border-slate-700 my-4 mx-3"></div>
+                <div class="px-5 mb-2">
+                    <span class="sidebar-text text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</span>
+                </div>
+                <ul class="space-y-1 px-3">
+                    <li>
+                        <a href="/MRMS/frontend/pages/admin/users.php"
+                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'admin-users' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                            </svg>
+                            <span class="sidebar-text">Users</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/MRMS/frontend/pages/admin/activity-log.php"
+                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'admin-activity' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                            </svg>
+                            <span class="sidebar-text">Activity Log</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/MRMS/frontend/pages/admin/data-management.php"
+                           class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-slate-700 transition-colors <?= ($currentPage ?? '') === 'admin-data' ? 'bg-slate-700 text-blue-400' : 'text-slate-300' ?>">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
+                            </svg>
+                            <span class="sidebar-text">Data Management</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </template>
     </nav>
 
     <!-- User info at bottom -->
@@ -67,6 +115,12 @@
                     <div class="text-sm font-medium truncate" x-text="$store.auth.user.full_name"></div>
                     <div class="text-xs text-slate-400 capitalize" x-text="$store.auth.user.role"></div>
                 </div>
+                <button @click="$store.auth.logout()" title="Logout"
+                        class="sidebar-text p-1.5 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded transition-colors flex-shrink-0">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                </button>
             </div>
         </template>
     </div>

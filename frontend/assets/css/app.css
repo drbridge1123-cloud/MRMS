@@ -191,6 +191,54 @@
     background: #a8a8a8;
 }
 
+/* Send status badges */
+.send-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.send-status-draft { background-color: #f3f4f6; color: #6b7280; }
+.send-status-sending { background-color: #dbeafe; color: #1d4ed8; }
+.send-status-sent { background-color: #d1fae5; color: #059669; }
+.send-status-failed { background-color: #fee2e2; color: #dc2626; }
+
+/* Escalation badges */
+.escalation-normal { background-color: #f3f4f6; color: #6b7280; }
+.escalation-action-needed { background-color: #fef3c7; color: #d97706; }
+.escalation-manager { background-color: #ffedd5; color: #ea580c; }
+.escalation-admin { background-color: #fee2e2; color: #dc2626; }
+
+.escalation-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.escalation-pulse {
+    animation: escalation-pulse 2s ease-in-out infinite;
+}
+
+@keyframes escalation-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* Notification type borders */
+.notif-escalation-action-needed { border-left: 3px solid #d97706; }
+.notif-escalation-manager { border-left: 3px solid #ea580c; }
+.notif-escalation-admin { border-left: 3px solid #dc2626; }
+.notif-default { border-left: 3px solid #3b82f6; }
+
 /* Print styles */
 @media print {
     .sidebar, .header-bar, .no-print {

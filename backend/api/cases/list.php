@@ -34,6 +34,20 @@ if (!empty($_GET['search'])) {
 
 $whereClause = implode(' AND ', $where);
 
+// Sorting
+$sortColumns = [
+    'case_number' => 'c.case_number',
+    'client_name' => 'c.client_name',
+    'client_dob' => 'c.client_dob',
+    'doi' => 'c.doi',
+    'attorney_name' => 'c.attorney_name',
+    'assigned_name' => 'u.full_name',
+    'status' => 'c.status',
+    'created_at' => 'c.created_at',
+];
+$sortBy = $sortColumns[$_GET['sort_by'] ?? ''] ?? 'c.updated_at';
+$sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
+
 // Get total count
 $countSql = "SELECT COUNT(*) as cnt FROM cases c WHERE {$whereClause}";
 $countResult = dbFetchOne($countSql, $params);
@@ -44,7 +58,7 @@ $sql = "SELECT c.*, u.full_name AS assigned_name
         FROM cases c
         LEFT JOIN users u ON c.assigned_to = u.id
         WHERE {$whereClause}
-        ORDER BY c.updated_at DESC
+        ORDER BY {$sortBy} {$sortDir}
         LIMIT ? OFFSET ?";
 
 $queryParams = array_merge($params, [$perPage, $offset]);

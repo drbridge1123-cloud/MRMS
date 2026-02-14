@@ -1,11 +1,17 @@
 <?php
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/email.php';
 require_once __DIR__ . '/../helpers/db.php';
 require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../helpers/auth.php';
 require_once __DIR__ . '/../helpers/validator.php';
 require_once __DIR__ . '/../helpers/date.php';
+require_once __DIR__ . '/../helpers/email.php';
+require_once __DIR__ . '/../helpers/fax.php';
+require_once __DIR__ . '/../helpers/letter-template.php';
+require_once __DIR__ . '/../helpers/escalation.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -42,7 +48,11 @@ switch ($resource) {
         break;
 
     case 'cases':
-        if ($method === 'GET' && !$id) {
+        if ($method === 'GET' && $id === 'export') {
+            require __DIR__ . '/cases/export.php';
+        } elseif ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/cases/import.php';
+        } elseif ($method === 'GET' && !$id) {
             require __DIR__ . '/cases/list.php';
         } elseif ($method === 'GET' && $id && !$action) {
             $_GET['id'] = $id;
@@ -61,7 +71,11 @@ switch ($resource) {
         break;
 
     case 'providers':
-        if ($method === 'GET' && $id === 'search') {
+        if ($method === 'GET' && $id === 'export') {
+            require __DIR__ . '/providers/export.php';
+        } elseif ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/providers/import.php';
+        } elseif ($method === 'GET' && $id === 'search') {
             require __DIR__ . '/providers/search.php';
         } elseif ($method === 'GET' && !$id) {
             require __DIR__ . '/providers/list.php';
@@ -83,6 +97,12 @@ switch ($resource) {
             require __DIR__ . '/case-providers/list.php';
         } elseif ($method === 'POST' && !$id) {
             require __DIR__ . '/case-providers/create.php';
+        } elseif ($method === 'PUT' && $id && $action === 'deadline') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/case-providers/update-deadline.php';
+        } elseif ($method === 'GET' && $id && $action === 'deadline-history') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/case-providers/deadline-history.php';
         } elseif ($method === 'PUT' && $id && $action === 'status') {
             $_GET['id'] = $id;
             require __DIR__ . '/case-providers/update-status.php';
@@ -107,6 +127,12 @@ switch ($resource) {
             require __DIR__ . '/requests/create.php';
         } elseif ($method === 'POST' && $id === 'followup') {
             require __DIR__ . '/requests/followup.php';
+        } elseif ($method === 'GET' && $id && $action === 'preview') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/requests/preview.php';
+        } elseif ($method === 'POST' && $id && $action === 'send') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/requests/send.php';
         } else {
             errorResponse('Request endpoint not found', 404);
         }
@@ -141,6 +167,9 @@ switch ($resource) {
             require __DIR__ . '/notes/list.php';
         } elseif ($method === 'POST' && !$id) {
             require __DIR__ . '/notes/create.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/notes/delete.php';
         } else {
             errorResponse('Notes endpoint not found', 404);
         }
@@ -158,8 +187,46 @@ switch ($resource) {
             case 'followup-due':
                 require __DIR__ . '/dashboard/followup-due.php';
                 break;
+            case 'escalations':
+                require __DIR__ . '/dashboard/escalations.php';
+                break;
             default:
                 errorResponse('Dashboard endpoint not found', 404);
+        }
+        break;
+
+    case 'users':
+        if ($method === 'GET' && !$id) {
+            require __DIR__ . '/users/list.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/users/create.php';
+        } elseif ($method === 'PUT' && $id && $action === 'toggle-active') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/users/toggle-active.php';
+        } elseif ($method === 'PUT' && $id && $action === 'reset-password') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/users/reset-password.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/users/update.php';
+        } else {
+            errorResponse('Users endpoint not found', 404);
+        }
+        break;
+
+    case 'activity-log':
+        if ($method === 'GET') {
+            require __DIR__ . '/activity-log/list.php';
+        } else {
+            errorResponse('Activity log endpoint not found', 404);
+        }
+        break;
+
+    case 'tracker':
+        if ($method === 'GET' && $id === 'list') {
+            require __DIR__ . '/tracker/list.php';
+        } else {
+            errorResponse('Tracker endpoint not found', 404);
         }
         break;
 
