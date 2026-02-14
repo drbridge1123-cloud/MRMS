@@ -14,34 +14,43 @@ ob_start();
             <!-- Search -->
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <svg class="w-4 h-4 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
                 <input type="text" x-model="searchQuery" @input.debounce.300ms="loadData(1)"
                        placeholder="Search cases..."
-                       class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                       class="w-64 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold focus:border-gold outline-none">
             </div>
 
-            <!-- Status filter -->
-            <select x-model="statusFilter" @change="loadData(1)"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="pending_review">Pending Review</option>
-                <option value="completed">Completed</option>
-                <option value="on_hold">On Hold</option>
-            </select>
+            <!-- Status filter tabs -->
+            <div class="flex gap-1.5">
+                <button @click="statusFilter = ''; loadData(1)"
+                        :class="statusFilter === '' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">All</button>
+                <button @click="statusFilter = 'active'; loadData(1)"
+                        :class="statusFilter === 'active' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Active</button>
+                <button @click="statusFilter = 'pending_review'; loadData(1)"
+                        :class="statusFilter === 'pending_review' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Review</button>
+                <button @click="statusFilter = 'completed'; loadData(1)"
+                        :class="statusFilter === 'completed' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Completed</button>
+                <button @click="statusFilter = 'on_hold'; loadData(1)"
+                        :class="statusFilter === 'on_hold' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">On Hold</button>
+            </div>
         </div>
 
         <!-- Create button -->
-        <button @click="showCreateModal = true"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+        <button x-show="$store.auth.isAdminOrManager" @click="showCreateModal = true"
+                class="bg-gold text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gold-hover transition-colors flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New Case
         </button>
     </div>
 
     <!-- Cases table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
         <div class="overflow-x-auto">
             <table class="data-table">
                 <thead>
@@ -53,19 +62,21 @@ ob_start();
                         <th class="cursor-pointer select-none" @click="sort('attorney_name')"><div class="flex items-center gap-1">Attorney <template x-if="sortBy==='attorney_name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th class="cursor-pointer select-none" @click="sort('assigned_name')"><div class="flex items-center gap-1">Assigned To <template x-if="sortBy==='assigned_name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th class="cursor-pointer select-none" @click="sort('status')"><div class="flex items-center gap-1">Status <template x-if="sortBy==='status'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th>Progress</th>
+                        <th>Issues</th>
                         <th class="cursor-pointer select-none" @click="sort('created_at')"><div class="flex items-center gap-1">Created <template x-if="sortBy==='created_at'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="loading">
-                        <tr><td colspan="8" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
+                        <tr><td colspan="10" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
                     <template x-if="!loading && cases.length === 0">
-                        <tr><td colspan="8" class="text-center text-gray-400 py-8">No cases found</td></tr>
+                        <tr><td colspan="10" class="text-center text-v2-text-light py-8">No cases found</td></tr>
                     </template>
                     <template x-for="c in cases" :key="c.id">
-                        <tr class="cursor-pointer" @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id='+c.id">
-                            <td class="font-medium text-blue-600" x-text="c.case_number"></td>
+                        <tr class="cursor-pointer" :class="{ 'row-dimmed': $store.auth.isStaff && !c.assigned_to_name }" @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id='+c.id">
+                            <td class="font-medium text-gold" x-text="c.case_number"></td>
                             <td class="font-medium" x-text="c.client_name"></td>
                             <td x-text="formatDate(c.client_dob)"></td>
                             <td x-text="formatDate(c.doi)"></td>
@@ -74,7 +85,28 @@ ob_start();
                             <td>
                                 <span class="status-badge" :class="'status-' + c.status" x-text="getStatusLabel(c.status)"></span>
                             </td>
-                            <td class="text-gray-500" x-text="formatDate(c.created_at)"></td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-16 h-1.5 bg-v2-card-border rounded-full overflow-hidden">
+                                        <div class="h-full bg-emerald-500 rounded-full" :style="'width:' + (c.provider_total > 0 ? Math.round(c.provider_done/c.provider_total*100) : 0) + '%'"></div>
+                                    </div>
+                                    <span class="text-xs text-v2-text-light" x-text="c.provider_done + '/' + c.provider_total"></span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex items-center justify-center gap-1">
+                                    <template x-if="c.provider_overdue > 0">
+                                        <span class="text-xs text-red-600 bg-red-50 px-1.5 py-0.5 rounded-full font-semibold" x-text="c.provider_overdue"></span>
+                                    </template>
+                                    <template x-if="c.provider_followup > 0">
+                                        <span class="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-full font-semibold" x-text="c.provider_followup"></span>
+                                    </template>
+                                    <template x-if="c.provider_overdue == 0 && c.provider_followup == 0">
+                                        <span class="text-emerald-500 text-xs">&#10003;</span>
+                                    </template>
+                                </div>
+                            </td>
+                            <td class="text-v2-text-light" x-text="formatDate(c.created_at)"></td>
                         </tr>
                     </template>
                 </tbody>
@@ -83,8 +115,8 @@ ob_start();
 
         <!-- Pagination -->
         <template x-if="pagination && pagination.total_pages > 1">
-            <div class="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-                <div class="text-sm text-gray-500">
+            <div class="flex items-center justify-between px-6 py-3 border-t border-v2-card-border">
+                <div class="text-sm text-v2-text-light">
                     Showing <span x-text="((pagination.page - 1) * pagination.per_page) + 1"></span>-<span x-text="Math.min(pagination.page * pagination.per_page, pagination.total)"></span> of <span x-text="pagination.total"></span>
                 </div>
                 <div class="flex gap-1">
@@ -101,47 +133,47 @@ ob_start();
     <div x-show="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="modal-overlay fixed inset-0" @click="showCreateModal = false"></div>
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg z-10" @click.stop>
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
                 <h3 class="text-lg font-semibold">New Case</h3>
-                <button @click="showCreateModal = false" class="text-gray-400 hover:text-gray-600">
+                <button @click="showCreateModal = false" class="text-v2-text-light hover:text-v2-text-mid">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <form @submit.prevent="createCase()" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Case Number *</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Case Number *</label>
                         <input type="text" x-model="newCase.case_number" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Client Name *</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Client Name *</label>
                         <input type="text" x-model="newCase.client_name" required
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Birth</label>
                         <input type="date" x-model="newCase.client_dob"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Date of Injury</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Injury</label>
                         <input type="date" x-model="newCase.doi"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Attorney</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Attorney</label>
                         <input type="text" x-model="newCase.attorney_name"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Assigned To</label>
                         <select x-model="newCase.assigned_to"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                             <option value="">Unassigned</option>
                             <template x-for="u in users" :key="u.id">
                                 <option :value="u.id" x-text="u.full_name"></option>
@@ -150,15 +182,15 @@ ob_start();
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Notes</label>
                     <textarea x-model="newCase.notes" rows="2"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                              class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"></textarea>
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="showCreateModal = false"
-                            class="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+                            class="px-4 py-2 text-sm text-v2-text border border-v2-card-border rounded-lg hover:bg-v2-bg">Cancel</button>
                     <button type="submit" :disabled="saving"
-                            class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            class="px-4 py-2 text-sm text-white bg-gold rounded-lg hover:bg-gold-hover disabled:opacity-50">
                         <span x-text="saving ? 'Creating...' : 'Create Case'"></span>
                     </button>
                 </div>

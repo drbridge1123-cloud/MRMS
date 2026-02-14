@@ -21,6 +21,18 @@ document.addEventListener('alpine:init', () => {
             return this.user?.role === 'admin';
         },
 
+        get isManager() {
+            return this.user?.role === 'manager';
+        },
+
+        get isStaff() {
+            return this.user?.role === 'staff';
+        },
+
+        get isAdminOrManager() {
+            return this.user?.role === 'admin' || this.user?.role === 'manager';
+        },
+
         async logout() {
             try {
                 await api.post('auth/logout');

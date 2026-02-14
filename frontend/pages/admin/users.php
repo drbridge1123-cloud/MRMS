@@ -13,35 +13,35 @@ ob_start();
         <div class="flex items-center gap-3">
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <svg class="w-4 h-4 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
                 <input type="text" x-model="searchQuery" @input.debounce.300ms="loadData(1)"
                        placeholder="Search users..."
-                       class="w-56 pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                       class="w-56 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
             </div>
             <select x-model="roleFilter" @change="loadData(1)"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
                 <option value="">All Roles</option>
                 <option value="admin">Admin</option>
                 <option value="manager">Manager</option>
                 <option value="staff">Staff</option>
             </select>
             <select x-model="activeFilter" @change="loadData(1)"
-                    class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
                 <option value="">All Status</option>
                 <option value="1">Active</option>
                 <option value="0">Inactive</option>
             </select>
         </div>
         <button @click="openCreateModal()"
-                class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-2">
+                class="bg-gold text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gold-hover flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New User
         </button>
     </div>
 
     <!-- Users table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
         <div class="overflow-x-auto">
             <table class="data-table">
                 <thead>
@@ -60,16 +60,16 @@ ob_start();
                         <tr><td colspan="7" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
                     <template x-if="!loading && users.length === 0">
-                        <tr><td colspan="7" class="text-center text-gray-400 py-8">No users found</td></tr>
+                        <tr><td colspan="7" class="text-center text-v2-text-light py-8">No users found</td></tr>
                     </template>
                     <template x-for="u in users" :key="u.id">
                         <tr>
-                            <td class="text-gray-500" x-text="u.id"></td>
+                            <td class="text-v2-text-light" x-text="u.id"></td>
                             <td class="font-medium" x-text="u.username"></td>
                             <td x-text="u.full_name"></td>
                             <td>
                                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
-                                      :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : u.role === 'manager' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'"
+                                      :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : u.role === 'manager' ? 'bg-orange-100 text-orange-700' : 'bg-v2-bg text-v2-text'"
                                       x-text="u.role"></span>
                             </td>
                             <td>
@@ -77,11 +77,11 @@ ob_start();
                                       :class="u.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
                                       x-text="u.is_active ? 'Active' : 'Inactive'"></span>
                             </td>
-                            <td class="text-gray-500" x-text="formatDate(u.created_at)"></td>
+                            <td class="text-v2-text-light" x-text="formatDate(u.created_at)"></td>
                             <td>
                                 <div class="flex gap-1">
                                     <button @click="openEditModal(u)" title="Edit"
-                                            class="p-1.5 text-blue-600 hover:bg-blue-50 rounded">
+                                            class="p-1.5 text-gold hover:bg-v2-bg rounded">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     </button>
                                     <button @click="openResetPasswordModal(u)" title="Reset Password"
@@ -107,35 +107,35 @@ ob_start();
     <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="modal-overlay fixed inset-0" @click="showModal = false"></div>
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10" @click.stop>
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
                 <h3 class="text-lg font-semibold" x-text="isEditing ? 'Edit User' : 'New User'"></h3>
-                <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                <button @click="showModal = false" class="text-v2-text-light hover:text-v2-text-mid">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <form @submit.prevent="saveUser()" class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Username *</label>
                     <input type="text" x-model="form.username" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Full Name *</label>
                     <input type="text" x-model="form.full_name" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 </div>
                 <template x-if="!isEditing">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Password *</label>
                         <input type="password" x-model="form.password" :required="!isEditing" minlength="6"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
                                placeholder="Min 6 characters">
                     </div>
                 </template>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Role</label>
                     <select x-model="form.role"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                         <option value="staff">Staff</option>
                         <option value="manager">Manager</option>
                         <option value="admin">Admin</option>
@@ -143,9 +143,9 @@ ob_start();
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="showModal = false"
-                            class="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
+                            class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
                     <button type="submit" :disabled="saving"
-                            class="px-4 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                            class="px-4 py-2 text-sm text-white bg-gold rounded-lg hover:bg-gold-hover disabled:opacity-50">
                         <span x-text="saving ? 'Saving...' : (isEditing ? 'Update' : 'Create')"></span>
                     </button>
                 </div>
@@ -157,20 +157,20 @@ ob_start();
     <div x-show="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="modal-overlay fixed inset-0" @click="showResetModal = false"></div>
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm z-10" @click.stop>
-            <div class="px-6 py-4 border-b border-gray-100">
+            <div class="px-6 py-4 border-b border-v2-card-border">
                 <h3 class="text-lg font-semibold">Reset Password</h3>
-                <p class="text-sm text-gray-500" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></p>
+                <p class="text-sm text-v2-text-light" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></p>
             </div>
             <form @submit.prevent="resetPassword()" class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password *</label>
+                    <label class="block text-sm font-medium text-v2-text mb-1">New Password *</label>
                     <input type="password" x-model="newPassword" required minlength="6"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
                            placeholder="Min 6 characters">
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="showResetModal = false"
-                            class="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
+                            class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
                     <button type="submit" :disabled="saving"
                             class="px-4 py-2 text-sm text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 disabled:opacity-50">
                         <span x-text="saving ? 'Resetting...' : 'Reset Password'"></span>

@@ -38,6 +38,20 @@ function requireAdmin() {
     }
 }
 
+function requireAdminOrManager() {
+    requireAuth();
+    if ($_SESSION['user_role'] !== 'admin' && $_SESSION['user_role'] !== 'manager') {
+        if (isApiRequest()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Admin or Manager access required']);
+            exit;
+        }
+        header('Location: /MRMS/frontend/pages/dashboard/index.php');
+        exit;
+    }
+}
+
 function getCurrentUser() {
     startSecureSession();
     if (empty($_SESSION['user_id'])) {

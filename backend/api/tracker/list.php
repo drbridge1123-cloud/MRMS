@@ -27,6 +27,30 @@ if (!empty($_GET['status'])) {
     }
 }
 
+// Filter: assigned_to
+if (!empty($_GET['assigned_to'])) {
+    $where[] = 'cp.assigned_to = ?';
+    $params[] = (int)$_GET['assigned_to'];
+}
+
+// Filter: escalation tier
+if (!empty($_GET['tier'])) {
+    $tierMap = [
+        'action' => [ESCALATION_ACTION_NEEDED_DAYS, ESCALATION_MANAGER_DAYS - 1],
+        'manager' => [ESCALATION_MANAGER_DAYS, ESCALATION_ADMIN_DAYS - 1],
+        'admin' => [ESCALATION_ADMIN_DAYS, 9999],
+    ];
+    if (isset($tierMap[$_GET['tier']])) {
+        $range = $tierMap[$_GET['tier']];
+        $where[] = "DATEDIFF(CURDATE(), (SELECT MIN(rr2.request_date) FROM record_requests rr2 WHERE rr2.case_provider_id = cp.id)) >= ?";
+        $params[] = $range[0];
+        if ($range[1] < 9999) {
+            $where[] = "DATEDIFF(CURDATE(), (SELECT MIN(rr3.request_date) FROM record_requests rr3 WHERE rr3.case_provider_id = cp.id)) <= ?";
+            $params[] = $range[1];
+        }
+    }
+}
+
 // Special filters
 $filter = $_GET['filter'] ?? '';
 if ($filter === 'overdue') {
@@ -90,6 +114,7 @@ $total = (int)$countResult['cnt'];
 // Main query
 $sql = "SELECT
     cp.id, cp.case_id, cp.overall_status, cp.deadline,
+    cp.assigned_to AS assigned_to_id,
     c.case_number, c.client_name,
     p.name AS provider_name, p.type AS provider_type,
     u.full_name AS assigned_name,
@@ -122,6 +147,20 @@ foreach ($rows as &$row) {
     $row['request_count'] = (int)$row['request_count'];
     $row['days_since_request'] = $row['days_since_request'] !== null ? (int)$row['days_since_request'] : null;
     $row['days_until_deadline'] = $row['days_until_deadline'] !== null ? (int)$row['days_until_deadline'] : null;
+
+    // Add escalation tier info
+    $firstReqDate = dbFetchOne(
+        "SELECT MIN(request_date) AS first_date FROM record_requests WHERE case_provider_id = ?",
+        [$row['id']]
+    );
+    $daysSinceFirst = $firstReqDate && $firstReqDate['first_date']
+        ? (int)((strtotime('today') - strtotime($firstReqDate['first_date'])) / 86400)
+        : null;
+    $esc = getEscalationInfo($daysSinceFirst);
+    $row['escalation_tier'] = $esc['tier'];
+    $row['escalation_label'] = $esc['label'];
+    $row['escalation_css'] = $esc['css'];
+    $row['assigned_to_id'] = $row['assigned_to_id'] ?? null;
 }
 unset($row);
 

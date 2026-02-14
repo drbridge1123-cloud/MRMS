@@ -161,14 +161,13 @@ function getEscalatedItems($role, $userId = null) {
 
     $params = [];
 
+    // v2: All roles see all escalation tiers (>= 30 days)
+    $baseQuery .= " AND days_since_first_request >= " . ESCALATION_ACTION_NEEDED_DAYS;
+
+    // Staff: only see their own assigned items
     if ($role === 'staff') {
-        $baseQuery .= " AND days_since_first_request >= " . ESCALATION_ACTION_NEEDED_DAYS;
         $baseQuery .= " AND cp.assigned_to = ?";
         $params[] = $userId;
-    } elseif ($role === 'manager') {
-        $baseQuery .= " AND days_since_first_request >= " . ESCALATION_MANAGER_DAYS;
-    } else {
-        $baseQuery .= " AND days_since_first_request >= " . ESCALATION_ACTION_NEEDED_DAYS;
     }
 
     $baseQuery .= " ORDER BY days_since_first_request DESC";

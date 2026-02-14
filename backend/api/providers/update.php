@@ -1,6 +1,7 @@
 <?php
 // PUT /api/providers/{id} - Update an existing provider
 
+requireAdminOrManager();
 $userId = requireAuth();
 
 $providerId = (int)($_GET['id'] ?? 0);

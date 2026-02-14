@@ -11,7 +11,7 @@ ob_start();
     <!-- Filters -->
     <div class="flex flex-wrap items-center gap-3 mb-6">
         <select x-model="userFilter" @change="loadData(1)"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
             <option value="">All Users</option>
             <template x-for="u in allUsers" :key="u.id">
                 <option :value="u.id" x-text="u.full_name"></option>
@@ -20,10 +20,10 @@ ob_start();
 
         <input type="text" x-model="actionFilter" @input.debounce.300ms="loadData(1)"
                placeholder="Filter by action..."
-               class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-48 focus:ring-2 focus:ring-blue-500 outline-none">
+               class="border border-v2-card-border rounded-lg px-3 py-2 text-sm w-48 focus:ring-2 focus:ring-gold outline-none">
 
         <select x-model="entityFilter" @change="loadData(1)"
-                class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
             <option value="">All Entities</option>
             <option value="user">User</option>
             <option value="case">Case</option>
@@ -34,16 +34,16 @@ ob_start();
         </select>
 
         <input type="date" x-model="dateFrom" @change="loadData(1)"
-               class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
-        <span class="text-gray-400 text-sm">to</span>
+               class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
+        <span class="text-v2-text-light text-sm">to</span>
         <input type="date" x-model="dateTo" @change="loadData(1)"
-               class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+               class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
 
-        <button @click="clearFilters()" class="text-sm text-gray-500 hover:text-gray-700 underline">Clear</button>
+        <button @click="clearFilters()" class="text-sm text-v2-text-light hover:text-v2-text underline">Clear</button>
     </div>
 
     <!-- Log table -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
         <div class="overflow-x-auto">
             <table class="data-table">
                 <thead>
@@ -61,33 +61,33 @@ ob_start();
                         <tr><td colspan="6" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
                     <template x-if="!loading && logs.length === 0">
-                        <tr><td colspan="6" class="text-center text-gray-400 py-8">No activity logs found</td></tr>
+                        <tr><td colspan="6" class="text-center text-v2-text-light py-8">No activity logs found</td></tr>
                     </template>
                     <template x-for="log in logs" :key="log.id">
                         <tr>
-                            <td class="text-gray-500 text-xs whitespace-nowrap" x-text="log.created_at"></td>
+                            <td class="text-v2-text-light text-xs whitespace-nowrap" x-text="log.created_at"></td>
                             <td>
                                 <span class="font-medium text-sm" x-text="log.user_name || 'System'"></span>
-                                <span class="text-xs text-gray-400 ml-1" x-text="log.username ? '(' + log.username + ')' : ''"></span>
+                                <span class="text-xs text-v2-text-light ml-1" x-text="log.username ? '(' + log.username + ')' : ''"></span>
                             </td>
                             <td>
-                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700"
+                                <span class="px-2 py-0.5 rounded-full text-xs font-medium bg-v2-bg text-v2-text"
                                       x-text="log.action.replace(/_/g, ' ')"></span>
                             </td>
-                            <td class="text-sm text-gray-600" x-text="log.entity_type.replace(/_/g, ' ')"></td>
-                            <td class="text-sm text-gray-500" x-text="log.entity_id || '-'"></td>
+                            <td class="text-sm text-v2-text-mid" x-text="log.entity_type.replace(/_/g, ' ')"></td>
+                            <td class="text-sm text-v2-text-light" x-text="log.entity_id || '-'"></td>
                             <td>
                                 <template x-if="log.details">
                                     <button @click="log._showDetails = !log._showDetails"
-                                            class="text-xs text-blue-600 hover:underline">
+                                            class="text-xs text-gold hover:underline">
                                         <span x-text="log._showDetails ? 'Hide' : 'View'"></span>
                                     </button>
                                 </template>
                                 <template x-if="!log.details">
-                                    <span class="text-xs text-gray-400">-</span>
+                                    <span class="text-xs text-v2-text-light">-</span>
                                 </template>
                                 <template x-if="log._showDetails && log.details">
-                                    <pre class="mt-1 text-xs bg-gray-50 rounded p-2 max-w-xs overflow-x-auto"
+                                    <pre class="mt-1 text-xs bg-v2-bg rounded p-2 max-w-xs overflow-x-auto"
                                          x-text="typeof log.details === 'string' ? log.details : JSON.stringify(JSON.parse(log.details), null, 2)"></pre>
                                 </template>
                             </td>
@@ -99,8 +99,8 @@ ob_start();
 
         <!-- Pagination -->
         <template x-if="pagination && pagination.total_pages > 1">
-            <div class="flex items-center justify-between px-6 py-3 border-t border-gray-100">
-                <div class="text-sm text-gray-500">
+            <div class="flex items-center justify-between px-6 py-3 border-t border-v2-card-border">
+                <div class="text-sm text-v2-text-light">
                     Showing <span x-text="((pagination.page - 1) * pagination.per_page) + 1"></span>-<span x-text="Math.min(pagination.page * pagination.per_page, pagination.total)"></span> of <span x-text="pagination.total"></span>
                 </div>
                 <div class="flex gap-1">

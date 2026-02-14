@@ -1,5 +1,6 @@
 <?php
 // POST /api/cases - Create a new case
+requireAdminOrManager();
 $userId = requireAuth();
 
 $input = getInput();

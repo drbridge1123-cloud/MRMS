@@ -1,6 +1,6 @@
 <?php
 define('APP_NAME', 'MRMS');
-define('APP_VERSION', '1.0.0');
+define('APP_VERSION', '2.0.0');
 define('BASE_PATH', dirname(dirname(__DIR__)));
 define('BACKEND_PATH', dirname(__DIR__));
 define('FRONTEND_PATH', BASE_PATH . '/frontend');
