@@ -138,7 +138,10 @@ ob_start();
                                 <span class="text-sm font-medium text-v2-text" x-text="item.provider_name"></span>
                                 <span class="text-xs text-v2-text-light ml-2" x-text="item.case_number"></span>
                             </div>
-                            <span class="text-xs text-orange-600 font-medium" x-text="item.days_since_request + ' days ago'"></span>
+                            <div class="text-right">
+                                <span class="text-xs text-orange-600 font-medium" x-text="item.days_since_request + ' days ago'"></span>
+                                <p class="text-[10px] text-v2-text-light" x-text="'Due: ' + formatDate(item.next_followup_date)"></p>
+                            </div>
                         </div>
                         <p class="text-xs text-v2-text-light mt-1" x-text="item.client_name"></p>
                     </a>
@@ -164,7 +167,10 @@ ob_start();
                                 <span class="text-sm font-medium text-v2-text" x-text="item.provider_name"></span>
                                 <span class="text-xs text-v2-text-light ml-2" x-text="item.case_number"></span>
                             </div>
-                            <span class="text-xs text-red-600 font-medium" x-text="item.days_overdue + ' days overdue'"></span>
+                            <div class="text-right">
+                                <span class="text-xs text-red-600 font-medium" x-text="item.days_overdue + ' days overdue'"></span>
+                                <p class="text-[10px] text-v2-text-light" x-text="'Deadline: ' + formatDate(item.deadline)"></p>
+                            </div>
                         </div>
                         <p class="text-xs text-v2-text-light mt-1" x-text="item.client_name"></p>
                     </a>

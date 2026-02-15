@@ -50,6 +50,7 @@ ob_start();
                         <th class="cursor-pointer select-none" @click="sort('username')"><div class="flex items-center gap-1">Username <template x-if="sortBy==='username'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th class="cursor-pointer select-none" @click="sort('full_name')"><div class="flex items-center gap-1">Full Name <template x-if="sortBy==='full_name'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th class="cursor-pointer select-none" @click="sort('role')"><div class="flex items-center gap-1">Role <template x-if="sortBy==='role'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th>Email</th>
                         <th class="cursor-pointer select-none" @click="sort('is_active')"><div class="flex items-center gap-1">Status <template x-if="sortBy==='is_active'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th class="cursor-pointer select-none" @click="sort('created_at')"><div class="flex items-center gap-1">Created <template x-if="sortBy==='created_at'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                         <th>Actions</th>
@@ -57,10 +58,10 @@ ob_start();
                 </thead>
                 <tbody>
                     <template x-if="loading">
-                        <tr><td colspan="7" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
+                        <tr><td colspan="8" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
                     <template x-if="!loading && users.length === 0">
-                        <tr><td colspan="7" class="text-center text-v2-text-light py-8">No users found</td></tr>
+                        <tr><td colspan="8" class="text-center text-v2-text-light py-8">No users found</td></tr>
                     </template>
                     <template x-for="u in users" :key="u.id">
                         <tr>
@@ -71,6 +72,9 @@ ob_start();
                                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
                                       :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : u.role === 'manager' ? 'bg-orange-100 text-orange-700' : 'bg-v2-bg text-v2-text'"
                                       x-text="u.role"></span>
+                            </td>
+                            <td>
+                                <span class="text-xs text-v2-text-light" x-text="u.smtp_email || '-'"></span>
                             </td>
                             <td>
                                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
@@ -141,6 +145,29 @@ ob_start();
                         <option value="admin">Admin</option>
                     </select>
                 </div>
+                <!-- Email / SMTP Settings (edit mode only) -->
+                <template x-if="isEditing">
+                    <div class="border-t border-v2-card-border pt-4 space-y-3">
+                        <p class="text-xs font-semibold text-v2-text-mid uppercase tracking-wider">Email Settings</p>
+                        <div>
+                            <label class="block text-sm font-medium text-v2-text mb-1">Gmail Address</label>
+                            <input type="email" x-model="form.smtp_email" placeholder="user@gmail.com"
+                                   class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-v2-text mb-1">Gmail App Password</label>
+                            <input type="password" x-model="form.smtp_app_password" placeholder="Leave blank to keep current"
+                                   class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                            <p class="text-xs text-v2-text-light mt-1">Google Account &rarr; Security &rarr; App passwords</p>
+                        </div>
+                        <template x-if="form.smtp_email">
+                            <p class="text-xs text-green-600">Emails will be sent from this user's Gmail</p>
+                        </template>
+                        <template x-if="!form.smtp_email">
+                            <p class="text-xs text-v2-text-light">No personal email — uses firm default</p>
+                        </template>
+                    </div>
+                </template>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" @click="showModal = false"
                             class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
@@ -241,7 +268,7 @@ function usersPage() {
         openEditModal(u) {
             this.isEditing = true;
             this.editingId = u.id;
-            this.form = { username: u.username, full_name: u.full_name, role: u.role };
+            this.form = { username: u.username, full_name: u.full_name, role: u.role, smtp_email: u.smtp_email || '', smtp_app_password: '' };
             this.showModal = true;
         },
 
@@ -249,11 +276,16 @@ function usersPage() {
             this.saving = true;
             try {
                 if (this.isEditing) {
-                    await api.put('users/' + this.editingId, {
+                    const payload = {
                         username: this.form.username,
                         full_name: this.form.full_name,
-                        role: this.form.role
-                    });
+                        role: this.form.role,
+                        smtp_email: this.form.smtp_email || null
+                    };
+                    if (this.form.smtp_app_password) {
+                        payload.smtp_app_password = this.form.smtp_app_password;
+                    }
+                    await api.put('users/' + this.editingId, payload);
                     showToast('User updated');
                 } else {
                     await api.post('users', this.form);

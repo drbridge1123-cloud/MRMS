@@ -220,3 +220,166 @@ function getRequestLetterData($requestId) {
         [$requestId]
     );
 }
+
+/**
+ * Render a Health Insurance Ledger Request Letter.
+ */
+function renderHealthLedgerLetter($data) {
+    $requestDate = !empty($data['request_date'])
+        ? date('F j, Y', strtotime($data['request_date']))
+        : date('F j, Y');
+    $clientDob = !empty($data['client_dob'])
+        ? date('m/d/Y', strtotime($data['client_dob']))
+        : 'N/A';
+    $doi = !empty($data['doi'])
+        ? date('m/d/Y', strtotime($data['doi']))
+        : 'N/A';
+
+    $subjectLine = 'HEALTH INSURANCE LEDGER REQUEST';
+    if (($data['request_type'] ?? '') === 'follow_up') {
+        $subjectLine = 'FOLLOW-UP: HEALTH INSURANCE LEDGER REQUEST';
+    } elseif (($data['request_type'] ?? '') === 're_request') {
+        $subjectLine = 'SECOND REQUEST: HEALTH INSURANCE LEDGER';
+    }
+
+    $firmName    = htmlspecialchars(FIRM_NAME);
+    $firmAddress = htmlspecialchars(FIRM_ADDRESS);
+    $firmCSZ     = htmlspecialchars(FIRM_CITY_STATE_ZIP);
+    $firmPhone   = htmlspecialchars(FIRM_PHONE);
+    $firmFax     = htmlspecialchars(FIRM_FAX);
+    $firmEmail   = htmlspecialchars(FIRM_EMAIL);
+    $clientName  = htmlspecialchars($data['client_name'] ?? '');
+    $carrier     = htmlspecialchars($data['insurance_carrier'] ?? '');
+    $caseNumber  = htmlspecialchars($data['case_number'] ?? '');
+    $attorneyName = htmlspecialchars($data['attorney_name'] ?? '');
+
+    $notesSection = '';
+    if (!empty($data['notes'])) {
+        $notesSection = '<p style="margin-top:15px;"><strong>Additional Instructions:</strong> '
+            . htmlspecialchars($data['notes']) . '</p>';
+    }
+
+    return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; margin: 0; padding: 0; }
+        .letter { max-width: 8.5in; margin: 0 auto; padding: 1in; }
+        .letterhead { text-align: center; border-bottom: 3px double #1a365d; padding-bottom: 15px; margin-bottom: 30px; }
+        .firm-name { font-size: 18pt; font-weight: bold; color: #1a365d; letter-spacing: 2px; margin-bottom: 4px; }
+        .firm-info { font-size: 9pt; color: #4a5568; }
+        .date { margin-bottom: 25px; }
+        .recipient { margin-bottom: 20px; line-height: 1.4; }
+        .re-line { margin-bottom: 20px; }
+        .re-line strong { text-decoration: underline; }
+        .body-text { margin-bottom: 12px; text-align: justify; }
+        .records-table { margin: 10px 0 10px 20px; }
+        .signature { margin-top: 40px; }
+        .footer { margin-top: 40px; font-size: 9pt; color: #666; text-align: center; border-top: 1px solid #ccc; padding-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="letter">
+    <div class="letterhead">
+        <div class="firm-name">{$firmName}</div>
+        <div class="firm-info">{$firmAddress} | {$firmCSZ}</div>
+        <div class="firm-info">Tel: {$firmPhone} | Fax: {$firmFax} | {$firmEmail}</div>
+    </div>
+
+    <div class="date">{$requestDate}</div>
+
+    <div class="recipient">
+        Claims / Ledger Department<br>
+        {$carrier}
+    </div>
+
+    <div class="re-line">
+        <strong>RE: {$subjectLine}</strong><br>
+        <strong>Insured / Patient:</strong> {$clientName}<br>
+        <strong>Date of Birth:</strong> {$clientDob}<br>
+        <strong>Date of Loss:</strong> {$doi}<br>
+        <strong>Insurance Carrier:</strong> {$carrier}<br>
+        <strong>Our File No.:</strong> {$caseNumber}
+    </div>
+
+    <p class="body-text">Dear Claims Department:</p>
+
+    <p class="body-text">
+        This firm represents the above-referenced insured in connection with a personal injury matter.
+        We are writing to request the following health insurance records and payment information:
+    </p>
+
+    <table class="records-table">
+        <tr><td style="padding:2px 8px;vertical-align:top;">1.</td><td style="padding:2px 0;">Complete Payment Ledger / Explanation of Benefits (EOB) statements</td></tr>
+        <tr><td style="padding:2px 8px;vertical-align:top;">2.</td><td style="padding:2px 0;">Claim Payment History (all payments made to providers)</td></tr>
+        <tr><td style="padding:2px 8px;vertical-align:top;">3.</td><td style="padding:2px 0;">Outstanding Balance / Subrogation / Lien Information</td></tr>
+        <tr><td style="padding:2px 8px;vertical-align:top;">4.</td><td style="padding:2px 0;">Coverage Verification and Policy Limits</td></tr>
+    </table>
+
+    <p class="body-text">
+        Please provide all records related to claims arising from the incident on <strong>{$doi}</strong>.
+    </p>
+
+    <p class="body-text">
+        Please forward the requested records to our office at your earliest convenience.
+        Records may be sent via fax to <strong>{$firmFax}</strong> or via email to
+        <strong>{$firmEmail}</strong>.
+    </p>
+
+    <p class="body-text">
+        Should you have any questions or require additional information, please do not
+        hesitate to contact our Records Department at {$firmPhone}.
+    </p>
+
+    {$notesSection}
+
+    <p class="body-text">Thank you for your prompt attention to this matter.</p>
+
+    <div class="signature">
+        <p>Respectfully,</p>
+        <br>
+        <p><strong>{$firmName}</strong></p>
+        <p>Records Department</p>
+        <p>On behalf of {$attorneyName}</p>
+    </div>
+
+    <div class="footer">
+        CONFIDENTIALITY NOTICE: This communication contains privileged and confidential information.
+        If you are not the intended recipient, please notify the sender immediately and destroy all copies.
+    </div>
+</div>
+</body>
+</html>
+HTML;
+}
+
+/**
+ * Gather data needed to render a health ledger request letter.
+ */
+function getHealthLedgerLetterData($requestId) {
+    return dbFetchOne(
+        "SELECT
+            hlr.id AS request_id,
+            hlr.request_date,
+            hlr.request_method,
+            hlr.request_type,
+            hlr.sent_to,
+            hlr.send_status,
+            hlr.notes,
+            hli.case_number,
+            hli.client_name,
+            hli.insurance_carrier,
+            hli.carrier_contact_email,
+            hli.carrier_contact_fax,
+            c.client_dob,
+            c.doi,
+            c.attorney_name
+        FROM hl_requests hlr
+        JOIN health_ledger_items hli ON hlr.item_id = hli.id
+        LEFT JOIN cases c ON hli.case_id = c.id
+        WHERE hlr.id = ?",
+        [$requestId]
+    );
+}

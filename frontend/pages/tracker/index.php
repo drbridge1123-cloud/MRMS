@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
-$pageTitle = 'Records Tracker';
+$pageTitle = 'MR Tracker';
 $currentPage = 'tracker';
 ob_start();
 ?>
@@ -11,7 +11,7 @@ ob_start();
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-v2-text">Records Tracker</h1>
+            <h1 class="text-2xl font-bold text-v2-text">MR Tracker</h1>
             <p class="text-sm text-v2-text-light mt-1">All medical record requests across active cases</p>
         </div>
     </div>
@@ -223,7 +223,7 @@ ob_start();
                             <tr><td colspan="11" class="text-center text-v2-text-light py-12">No records found</td></tr>
                         </template>
                         <template x-for="item in items" :key="item.id">
-                            <tr @click="goToCase(item.case_id)" class="cursor-pointer"
+                            <tr @click="goToCase(item.case_id, item.id)" class="cursor-pointer"
                                 :class="{
                                     'tracker-row-overdue': item.is_overdue,
                                     'tracker-row-followup': !item.is_overdue && item.is_followup_due
@@ -434,8 +434,10 @@ function trackerPage() {
             this.loadData(1);
         },
 
-        goToCase(caseId) {
-            window.location.href = '/MRMS/frontend/pages/cases/detail.php?id=' + caseId;
+        goToCase(caseId, cpId) {
+            let url = '/MRMS/frontend/pages/cases/detail.php?id=' + caseId;
+            if (cpId) url += '&cp=' + cpId;
+            window.location.href = url;
         },
 
         getMethodLabel(method) {

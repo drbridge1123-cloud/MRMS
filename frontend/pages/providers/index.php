@@ -49,11 +49,9 @@ ob_start();
         </button>
     </div>
 
-    <!-- Providers split-panel layout -->
-    <div class="grid grid-cols-3 gap-4">
-        <!-- Left: Table (2/3) -->
-        <div class="col-span-2">
-            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
+    <!-- Providers Table (full width) -->
+    <div>
+        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="data-table">
                         <thead>
@@ -62,6 +60,7 @@ ob_start();
                                 <th class="cursor-pointer select-none" @click="sort('type')"><div class="flex items-center gap-1">Type <template x-if="sortBy==='type'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                                 <th>Phone</th>
                                 <th>Fax</th>
+                                <th>Email</th>
                                 <th class="cursor-pointer select-none" @click="sort('preferred_method')"><div class="flex items-center gap-1">Preferred Method <template x-if="sortBy==='preferred_method'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                                 <th class="cursor-pointer select-none" @click="sort('difficulty_level')"><div class="flex items-center gap-1">Difficulty <template x-if="sortBy==='difficulty_level'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
                                 <th class="cursor-pointer select-none" @click="sort('avg_response_days')"><div class="flex items-center gap-1">Avg Response <template x-if="sortBy==='avg_response_days'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
@@ -69,10 +68,10 @@ ob_start();
                         </thead>
                         <tbody>
                             <template x-if="loading">
-                                <tr><td colspan="7" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
+                                <tr><td colspan="8" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                             </template>
                             <template x-if="!loading && providers.length === 0">
-                                <tr><td colspan="7" class="text-center text-v2-text-light py-8">No providers found</td></tr>
+                                <tr><td colspan="8" class="text-center text-v2-text-light py-8">No providers found</td></tr>
                             </template>
                             <template x-for="p in providers" :key="p.id">
                                 <tr class="cursor-pointer" @click="viewProvider(p.id)" :class="selectedProvider?.id === p.id ? 'bg-v2-bg' : 'hover:bg-v2-bg'">
@@ -80,6 +79,7 @@ ob_start();
                                     <td><span class="text-xs text-v2-text-light" x-text="getProviderTypeLabel(p.type)"></span></td>
                                     <td x-text="p.phone || '-'"></td>
                                     <td x-text="p.fax || '-'"></td>
+                                    <td class="text-xs" x-text="p.email || '-'"></td>
                                     <td><span class="text-xs" x-text="getRequestMethodLabel(p.preferred_method)"></span></td>
                                     <td>
                                         <span class="status-badge" :class="'difficulty-' + p.difficulty_level" x-text="p.difficulty_level"></span>
@@ -105,69 +105,152 @@ ob_start();
             </div>
         </div>
 
-        <!-- Right: Detail Panel (1/3) -->
-        <div class="bg-white rounded-xl border border-v2-card-border p-4">
+    <!-- Provider Detail Modal -->
+    <div
+        x-show="selectedProvider"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @keydown.escape.window="selectedProvider = null"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        style="display: none;"
+    >
+        <div class="absolute inset-0 bg-black/40" @click="selectedProvider = null"></div>
+
+        <div
+            x-show="selectedProvider"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+            @click.stop
+            class="relative w-full max-w-2xl bg-white rounded-lg shadow-2xl overflow-hidden"
+            style="max-height: 90vh;"
+        >
             <template x-if="selectedProvider">
                 <div>
-                    <h3 class="font-bold text-v2-text text-sm" x-text="selectedProvider.name"></h3>
-                    <div class="flex gap-1.5 mt-1.5">
-                        <span class="text-xs bg-v2-bg text-v2-text-light px-1.5 py-0.5 rounded" x-text="selectedProvider.type_label || selectedProvider.type"></span>
-                        <template x-if="selectedProvider.difficulty_level">
-                            <span class="text-xs font-semibold px-1.5 py-0.5 rounded status-badge" :class="'difficulty-' + selectedProvider.difficulty_level" x-text="selectedProvider.difficulty_level"></span>
-                        </template>
-                    </div>
-
-                    <!-- Contact Info -->
-                    <div class="pt-3 mt-3 border-t border-v2-card-border space-y-2">
-                        <span class="v2-section-title">Contacts</span>
-                        <template x-if="selectedProvider.phone">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                                <div><p class="text-xs text-v2-text-light">Phone</p><p class="text-xs font-medium text-v2-text" x-text="selectedProvider.phone"></p></div>
+                    <!-- Header -->
+                    <div class="px-6 py-5" style="background: #0F1B2D;">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 pr-4">
+                                <h2 class="text-lg font-black text-white leading-tight" x-text="selectedProvider.name"></h2>
+                                <div class="flex items-center gap-2 mt-2 flex-wrap">
+                                    <span
+                                        class="text-xs font-bold px-2.5 py-0.5 rounded uppercase tracking-wider"
+                                        style="background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7);"
+                                        x-text="getProviderTypeLabel(selectedProvider.type)"
+                                    ></span>
+                                    <template x-if="selectedProvider.difficulty_level">
+                                        <span
+                                            class="text-xs font-bold px-2.5 py-0.5 rounded uppercase tracking-wider"
+                                            :style="getDifficultyStyle(selectedProvider.difficulty_level)"
+                                            x-text="selectedProvider.difficulty_level"
+                                        ></span>
+                                    </template>
+                                    <template x-if="selectedProvider.uses_third_party == 1">
+                                        <span
+                                            class="text-xs font-bold px-2.5 py-0.5 rounded uppercase tracking-wider"
+                                            style="background: rgba(201,168,76,0.15); color: #C9A84C;"
+                                        >ChartSwap</span>
+                                    </template>
+                                </div>
                             </div>
-                        </template>
-                        <template x-if="selectedProvider.fax">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                                <div><p class="text-xs text-v2-text-light">Fax</p><p class="text-xs font-medium text-v2-text" x-text="selectedProvider.fax"></p></div>
-                            </div>
-                        </template>
-                        <template x-if="selectedProvider.email">
-                            <div class="flex items-center gap-2">
-                                <svg class="w-3.5 h-3.5 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                                <div><p class="text-xs text-v2-text-light">Email</p><p class="text-xs font-medium text-v2-text" x-text="selectedProvider.email"></p></div>
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- Stats -->
-                    <div class="pt-3 mt-3 border-t border-v2-card-border grid grid-cols-2 gap-2">
-                        <div class="bg-v2-bg rounded px-3 py-2">
-                            <p class="text-xs text-v2-text-light">Avg Response</p>
-                            <p class="text-lg font-bold text-v2-text" x-text="(selectedProvider.avg_response_days || '\u2014') + 'd'"></p>
-                        </div>
-                        <div class="bg-v2-bg rounded px-3 py-2">
-                            <p class="text-xs text-v2-text-light">Preferred</p>
-                            <p class="text-sm font-semibold text-v2-text capitalize" x-text="selectedProvider.preferred_method || '\u2014'"></p>
+                            <button @click="selectedProvider = null" class="p-1 rounded" style="color: rgba(255,255,255,0.5);">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Edit button (admin/manager only) -->
-                    <template x-if="$store.auth.isAdminOrManager">
-                        <button @click="editProvider = selectedProvider; showProviderModal = true"
-                                class="w-full mt-3 py-1.5 bg-v2-bg text-v2-text rounded-lg text-xs font-medium hover:bg-v2-card-border">
-                            Edit Provider
-                        </button>
-                    </template>
-                    <template x-if="$store.auth.isStaff">
-                        <p class="text-xs text-v2-text-light italic text-center mt-3">View only — contact manager to edit</p>
-                    </template>
-                </div>
-            </template>
-            <template x-if="!selectedProvider">
-                <div class="flex flex-col items-center justify-center h-48 text-v2-text-light">
-                    <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    <p class="text-xs">Select a provider to view details</p>
+                    <!-- Body -->
+                    <div class="px-6 py-5 space-y-5 overflow-y-auto" style="max-height: 60vh;">
+                        <!-- Contact Information -->
+                        <div>
+                            <h3 class="text-xs font-black uppercase mb-3" style="color: #5A6B82; letter-spacing: 0.1em;">Contact Information</h3>
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <div class="rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                    <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Phone</p>
+                                    <p class="text-sm font-semibold mt-0.5" :style="{ color: selectedProvider.phone ? '#0F1B2D' : '#5A6B82' }" x-text="selectedProvider.phone || '—'"></p>
+                                </div>
+                                <div class="rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                    <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Fax</p>
+                                    <p class="text-sm font-semibold mt-0.5" :style="{ color: selectedProvider.fax ? '#0F1B2D' : '#5A6B82' }" x-text="selectedProvider.fax || '—'"></p>
+                                </div>
+                                <div class="col-span-2 rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                    <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Email</p>
+                                    <p class="text-sm font-semibold mt-0.5 break-all" :style="{ color: selectedProvider.email ? '#0F1B2D' : '#5A6B82' }" x-text="selectedProvider.email || '—'"></p>
+                                </div>
+                                <template x-if="selectedProvider.address">
+                                    <div class="col-span-2 rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                        <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Address</p>
+                                        <p class="text-sm font-semibold mt-0.5" style="color: #0F1B2D;" x-text="selectedProvider.address"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Stats Row -->
+                        <div class="grid grid-cols-2 gap-2.5">
+                            <div class="rounded px-4 py-3" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Avg Response</p>
+                                <p class="text-xl font-black mt-0.5" :style="{ color: getAvgColor(selectedProvider.avg_response_days) }" x-text="selectedProvider.avg_response_days ? selectedProvider.avg_response_days + 'd' : '—'"></p>
+                            </div>
+                            <div class="rounded px-4 py-3" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Preferred Method</p>
+                                <p class="text-xl font-black mt-0.5" style="color: #0F1B2D;" x-text="getRequestMethodLabel(selectedProvider.preferred_method)"></p>
+                            </div>
+                        </div>
+
+                        <!-- Department Contacts -->
+                        <template x-if="selectedProvider.contacts && selectedProvider.contacts.length > 0">
+                            <div>
+                                <h3 class="text-xs font-black uppercase mb-3" style="color: #5A6B82; letter-spacing: 0.1em;">Department Contacts</h3>
+                                <div class="space-y-1.5">
+                                    <template x-for="(contact, idx) in selectedProvider.contacts" :key="idx">
+                                        <div class="flex items-center gap-3 px-3 py-2 rounded text-sm" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
+                                            <span class="font-bold flex-shrink-0" style="color: #0F1B2D; min-width: 100px;" x-text="contact.department"></span>
+                                            <span class="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded uppercase" :style="getContactTypeStyle(contact.contact_type)" x-text="contact.contact_type"></span>
+                                            <span class="truncate min-w-0" style="color: #3D4F63;" x-text="contact.contact_value"></span>
+                                            <template x-if="contact.is_primary == 1">
+                                                <span class="flex-shrink-0 ml-auto text-xs font-bold" style="color: #C9A84C;">PRIMARY</span>
+                                            </template>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="px-6 py-4 flex items-center gap-3" style="border-top: 1px solid #E5E5E0; background: #F5F5F0;">
+                        <template x-if="$store.auth.isAdminOrManager">
+                            <div class="flex items-center gap-3 w-full">
+                                <button
+                                    @click="editProvider = selectedProvider; showProviderModal = true; selectedProvider = null"
+                                    class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded text-sm font-bold"
+                                    style="background: #0F1B2D; color: #C9A84C;"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    Edit Provider
+                                </button>
+                                <button
+                                    @click="deleteProvider(selectedProvider.id, selectedProvider.name)"
+                                    class="flex items-center justify-center gap-2 px-5 py-2.5 rounded text-sm font-bold"
+                                    style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;"
+                                >
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    Delete
+                                </button>
+                            </div>
+                        </template>
+                        <template x-if="$store.auth.isStaff">
+                            <p class="text-xs italic text-center w-full" style="color: #5A6B82;">View only — contact manager to edit</p>
+                        </template>
+                    </div>
                 </div>
             </template>
         </div>
@@ -319,6 +402,32 @@ function providersListPage() {
             third_party_contact: '', notes: ''
         },
 
+        getDifficultyStyle(level) {
+            const styles = {
+                easy:   { background: '#F0FDF4', color: '#166534' },
+                medium: { background: '#FFFBEB', color: '#D97706' },
+                hard:   { background: '#FEF2F2', color: '#DC2626' }
+            };
+            return styles[level] || {};
+        },
+
+        getAvgColor(days) {
+            if (!days) return '#5A6B82';
+            if (days > 21) return '#DC2626';
+            if (days > 10) return '#D97706';
+            return '#166534';
+        },
+
+        getContactTypeStyle(type) {
+            const styles = {
+                email:  { background: '#EFF6FF', color: '#1E40AF' },
+                fax:    { background: '#F5F3FF', color: '#6B21A8' },
+                phone:  { background: '#ECFEFF', color: '#0E7490' },
+                portal: { background: '#FFF7ED', color: '#C2410C' }
+            };
+            return styles[type] || { background: '#F5F5F0', color: '#5A6B82' };
+        },
+
         async loadData(page = 1) {
             this.loading = true;
             const params = buildQueryString({
@@ -354,6 +463,18 @@ function providersListPage() {
                 this.selectedProvider = res.data;
             } catch (e) {
                 showToast('Failed to load provider', 'error');
+            }
+        },
+
+        async deleteProvider(id, name) {
+            if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+            try {
+                await api.delete('providers/' + id);
+                showToast('Provider deleted');
+                this.selectedProvider = null;
+                this.loadData(1);
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to delete provider', 'error');
             }
         },
 

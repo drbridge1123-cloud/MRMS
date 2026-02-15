@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS cases (
     doi DATE NULL,
     assigned_to INT NULL,
     status ENUM('active','pending_review','completed','on_hold') NOT NULL DEFAULT 'active',
+    treatment_status ENUM('in_treatment','treatment_done','neg','rfd') NULL,
+    treatment_end_date DATE NULL,
     attorney_name VARCHAR(100) NULL,
     ini_completed TINYINT(1) NOT NULL DEFAULT 0,
     notes TEXT NULL,
@@ -36,6 +38,7 @@ CREATE TABLE IF NOT EXISTS cases (
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_cases_status ON cases(status);
+CREATE INDEX idx_cases_treatment_status ON cases(treatment_status);
 CREATE INDEX idx_cases_assigned ON cases(assigned_to);
 
 -- Providers (Master DB)
@@ -48,7 +51,7 @@ CREATE TABLE IF NOT EXISTS providers (
     fax VARCHAR(20) NULL,
     email VARCHAR(100) NULL,
     portal_url VARCHAR(300) NULL,
-    preferred_method ENUM('email','fax','portal','phone','mail') NOT NULL DEFAULT 'fax',
+    preferred_method ENUM('email','fax','portal','phone','mail','chartswap','online') NOT NULL DEFAULT 'fax',
     uses_third_party TINYINT(1) NOT NULL DEFAULT 0,
     third_party_name VARCHAR(200) NULL,
     third_party_contact VARCHAR(200) NULL,
@@ -90,6 +93,8 @@ CREATE TABLE IF NOT EXISTS case_providers (
     assigned_to INT NULL,
     deadline DATE NULL,
     notes TEXT NULL,
+    is_on_hold TINYINT(1) NOT NULL DEFAULT 0,
+    hold_reason VARCHAR(255) NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
@@ -100,13 +105,14 @@ CREATE TABLE IF NOT EXISTS case_providers (
 CREATE INDEX idx_case_providers_case ON case_providers(case_id);
 CREATE INDEX idx_case_providers_provider ON case_providers(provider_id);
 CREATE INDEX idx_case_providers_status ON case_providers(overall_status);
+CREATE INDEX idx_case_providers_hold ON case_providers(is_on_hold);
 
 -- Record Requests (Request History)
 CREATE TABLE IF NOT EXISTS record_requests (
     id INT AUTO_INCREMENT PRIMARY KEY,
     case_provider_id INT NOT NULL,
     request_date DATE NOT NULL,
-    request_method ENUM('email','fax','portal','phone','mail') NOT NULL,
+    request_method ENUM('email','fax','portal','phone','mail','chartswap','online') NOT NULL,
     request_type ENUM('initial','follow_up','re_request','rfd') NOT NULL DEFAULT 'initial',
     sent_to VARCHAR(200) NULL,
     authorization_sent TINYINT(1) NOT NULL DEFAULT 0,

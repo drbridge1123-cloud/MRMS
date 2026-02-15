@@ -65,17 +65,18 @@ ob_start();
                         <th>Progress</th>
                         <th>Issues</th>
                         <th class="cursor-pointer select-none" @click="sort('created_at')"><div class="flex items-center gap-1">Created <template x-if="sortBy==='created_at'"><svg class="w-3 h-3" :class="sortDir==='asc'?'':'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template></div></th>
+                        <th x-show="$store.auth.isAdmin" class="w-10"></th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="loading">
-                        <tr><td colspan="10" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
+                        <tr><td colspan="11" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
                     <template x-if="!loading && cases.length === 0">
-                        <tr><td colspan="10" class="text-center text-v2-text-light py-8">No cases found</td></tr>
+                        <tr><td colspan="11" class="text-center text-v2-text-light py-8">No cases found</td></tr>
                     </template>
                     <template x-for="c in cases" :key="c.id">
-                        <tr class="cursor-pointer" :class="{ 'row-dimmed': $store.auth.isStaff && !c.assigned_to_name }" @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id='+c.id">
+                        <tr class="cursor-pointer" :class="{ 'row-dimmed': $store.auth.isStaff && !c.assigned_name }" @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id='+c.id">
                             <td class="font-medium text-gold" x-text="c.case_number"></td>
                             <td class="font-medium" x-text="c.client_name"></td>
                             <td x-text="formatDate(c.client_dob)"></td>
@@ -107,6 +108,12 @@ ob_start();
                                 </div>
                             </td>
                             <td class="text-v2-text-light" x-text="formatDate(c.created_at)"></td>
+                            <td x-show="$store.auth.isAdmin" class="px-2 py-3 text-center" @click.stop>
+                                <button @click="deleteCase(c.id, c.case_number, c.client_name)"
+                                        class="text-v2-text-light hover:text-red-600 transition-colors" title="Delete case">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </td>
                         </tr>
                     </template>
                 </tbody>
@@ -257,6 +264,17 @@ function casesListPage() {
                 showToast(e.data?.message || 'Failed to create case', 'error');
             }
             this.saving = false;
+        },
+
+        async deleteCase(id, caseNumber, clientName) {
+            if (!confirm(`Delete case ${caseNumber} (${clientName})? This will also delete all providers, requests, and notes for this case.`)) return;
+            try {
+                await api.delete('cases/' + id);
+                showToast('Case deleted');
+                this.loadData(this.pagination?.page || 1);
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to delete case', 'error');
+            }
         },
 
         async init() {

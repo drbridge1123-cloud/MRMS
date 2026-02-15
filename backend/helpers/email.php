@@ -8,16 +8,21 @@ use PHPMailer\PHPMailer\Exception;
  * @param string $to        Recipient email address
  * @param string $subject   Email subject line
  * @param string $htmlBody  Full HTML body
- * @param array  $options   Optional: 'cc', 'bcc', 'attachments', 'replyTo'
+ * @param array  $options   Optional: 'cc', 'bcc', 'attachments', 'replyTo', 'smtp_email', 'smtp_password', 'from_name'
  * @return array ['success' => bool, 'message_id' => string|null, 'error' => string|null]
  */
 function sendEmail($to, $subject, $htmlBody, $options = []) {
-    // Check SMTP configuration
-    if (empty(SMTP_USERNAME) || empty(SMTP_PASSWORD) || empty(SMTP_FROM_EMAIL)) {
+    // Per-user SMTP or global fallback
+    $smtpUser = !empty($options['smtp_email']) ? $options['smtp_email'] : SMTP_USERNAME;
+    $smtpPass = !empty($options['smtp_password']) ? $options['smtp_password'] : SMTP_PASSWORD;
+    $fromEmail = !empty($options['smtp_email']) ? $options['smtp_email'] : SMTP_FROM_EMAIL;
+    $fromName = !empty($options['from_name']) ? $options['from_name'] . ' - ' . FIRM_NAME : SMTP_FROM_NAME;
+
+    if (empty($smtpUser) || empty($smtpPass)) {
         return [
             'success'    => false,
             'message_id' => null,
-            'error'      => 'Email not configured. Please set SMTP_USERNAME, SMTP_PASSWORD, and SMTP_FROM_EMAIL in backend/config/email.php'
+            'error'      => 'Email not configured. Please set SMTP credentials in settings or backend/config/email.php'
         ];
     }
 
@@ -27,15 +32,15 @@ function sendEmail($to, $subject, $htmlBody, $options = []) {
         $mail->isSMTP();
         $mail->Host       = SMTP_HOST;
         $mail->SMTPAuth   = true;
-        $mail->Username   = SMTP_USERNAME;
-        $mail->Password   = SMTP_PASSWORD;
+        $mail->Username   = $smtpUser;
+        $mail->Password   = $smtpPass;
         $mail->SMTPSecure = SMTP_ENCRYPTION === 'tls'
             ? PHPMailer::ENCRYPTION_STARTTLS
             : PHPMailer::ENCRYPTION_SMTPS;
         $mail->Port       = SMTP_PORT;
         $mail->Timeout    = SEND_TIMEOUT;
 
-        $mail->setFrom(SMTP_FROM_EMAIL, SMTP_FROM_NAME);
+        $mail->setFrom($fromEmail, $fromName);
 
         if (!empty($options['replyTo'])) {
             $mail->addReplyTo($options['replyTo']);

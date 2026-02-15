@@ -87,6 +87,9 @@ switch ($resource) {
         } elseif ($method === 'PUT' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/providers/update.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/providers/delete.php';
         } else {
             errorResponse('Provider endpoint not found', 404);
         }
@@ -227,6 +230,35 @@ switch ($resource) {
             require __DIR__ . '/tracker/list.php';
         } else {
             errorResponse('Tracker endpoint not found', 404);
+        }
+        break;
+
+    case 'health-ledger':
+        if ($method === 'GET' && $id === 'list') {
+            require __DIR__ . '/health-ledger/list.php';
+        } elseif ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/health-ledger/import.php';
+        } elseif ($method === 'POST' && $id === 'request') {
+            require __DIR__ . '/health-ledger/request.php';
+        } elseif ($method === 'GET' && $id && $action === 'requests') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/health-ledger/requests-list.php';
+        } elseif ($method === 'GET' && $id && $action === 'preview') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/health-ledger/preview.php';
+        } elseif ($method === 'POST' && $id && $action === 'send') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/health-ledger/send.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/health-ledger/create.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/health-ledger/update.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/health-ledger/delete.php';
+        } else {
+            errorResponse('Health ledger endpoint not found', 404);
         }
         break;
 

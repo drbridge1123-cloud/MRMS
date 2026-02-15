@@ -44,7 +44,7 @@ $sortDir = ($_GET['sort_dir'] ?? 'asc') === 'desc' ? 'DESC' : 'ASC';
 $total = dbFetchOne("SELECT COUNT(*) as cnt FROM users WHERE {$whereClause}", $params)['cnt'];
 
 $users = dbFetchAll(
-    "SELECT id, username, full_name, role, is_active, created_at, updated_at
+    "SELECT id, username, full_name, email, smtp_email, role, is_active, created_at, updated_at
      FROM users WHERE {$whereClause} ORDER BY {$sortBy} {$sortDir} LIMIT ? OFFSET ?",
     array_merge($params, [$perPage, $offset])
 );

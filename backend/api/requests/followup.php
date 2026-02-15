@@ -11,7 +11,7 @@ if (!empty($errors)) {
     errorResponse(implode(', ', $errors));
 }
 
-$cpId = (int)$input['case_provider_id'];
+$cpId = (int) $input['case_provider_id'];
 
 $cp = dbFetchOne("SELECT id FROM case_providers WHERE id = ?", [$cpId]);
 if (!$cp) {
@@ -28,12 +28,17 @@ $data = [
     'request_method' => sanitizeString($input['request_method']),
     'request_type' => 'follow_up',
     'requested_by' => $userId,
-    'next_followup_date' => calculateNextFollowup($input['request_date'])
+    'next_followup_date' => !empty($input['next_followup_date'])
+        ? $input['next_followup_date']
+        : calculateNextFollowup($input['request_date'])
 ];
 
-if (isset($input['sent_to'])) $data['sent_to'] = sanitizeString($input['sent_to']);
-if (isset($input['authorization_sent'])) $data['authorization_sent'] = $input['authorization_sent'] ? 1 : 0;
-if (isset($input['notes'])) $data['notes'] = sanitizeString($input['notes']);
+if (isset($input['sent_to']))
+    $data['sent_to'] = sanitizeString($input['sent_to']);
+if (isset($input['authorization_sent']))
+    $data['authorization_sent'] = $input['authorization_sent'] ? 1 : 0;
+if (isset($input['notes']))
+    $data['notes'] = sanitizeString($input['notes']);
 $data['send_status'] = 'draft';
 
 $newId = dbInsert('record_requests', $data);

@@ -19,6 +19,8 @@ const REQUEST_METHODS = {
     portal: 'Portal',
     phone: 'Phone',
     mail: 'Mail',
+    chartswap: 'ChartSwap',
+    online: 'Online',
 };
 
 // Request type labels

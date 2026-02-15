@@ -1,36 +1,30 @@
 <?php
-if ($method !== 'POST') {
-    errorResponse('Method not allowed', 405);
-}
+// POST /api/health-ledger/send/{id} - Send a request via email or fax
+if ($method !== 'POST') errorResponse('Method not allowed', 405);
 
 $userId = requireAuth();
-
 $requestId = (int)($_GET['id'] ?? 0);
-if (!$requestId) {
-    errorResponse('Request ID is required');
-}
+if (!$requestId) errorResponse('Request ID is required');
 
 $input = getInput();
 
-$letterData = getRequestLetterData($requestId);
-if (!$letterData) {
-    errorResponse('Request not found', 404);
-}
+$letterData = getHealthLedgerLetterData($requestId);
+if (!$letterData) errorResponse('Request not found', 404);
 
 if (!in_array($letterData['request_method'], ['email', 'fax'])) {
     errorResponse('Only email and fax requests can be sent through the system');
 }
 
 if ($letterData['send_status'] === 'sent') {
-    errorResponse('This request has already been sent successfully');
+    errorResponse('This request has already been sent');
 }
 
 // Determine recipient
 $recipient = !empty($input['recipient'])
     ? sanitizeString($input['recipient'])
     : ($letterData['sent_to'] ?: ($letterData['request_method'] === 'email'
-        ? $letterData['provider_email']
-        : $letterData['provider_fax']));
+        ? $letterData['carrier_contact_email']
+        : $letterData['carrier_contact_fax']));
 
 if (empty($recipient)) {
     $label = $letterData['request_method'] === 'email' ? 'email address' : 'fax number';
@@ -38,10 +32,10 @@ if (empty($recipient)) {
 }
 
 // Render letter
-$html = renderRequestLetter($letterData);
+$html = renderHealthLedgerLetter($letterData);
 
 // Mark as sending
-dbUpdate('record_requests', [
+dbUpdate('hl_requests', [
     'send_status' => 'sending',
     'sent_to' => $recipient
 ], 'id = ?', [$requestId]);
@@ -50,12 +44,10 @@ dbUpdate('record_requests', [
 $result = ['success' => false, 'error' => 'Unknown method'];
 
 if ($letterData['request_method'] === 'email') {
-    $doiFormatted = !empty($letterData['doi']) ? date('m/d/Y', strtotime($letterData['doi'])) : '';
-    $subject = 'Medical Records Request - ' . $letterData['client_name'];
-    if ($doiFormatted) {
-        $subject .= ' (DOI: ' . $doiFormatted . ')';
+    $subject = 'Health Insurance Ledger Request - ' . $letterData['client_name'];
+    if (!empty($letterData['doi'])) {
+        $subject .= ' (DOI: ' . date('m/d/Y', strtotime($letterData['doi'])) . ')';
     }
-    // Use per-user SMTP if configured
     $emailOptions = [];
     $sender = dbFetchOne("SELECT full_name, smtp_email, smtp_app_password FROM users WHERE id = ?", [$userId]);
     if ($sender && !empty($sender['smtp_email']) && !empty($sender['smtp_app_password'])) {
@@ -68,7 +60,7 @@ if ($letterData['request_method'] === 'email') {
     $result = sendFax($recipient, $html);
 }
 
-// Log the attempt
+// Log
 dbInsert('send_log', [
     'record_request_id' => $requestId,
     'send_method'       => $letterData['request_method'],
@@ -79,12 +71,11 @@ dbInsert('send_log', [
     'sent_by'           => $userId
 ]);
 
-// Get current attempts count
-$current = dbFetchOne("SELECT send_attempts FROM record_requests WHERE id = ?", [$requestId]);
+$current = dbFetchOne("SELECT send_attempts FROM hl_requests WHERE id = ?", [$requestId]);
 $attempts = (($current['send_attempts'] ?? 0) + 1);
 
 if ($result['success']) {
-    dbUpdate('record_requests', [
+    dbUpdate('hl_requests', [
         'send_status'   => 'sent',
         'sent_at'       => date('Y-m-d H:i:s'),
         'send_error'    => null,
@@ -92,27 +83,26 @@ if ($result['success']) {
         'letter_html'   => $html
     ], 'id = ?', [$requestId]);
 
-    logActivity($userId, 'request_delivered', 'record_request', $requestId, [
-        'method'    => $letterData['request_method'],
+    logActivity($userId, 'hl_request_sent', 'hl_request', $requestId, [
+        'method' => $letterData['request_method'],
         'recipient' => $recipient
     ]);
 
     successResponse([
         'send_status' => 'sent',
-        'sent_at'     => date('Y-m-d H:i:s')
-    ], 'Request sent successfully via ' . $letterData['request_method']);
+        'sent_at' => date('Y-m-d H:i:s')
+    ], 'Request sent via ' . $letterData['request_method']);
 } else {
-    dbUpdate('record_requests', [
+    dbUpdate('hl_requests', [
         'send_status'   => 'failed',
         'send_error'    => $result['error'],
         'send_attempts' => $attempts,
         'letter_html'   => $html
     ], 'id = ?', [$requestId]);
 
-    logActivity($userId, 'request_send_failed', 'record_request', $requestId, [
-        'method'    => $letterData['request_method'],
-        'recipient' => $recipient,
-        'error'     => $result['error']
+    logActivity($userId, 'hl_request_send_failed', 'hl_request', $requestId, [
+        'method' => $letterData['request_method'],
+        'error' => $result['error']
     ]);
 
     errorResponse('Failed to send: ' . $result['error'], 422);

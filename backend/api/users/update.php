@@ -37,6 +37,18 @@ if (isset($input['role']) && validateEnum($input['role'], ['admin', 'manager', '
     $data['role'] = $input['role'];
 }
 
+if (array_key_exists('email', $input)) {
+    $data['email'] = $input['email'] ? sanitizeString($input['email']) : null;
+}
+
+if (array_key_exists('smtp_email', $input)) {
+    $data['smtp_email'] = $input['smtp_email'] ? sanitizeString($input['smtp_email']) : null;
+}
+
+if (array_key_exists('smtp_app_password', $input)) {
+    $data['smtp_app_password'] = $input['smtp_app_password'] ? $input['smtp_app_password'] : null;
+}
+
 if (empty($data)) {
     errorResponse('No fields to update');
 }
@@ -46,7 +58,7 @@ dbUpdate('users', $data, 'id = ?', [$targetId]);
 logActivity($currentUserId, 'user_updated', 'user', $targetId, $data);
 
 $updated = dbFetchOne(
-    "SELECT id, username, full_name, role, is_active, created_at, updated_at FROM users WHERE id = ?",
+    "SELECT id, username, full_name, email, smtp_email, role, is_active, created_at, updated_at FROM users WHERE id = ?",
     [$targetId]
 );
 

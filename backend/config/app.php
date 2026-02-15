@@ -6,7 +6,7 @@ define('BACKEND_PATH', dirname(__DIR__));
 define('FRONTEND_PATH', BASE_PATH . '/frontend');
 define('STORAGE_PATH', BASE_PATH . '/storage');
 
-define('DEFAULT_FOLLOWUP_DAYS', 14);
+define('DEFAULT_FOLLOWUP_DAYS', 7);
 define('DEADLINE_WARNING_DAYS', 7);
 define('DEFAULT_DEADLINE_DAYS', 30);
 
