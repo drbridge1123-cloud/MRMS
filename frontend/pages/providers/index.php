@@ -15,12 +15,12 @@ ob_start();
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
-                <input type="text" x-model="searchQuery" @input.debounce.300ms="loadData(1)"
-                       placeholder="Search providers..."
-                       class="w-64 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                <input type="text" x-model="searchQuery" @input.debounce.300ms="loadData()"
+                       placeholder="Search by name, phone, fax, or email..."
+                       class="w-80 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
             </div>
 
-            <select x-model="typeFilter" @change="loadData(1)"
+            <select x-model="typeFilter" @change="loadData()"
                     class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
                 <option value="">All Types</option>
                 <option value="hospital">Hospital</option>
@@ -30,10 +30,14 @@ ob_start();
                 <option value="physician">Physician</option>
                 <option value="surgery_center">Surgery Center</option>
                 <option value="pharmacy">Pharmacy</option>
+                <option value="acupuncture">Acupuncture</option>
+                <option value="massage">Massage</option>
+                <option value="pain_management">Pain Management</option>
+                <option value="pt">Physical Therapy</option>
                 <option value="other">Other</option>
             </select>
 
-            <select x-model="difficultyFilter" @change="loadData(1)"
+            <select x-model="difficultyFilter" @change="loadData()"
                     class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
                 <option value="">All Difficulty</option>
                 <option value="easy">Easy</option>
@@ -74,12 +78,12 @@ ob_start();
                                 <tr><td colspan="8" class="text-center text-v2-text-light py-8">No providers found</td></tr>
                             </template>
                             <template x-for="p in providers" :key="p.id">
-                                <tr class="cursor-pointer" @click="viewProvider(p.id)" :class="selectedProvider?.id === p.id ? 'bg-v2-bg' : 'hover:bg-v2-bg'">
-                                    <td class="font-medium text-gold" x-text="p.name"></td>
+                                <tr class="cursor-pointer" @click="viewProvider(p.id)" :class="[selectedProvider?.id === p.id ? 'bg-v2-bg' : 'hover:bg-v2-bg', p.is_suspicious == 1 ? 'bg-blue-50' : '']">
+                                    <td class="font-medium" :class="p.is_suspicious == 1 ? 'text-blue-600' : 'text-gold'" x-text="p.name"></td>
                                     <td><span class="text-xs text-v2-text-light" x-text="getProviderTypeLabel(p.type)"></span></td>
-                                    <td x-text="p.phone || '-'"></td>
-                                    <td x-text="p.fax || '-'"></td>
-                                    <td class="text-xs" x-text="p.email || '-'"></td>
+                                    <td class="whitespace-nowrap" x-text="formatPhoneNumber(p.phone)"></td>
+                                    <td class="whitespace-nowrap" x-text="formatPhoneNumber(p.fax)"></td>
+                                    <td class="text-xs whitespace-nowrap" x-text="p.email || '-'"></td>
                                     <td><span class="text-xs" x-text="getRequestMethodLabel(p.preferred_method)"></span></td>
                                     <td>
                                         <span class="status-badge" :class="'difficulty-' + p.difficulty_level" x-text="p.difficulty_level"></span>
@@ -91,17 +95,11 @@ ob_start();
                     </table>
                 </div>
 
-                <template x-if="pagination && pagination.total_pages > 1">
-                    <div class="flex items-center justify-between px-6 py-3 border-t border-v2-card-border">
-                        <div class="text-sm text-v2-text-light">
-                            Showing <span x-text="((pagination.page - 1) * pagination.per_page) + 1"></span>-<span x-text="Math.min(pagination.page * pagination.per_page, pagination.total)"></span> of <span x-text="pagination.total"></span>
-                        </div>
-                        <div class="flex gap-1">
-                            <button @click="loadData(pagination.page - 1)" :disabled="pagination.page <= 1" class="px-3 py-1.5 text-sm border rounded-md disabled:opacity-50">Prev</button>
-                            <button @click="loadData(pagination.page + 1)" :disabled="pagination.page >= pagination.total_pages" class="px-3 py-1.5 text-sm border rounded-md disabled:opacity-50">Next</button>
-                        </div>
+                <div class="px-6 py-3 border-t border-v2-card-border">
+                    <div class="text-sm text-v2-text-light">
+                        Showing <span x-text="providers.length"></span> provider<span x-text="providers.length === 1 ? '' : 's'"></span>
                     </div>
-                </template>
+                </div>
             </div>
         </div>
 
@@ -174,20 +172,25 @@ ob_start();
                             <div class="grid grid-cols-2 gap-2.5">
                                 <div class="rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
                                     <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Phone</p>
-                                    <p class="text-sm font-semibold mt-0.5" :style="{ color: selectedProvider.phone ? '#0F1B2D' : '#5A6B82' }" x-text="selectedProvider.phone || '—'"></p>
+                                    <p class="text-sm font-semibold mt-0.5" :style="{ color: selectedProvider.phone ? '#0F1B2D' : '#5A6B82' }" x-text="formatPhoneNumber(selectedProvider.phone)"></p>
                                 </div>
                                 <div class="rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
                                     <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Fax</p>
-                                    <p class="text-sm font-semibold mt-0.5" :style="{ color: selectedProvider.fax ? '#0F1B2D' : '#5A6B82' }" x-text="selectedProvider.fax || '—'"></p>
+                                    <p class="text-sm font-semibold mt-0.5" :style="{ color: selectedProvider.fax ? '#0F1B2D' : '#5A6B82' }" x-text="formatPhoneNumber(selectedProvider.fax)"></p>
                                 </div>
                                 <div class="col-span-2 rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
                                     <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Email</p>
                                     <p class="text-sm font-semibold mt-0.5 break-all" :style="{ color: selectedProvider.email ? '#0F1B2D' : '#5A6B82' }" x-text="selectedProvider.email || '—'"></p>
                                 </div>
-                                <template x-if="selectedProvider.address">
+                                <template x-if="selectedProvider.address || selectedProvider.city">
                                     <div class="col-span-2 rounded px-3 py-2.5" style="background: #F5F5F0; border: 1px solid #E5E5E0;">
                                         <p class="text-xs font-bold uppercase" style="color: #5A6B82; letter-spacing: 0.1em;">Address</p>
-                                        <p class="text-sm font-semibold mt-0.5" style="color: #0F1B2D;" x-text="selectedProvider.address"></p>
+                                        <div class="text-sm font-semibold mt-0.5" style="color: #0F1B2D;">
+                                            <p x-show="selectedProvider.address" x-text="selectedProvider.address"></p>
+                                            <p x-show="selectedProvider.city || selectedProvider.state || selectedProvider.zip">
+                                                <span x-text="selectedProvider.city || ''"></span><span x-show="selectedProvider.city && selectedProvider.state">, </span><span x-text="selectedProvider.state || ''"></span><span x-show="selectedProvider.zip"> </span><span x-text="selectedProvider.zip || ''"></span>
+                                            </p>
+                                        </div>
                                     </div>
                                 </template>
                             </div>
@@ -284,6 +287,10 @@ ob_start();
                             <option value="physician">Physician</option>
                             <option value="surgery_center">Surgery Center</option>
                             <option value="pharmacy">Pharmacy</option>
+                            <option value="acupuncture">Acupuncture</option>
+                            <option value="massage">Massage</option>
+                            <option value="pain_management">Pain Management</option>
+                            <option value="pt">Physical Therapy</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
@@ -301,9 +308,30 @@ ob_start();
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">Address</label>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Street Address</label>
                     <input type="text" x-model="newProvider.address"
                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-v2-text mb-1">City</label>
+                        <input type="text" x-model="newProvider.city"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">State</label>
+                        <input type="text" x-model="newProvider.state" maxlength="2" placeholder="WA"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm uppercase">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">ZIP Code</label>
+                        <input type="text" x-model="newProvider.zip" maxlength="10" placeholder="98036"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-4">
@@ -376,13 +404,157 @@ ob_start();
         </div>
     </div>
 
+    <!-- Edit Provider Modal -->
+    <div x-show="showProviderModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+        <div class="modal-overlay fixed inset-0" @click="showProviderModal = false"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto z-10" @click.stop>
+            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 class="text-lg font-semibold">Edit Provider</h3>
+                <button @click="showProviderModal = false" class="text-v2-text-light hover:text-v2-text-mid">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form @submit.prevent="updateProvider()" class="p-6 space-y-4" x-show="editProvider">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-v2-text mb-1">Provider Name *</label>
+                        <input type="text" x-model="editProvider.name" required
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Type *</label>
+                        <select x-model="editProvider.type" required
+                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                            <option value="hospital">Hospital</option>
+                            <option value="er">Emergency Room</option>
+                            <option value="chiro">Chiropractor</option>
+                            <option value="imaging">Imaging Center</option>
+                            <option value="physician">Physician</option>
+                            <option value="surgery_center">Surgery Center</option>
+                            <option value="pharmacy">Pharmacy</option>
+                            <option value="acupuncture">Acupuncture</option>
+                            <option value="massage">Massage</option>
+                            <option value="pain_management">Pain Management</option>
+                            <option value="pt">Physical Therapy</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Preferred Method</label>
+                        <select x-model="editProvider.preferred_method"
+                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                            <option value="fax">Fax</option>
+                            <option value="email">Email</option>
+                            <option value="portal">Portal</option>
+                            <option value="phone">Phone</option>
+                            <option value="mail">Mail</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Street Address</label>
+                    <input type="text" x-model="editProvider.address"
+                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium text-v2-text mb-1">City</label>
+                        <input type="text" x-model="editProvider.city"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">State</label>
+                        <input type="text" x-model="editProvider.state" maxlength="2" placeholder="WA"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm uppercase">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">ZIP Code</label>
+                        <input type="text" x-model="editProvider.zip" maxlength="10" placeholder="98036"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Phone</label>
+                        <input type="text" x-model="editProvider.phone"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Fax</label>
+                        <input type="text" x-model="editProvider.fax"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Email</label>
+                        <input type="email" x-model="editProvider.email"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Portal URL</label>
+                        <input type="url" x-model="editProvider.portal_url"
+                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Difficulty</label>
+                        <select x-model="editProvider.difficulty_level"
+                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Third party -->
+                <div>
+                    <label class="flex items-center gap-2 text-sm mb-2">
+                        <input type="checkbox" x-model="editProvider.uses_third_party" class="rounded"> Uses third party for records
+                    </label>
+                    <div x-show="editProvider.uses_third_party" class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-v2-text mb-1">Third Party Name</label>
+                            <input type="text" x-model="editProvider.third_party_name"
+                                   class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-v2-text mb-1">Third Party Contact</label>
+                            <input type="text" x-model="editProvider.third_party_contact"
+                                   class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Notes</label>
+                    <textarea x-model="editProvider.notes" rows="2"
+                              class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm"></textarea>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="showProviderModal = false" class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
+                    <button type="submit" :disabled="saving" class="px-4 py-2 text-sm text-white bg-gold rounded-lg hover:bg-gold-hover disabled:opacity-50">
+                        <span x-text="saving ? 'Saving...' : 'Update Provider'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </div>
 
 <script>
 function providersListPage() {
     return {
         providers: [],
-        pagination: null,
         loading: true,
         searchQuery: '',
         typeFilter: '',
@@ -395,11 +567,15 @@ function providersListPage() {
         saving: false,
         detailProvider: null,
         selectedProvider: null,
-        editProvider: null,
+        editProvider: {
+            id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
+            phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+            third_party_name: '', third_party_contact: '', notes: ''
+        },
         newProvider: {
-            name: '', type: 'hospital', preferred_method: 'fax', address: '', phone: '', fax: '', email: '',
-            portal_url: '', difficulty_level: 'medium', uses_third_party: false, third_party_name: '',
-            third_party_contact: '', notes: ''
+            name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
+            phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+            third_party_name: '', third_party_contact: '', notes: ''
         },
 
         getDifficultyStyle(level) {
@@ -428,10 +604,9 @@ function providersListPage() {
             return styles[type] || { background: '#F5F5F0', color: '#5A6B82' };
         },
 
-        async loadData(page = 1) {
+        async loadData() {
             this.loading = true;
             const params = buildQueryString({
-                page,
                 search: this.searchQuery,
                 type: this.typeFilter,
                 difficulty_level: this.difficultyFilter,
@@ -441,7 +616,6 @@ function providersListPage() {
             try {
                 const res = await api.get('providers' + params);
                 this.providers = res.data || [];
-                this.pagination = res.pagination || null;
             } catch (e) {}
             this.loading = false;
         },
@@ -453,7 +627,7 @@ function providersListPage() {
                 this.sortBy = column;
                 this.sortDir = 'asc';
             }
-            this.loadData(1);
+            this.loadData();
         },
 
         async viewProvider(id) {
@@ -472,7 +646,7 @@ function providersListPage() {
                 await api.delete('providers/' + id);
                 showToast('Provider deleted');
                 this.selectedProvider = null;
-                this.loadData(1);
+                this.loadData();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to delete provider', 'error');
             }
@@ -487,13 +661,34 @@ function providersListPage() {
                 showToast('Provider created successfully');
                 this.showCreateModal = false;
                 this.newProvider = {
-                    name: '', type: 'hospital', preferred_method: 'fax', address: '', phone: '', fax: '', email: '',
-                    portal_url: '', difficulty_level: 'medium', uses_third_party: false, third_party_name: '',
-                    third_party_contact: '', notes: ''
+                    name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
+                    phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+                    third_party_name: '', third_party_contact: '', notes: ''
                 };
-                this.loadData(1);
+                this.loadData();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to create provider', 'error');
+            }
+            this.saving = false;
+        },
+
+        async updateProvider() {
+            if (!this.editProvider.id) return;
+            this.saving = true;
+            try {
+                const data = { ...this.editProvider };
+                data.uses_third_party = data.uses_third_party ? 1 : 0;
+                await api.put('providers/' + data.id, data);
+                showToast('Provider updated successfully');
+                this.showProviderModal = false;
+                this.editProvider = {
+                    id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
+                    phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+                    third_party_name: '', third_party_contact: '', notes: ''
+                };
+                this.loadData();
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to update provider', 'error');
             }
             this.saving = false;
         }

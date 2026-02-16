@@ -13,7 +13,7 @@ if (!empty($errors)) {
 }
 
 // Validate type enum
-$allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'other'];
+$allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'acupuncture', 'massage', 'pain_management', 'pt', 'other'];
 if (!validateEnum($input['type'], $allowedTypes)) {
     errorResponse('Invalid provider type. Allowed: ' . implode(', ', $allowedTypes), 422);
 }
@@ -42,7 +42,7 @@ $providerData = [
 
 // Optional fields
 $optionalFields = [
-    'address', 'phone', 'fax', 'email', 'portal_url',
+    'address', 'city', 'state', 'zip', 'phone', 'fax', 'email', 'portal_url',
     'third_party_name', 'third_party_contact', 'notes'
 ];
 
