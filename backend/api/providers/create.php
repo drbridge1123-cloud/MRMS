@@ -1,7 +1,6 @@
 <?php
 // POST /api/providers - Create a new provider
 
-requireAdminOrManager();
 $userId = requireAuth();
 
 $input = getInput();

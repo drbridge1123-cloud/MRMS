@@ -19,7 +19,17 @@ if (!in_array($letterData['request_method'], ['email', 'fax'])) {
     errorResponse('Only email and fax requests can be previewed');
 }
 
-$html = renderRequestLetter($letterData);
+// Use database template if specified, otherwise use hardcoded template
+$subject = '';
+if (!empty($letterData['template_id'])) {
+    $result = renderLetterFromTemplate($letterData['template_id'], $letterData);
+    $html = $result['html'];
+    $subject = $result['subject'];
+} else {
+    $html = renderRequestLetter($letterData);
+    // Generate default subject for hardcoded template
+    $subject = 'Medical Records Request - ' . $letterData['client_name'];
+}
 
 $recipient = $letterData['sent_to']
     ?: ($letterData['request_method'] === 'email'
@@ -33,5 +43,6 @@ successResponse([
     'provider_name' => $letterData['provider_name'],
     'client_name'   => $letterData['client_name'],
     'send_status'   => $letterData['send_status'],
+    'subject'       => $subject,
     'letter_html'   => $html
 ]);

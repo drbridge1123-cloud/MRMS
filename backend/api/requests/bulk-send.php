@@ -68,6 +68,25 @@ foreach ($sendableRequests as $request) {
     // Render letter
     $html = renderRequestLetter($letterData);
 
+    // Load attachments if this is an email request
+    $attachments = [];
+    if ($request['request_method'] === 'email') {
+        $attachmentRecords = dbFetchAll(
+            "SELECT cd.file_path, cd.original_file_name
+             FROM request_attachments ra
+             JOIN case_documents cd ON ra.case_document_id = cd.id
+             WHERE ra.record_request_id = ?",
+            [$requestId]
+        );
+
+        foreach ($attachmentRecords as $att) {
+            $fullPath = __DIR__ . '/../../storage/' . $att['file_path'];
+            if (file_exists($fullPath)) {
+                $attachments[] = $fullPath;
+            }
+        }
+    }
+
     // Mark as sending
     dbUpdate('record_requests', ['send_status' => 'sending'], 'id = ?', [$requestId]);
 
@@ -88,6 +107,10 @@ foreach ($sendableRequests as $request) {
             $emailOptions['smtp_email'] = $sender['smtp_email'];
             $emailOptions['smtp_password'] = $sender['smtp_app_password'];
             $emailOptions['from_name'] = $sender['full_name'];
+        }
+        // Add attachments if any
+        if (!empty($attachments)) {
+            $emailOptions['attachments'] = $attachments;
         }
         $result = sendEmail($recipient, $subject, $html, $emailOptions);
     } elseif ($request['request_method'] === 'fax') {

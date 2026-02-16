@@ -357,6 +357,230 @@ ob_start();
                 </div>
             </div>
 
+            <!-- Documents Section -->
+            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mb-6"
+                x-data="documentUploader(caseId)" x-init="init()">
+                <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
+                    <h3 class="font-semibold text-v2-text">Documents</h3>
+                    <button @click="$refs.fileInput.click()"
+                        class="bg-gold text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gold-hover flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        Upload
+                    </button>
+                </div>
+                <div class="p-6">
+                    <!-- Upload Area -->
+                    <div class="mb-6"
+                        @dragover="handleDragOver($event)"
+                        @dragleave="handleDragLeave()"
+                        @drop="handleDrop($event)">
+                        <!-- Drag and Drop Zone -->
+                        <div class="border-2 border-dashed rounded-lg p-6 text-center transition-colors"
+                            :class="dragOver ? 'border-gold bg-gold/5' : 'border-v2-card-border hover:border-gold/50'">
+                            <input type="file" x-ref="fileInput" @change="handleFileSelect($event)"
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.tif,.tiff"
+                                class="hidden">
+
+                            <template x-if="!selectedFile">
+                                <div>
+                                    <svg class="w-12 h-12 mx-auto text-v2-text-light mb-3" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                    </svg>
+                                    <p class="text-sm text-v2-text mb-1">Drag and drop files here, or</p>
+                                    <button type="button" @click="$refs.fileInput.click()"
+                                        class="text-sm text-gold hover:text-gold-hover font-medium">
+                                        Browse files
+                                    </button>
+                                    <p class="text-xs text-v2-text-light mt-2">PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TIFF (max 10MB)</p>
+                                </div>
+                            </template>
+
+                            <template x-if="selectedFile">
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between bg-v2-bg rounded-lg p-3">
+                                        <div class="flex items-center gap-3">
+                                            <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            <div class="text-left">
+                                                <p class="text-sm font-medium text-v2-text" x-text="selectedFile.name"></p>
+                                                <p class="text-xs text-v2-text-light" x-text="(selectedFile.size / 1024 / 1024).toFixed(2) + ' MB'"></p>
+                                            </div>
+                                        </div>
+                                        <button type="button" @click="selectedFile = null"
+                                            class="text-v2-text-light hover:text-red-500">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- Document Type Selection -->
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-v2-text mb-1">Document Type</label>
+                                            <select x-model="uploadForm.document_type"
+                                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                                                <option value="hipaa_authorization">HIPAA Authorization</option>
+                                                <option value="signed_release">Signed Release</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-v2-text mb-1">Notes (Optional)</label>
+                                            <input type="text" x-model="uploadForm.notes" placeholder="Add notes..."
+                                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                                        </div>
+                                    </div>
+
+                                    <!-- Provider Template Mode -->
+                                    <div class="border-t border-v2-card-border pt-3">
+                                        <label class="flex items-center gap-2 cursor-pointer">
+                                            <input type="checkbox" x-model="uploadForm.is_provider_template"
+                                                class="rounded border-gray-300 text-gold focus:ring-gold">
+                                            <span class="text-xs font-medium text-v2-text">
+                                                This is a provider name template
+                                                <span class="text-v2-text-light">(allows changing provider name for different providers)</span>
+                                            </span>
+                                        </label>
+
+                                        <!-- Template Coordinates (shown when template mode is enabled) -->
+                                        <template x-if="uploadForm.is_provider_template">
+                                            <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+                                                <p class="text-xs text-blue-800 font-medium">Provider Name Location</p>
+                                                <div class="grid grid-cols-2 gap-2">
+                                                    <div>
+                                                        <label class="block text-xs text-blue-700 mb-1">X Position</label>
+                                                        <input type="number" x-model.number="uploadForm.provider_name_x" placeholder="e.g., 50"
+                                                            class="w-full px-2 py-1 border border-blue-300 rounded text-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs text-blue-700 mb-1">Y Position</label>
+                                                        <input type="number" x-model.number="uploadForm.provider_name_y" placeholder="e.g., 100"
+                                                            class="w-full px-2 py-1 border border-blue-300 rounded text-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs text-blue-700 mb-1">Width</label>
+                                                        <input type="number" x-model.number="uploadForm.provider_name_width" placeholder="e.g., 150"
+                                                            class="w-full px-2 py-1 border border-blue-300 rounded text-sm">
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-xs text-blue-700 mb-1">Height</label>
+                                                        <input type="number" x-model.number="uploadForm.provider_name_height" placeholder="e.g., 20"
+                                                            class="w-full px-2 py-1 border border-blue-300 rounded text-sm">
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs text-blue-700 mb-1">Font Size</label>
+                                                    <input type="number" x-model.number="uploadForm.provider_name_font_size" placeholder="e.g., 12"
+                                                        class="w-full px-2 py-1 border border-blue-300 rounded text-sm">
+                                                </div>
+                                                <p class="text-xs text-blue-600 italic">
+                                                    📌 Tip: These coordinates mark where the provider name appears in your PDF. You can adjust them later if needed.
+                                                </p>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Progress Bar -->
+                                    <template x-if="uploading">
+                                        <div>
+                                            <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                                <div class="bg-gold h-2 rounded-full transition-all duration-300"
+                                                    :style="'width: ' + uploadProgress + '%'"></div>
+                                            </div>
+                                            <p class="text-xs text-center text-v2-text-light" x-text="uploadProgress + '%'"></p>
+                                        </div>
+                                    </template>
+
+                                    <!-- Upload Button -->
+                                    <button type="button" @click="uploadDocument()" :disabled="uploading"
+                                        class="w-full px-4 py-2 bg-gold text-white rounded-lg text-sm hover:bg-gold-hover disabled:opacity-50">
+                                        <span x-show="!uploading">Upload Document</span>
+                                        <span x-show="uploading">Uploading...</span>
+                                    </button>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Documents List -->
+                    <template x-if="loading">
+                        <div class="flex justify-center py-8">
+                            <div class="spinner"></div>
+                        </div>
+                    </template>
+
+                    <template x-if="!loading && documents.length === 0">
+                        <p class="text-sm text-v2-text-light text-center py-8">No documents uploaded yet</p>
+                    </template>
+
+                    <template x-if="!loading && documents.length > 0">
+                        <div class="space-y-2">
+                            <template x-for="doc in documents" :key="doc.id">
+                                <div class="flex items-center justify-between p-3 border border-v2-card-border rounded-lg hover:bg-v2-bg transition-colors">
+                                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                                        <div class="flex-shrink-0">
+                                            <div class="w-10 h-10 bg-gold/10 rounded flex items-center justify-center">
+                                                <span class="text-xs font-bold text-gold" x-text="getFileExtension(doc.original_file_name)"></span>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-medium text-v2-text truncate" x-text="doc.original_file_name"></p>
+                                            <div class="flex items-center gap-2 mt-1">
+                                                <span class="text-xs px-2 py-0.5 rounded-full" :class="getDocumentTypeBadgeClass(doc.document_type)"
+                                                    x-text="getDocumentTypeLabel(doc.document_type)"></span>
+                                                <template x-if="doc.is_provider_template == 1">
+                                                    <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800" title="Provider name can be changed">
+                                                        📋 Template
+                                                    </span>
+                                                </template>
+                                                <span class="text-xs text-v2-text-light" x-text="doc.file_size_formatted"></span>
+                                                <span class="text-xs text-v2-text-light" x-text="formatDate(doc.created_at)"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <!-- Generate for Provider button (only for templates) -->
+                                        <template x-if="doc.is_provider_template == 1">
+                                            <button @click="promptGenerateProviderVersion(doc)" title="Generate for Provider"
+                                                class="p-2 text-v2-text-light hover:text-blue-600 hover:bg-blue-50 rounded">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </button>
+                                        </template>
+                                        <button @click="downloadDocument(doc.id)" title="Download"
+                                            class="p-2 text-v2-text-light hover:text-gold hover:bg-gold/10 rounded">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                        </button>
+                                        <button @click="deleteDocument(doc.id, doc.original_file_name)" title="Delete"
+                                            class="p-2 text-v2-text-light hover:text-red-500 hover:bg-red-50 rounded">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
             <!-- Activity Log section -->
             <div class="bg-white rounded-xl shadow-sm border border-v2-card-border">
                 <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
@@ -485,18 +709,6 @@ ob_start();
                     </div>
                     <p x-show="selectedProvider" class="text-sm text-gold mt-1" x-text="selectedProvider?.name"></p>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Treatment Start</label>
-                        <input type="date" x-model="newProvider.treatment_start_date"
-                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Treatment End</label>
-                        <input type="date" x-model="newProvider.treatment_end_date"
-                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                    </div>
-                </div>
                 <div>
                     <label class="block text-sm font-medium text-v2-text mb-1">Record Types Needed</label>
                     <div class="flex flex-wrap gap-2">
@@ -545,8 +757,8 @@ ob_start();
                         <label class="block text-sm font-medium text-v2-text mb-1">Method *</label>
                         <select x-model="newRequest.request_method" required @change="updateSentToByMethod()"
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                            <option value="fax">Fax</option>
                             <option value="email">Email</option>
+                            <option value="fax">Fax</option>
                             <option value="portal">Portal</option>
                             <option value="phone">Phone</option>
                             <option value="mail">Mail</option>
@@ -559,7 +771,7 @@ ob_start();
                         class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                     <p class="text-xs text-v2-text-light mt-1">Defaults to 7 days from today</p>
                 </div>
-                <div>
+                <div x-effect="$dispatch('auto-select-template', { type: newRequest.request_type })">
                     <label class="block text-sm font-medium text-v2-text mb-1">Type</label>
                     <select x-model="newRequest.request_type"
                         class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
@@ -569,17 +781,136 @@ ob_start();
                         <option value="rfd">RFD</option>
                     </select>
                 </div>
+
+                <!-- Template Selector -->
+                <div x-data="templateSelector('medical_records')"
+                    x-init="init(); $watch('selectedTemplateId', val => newRequest.template_id = val)"
+                    @template-selected="newRequest.template_id = $event.detail.templateId"
+                    @auto-select-template.window="
+                        if ($event.detail.type === 'follow_up') {
+                            const followUpTemplate = templates.find(t => t.name.toLowerCase().includes('follow-up'));
+                            if (followUpTemplate) {
+                                selectedTemplateId = followUpTemplate.id;
+                                selectTemplate(followUpTemplate.id);
+                            }
+                        } else if ($event.detail.type === 'initial') {
+                            const defaultTemplate = templates.find(t => t.is_default === 1);
+                            if (defaultTemplate) {
+                                selectedTemplateId = defaultTemplate.id;
+                                selectTemplate(defaultTemplate.id);
+                            }
+                        }
+                    ">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-sm font-medium text-v2-text">Letter Template</label>
+                        <button type="button" @click="previewSelectedTemplate()"
+                            :disabled="!selectedTemplateId"
+                            class="text-xs text-gold hover:text-gold-hover disabled:opacity-50 disabled:cursor-not-allowed">
+                            Preview
+                        </button>
+                    </div>
+                    <select x-model="selectedTemplateId" @change="selectTemplate($event.target.value)"
+                        class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                        <option value="">Select template...</option>
+                        <template x-for="template in templates" :key="template.id">
+                            <option :value="template.id" x-text="template.name + (template.is_default ? ' (Default)' : '')"></option>
+                        </template>
+                    </select>
+                    <p class="text-xs text-v2-text-light mt-1" x-show="selectedTemplate" x-text="selectedTemplate?.description"></p>
+
+                    <!-- Preview Modal -->
+                    <div x-show="showPreview" class="fixed inset-0 z-[60] flex items-center justify-center p-4" style="display:none;">
+                        <div class="modal-overlay fixed inset-0" @click="closePreview()"></div>
+                        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl z-10 max-h-[90vh] overflow-hidden" @click.stop>
+                            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
+                                <h3 class="text-lg font-semibold">Template Preview</h3>
+                                <button type="button" @click="closePreview()" class="text-v2-text-light hover:text-v2-text">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="p-6 overflow-y-auto max-h-[calc(90vh-8rem)]">
+                                <div class="prose max-w-none" x-html="previewHtml"></div>
+                            </div>
+                            <div class="px-6 py-4 border-t border-v2-card-border flex justify-end">
+                                <button type="button" @click="closePreview()" class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-v2-text mb-1">Sent To</label>
                     <input type="text" x-model="newRequest.sent_to"
                         class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm"
                         placeholder="Email or fax number">
                 </div>
-                <label class="flex items-center gap-2 text-sm">
-                    <input type="checkbox" x-model="newRequest.authorization_sent"
-                        class="rounded border-v2-card-border text-gold">
-                    Authorization (HIPAA) attached
-                </label>
+
+                <!-- Document Attachments (for email requests) -->
+                <div x-show="newRequest.request_method === 'email'"
+                    x-data="documentSelector(caseId, currentProvider?.id)"
+                    x-init="init(); $watch('selectedDocumentIds', val => newRequest.document_ids = val)"
+                    @documents-selected="newRequest.document_ids = $event.detail.documentIds"
+                    @document-uploaded.window="loadDocuments()"
+                    @document-generated.window="loadDocuments()">
+                    <div class="border border-v2-card-border rounded-lg p-3">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-v2-text">Attachments</label>
+                            <div class="flex gap-2 text-xs">
+                                <button type="button" @click="selectAll()" :disabled="documents.length === 0"
+                                    class="text-gold hover:text-gold-hover disabled:opacity-50">
+                                    Select All
+                                </button>
+                                <span class="text-v2-text-light">|</span>
+                                <button type="button" @click="deselectAll()" :disabled="selectedDocumentIds.length === 0"
+                                    class="text-gold hover:text-gold-hover disabled:opacity-50">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+
+                        <template x-if="loading">
+                            <div class="text-center py-2">
+                                <div class="spinner-sm inline-block"></div>
+                            </div>
+                        </template>
+
+                        <template x-if="!loading && documents.length === 0">
+                            <p class="text-xs text-v2-text-light text-center py-2">
+                                No documents available. Upload documents in the Documents section above.
+                            </p>
+                        </template>
+
+                        <template x-if="!loading && documents.length > 0">
+                            <div class="space-y-1 max-h-40 overflow-y-auto">
+                                <template x-for="doc in documents" :key="doc.id">
+                                    <label class="flex items-center gap-2 p-2 hover:bg-v2-bg rounded cursor-pointer">
+                                        <input type="checkbox" :value="doc.id"
+                                            @change="toggleDocument(doc.id)"
+                                            :checked="isSelected(doc.id)"
+                                            class="rounded border-v2-card-border text-gold">
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-medium text-v2-text truncate" x-text="doc.original_file_name"></p>
+                                            <div class="flex items-center gap-1 mt-0.5">
+                                                <span class="text-xs px-1.5 py-0.5 rounded" :class="getDocumentTypeBadgeClass(doc.document_type)"
+                                                    x-text="getDocumentTypeLabel(doc.document_type)"></span>
+                                                <span class="text-xs text-v2-text-light" x-text="doc.file_size_formatted"></span>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                        </template>
+
+                        <p class="text-xs text-v2-text-light mt-2" x-show="selectedDocumentIds.length > 0">
+                            <span x-text="selectedDocumentIds.length"></span> document(s) will be attached
+                        </p>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-sm font-medium text-v2-text mb-1">Notes</label>
                     <textarea x-model="newRequest.notes" rows="2"
@@ -693,6 +1024,10 @@ ob_start();
                 <input type="text" x-model="previewData.recipient"
                     class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
                     :placeholder="previewData.method === 'email' ? 'provider@example.com' : '(212) 555-1234'">
+            </div>
+            <div x-show="previewData.subject && previewData.method === 'email'" class="px-6 py-3 border-b border-v2-card-border bg-v2-bg">
+                <label class="block text-sm font-medium text-v2-text mb-1">Subject</label>
+                <div class="px-3 py-2 bg-white border border-v2-card-border rounded-lg text-sm" x-text="previewData.subject"></div>
             </div>
             <div class="flex-1 overflow-y-auto px-6 py-4">
                 <div class="border rounded-lg bg-white shadow-inner">
@@ -827,7 +1162,7 @@ ob_start();
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                             <option value="">Unassigned</option>
                             <option value="1">Ella</option>
-                            <option value="2">Micky</option>
+                            <option value="2">Miki</option>
                         </select>
                     </div>
                 </div>
@@ -887,6 +1222,10 @@ ob_start();
     }
 </style>
 
+<script src="/MRMS/frontend/components/template-selector.js"></script>
+<script src="/MRMS/frontend/components/document-uploader.js"></script>
+<script src="/MRMS/frontend/components/document-selector.js"></script>
+
 <script>
     function caseDetailPage() {
         return {
@@ -910,7 +1249,7 @@ ob_start();
             provSortDir: 'asc',
             expandedProvider: null,
             requestHistory: [],
-            previewData: { method: '', recipient: '', provider_name: '', client_name: '', send_status: '', letter_html: '', request_id: null },
+            previewData: { method: '', recipient: '', provider_name: '', client_name: '', send_status: '', subject: '', letter_html: '', request_id: null },
             sending: false,
             deadlineProvider: null,
             deadlineForm: { deadline: '', reason: '' },
@@ -919,8 +1258,8 @@ ob_start();
             providerSearch: '',
             providerResults: [],
             selectedProvider: null,
-            newProvider: { treatment_start_date: '', treatment_end_date: '', record_types: [], deadline: '' },
-            newRequest: { request_date: new Date().toISOString().split('T')[0], request_method: 'fax', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '' },
+            newProvider: { record_types: [], deadline: '' },
+            newRequest: { request_date: new Date().toISOString().split('T')[0], request_method: 'email', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '', template_id: null, document_ids: [] },
             newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, has_op_report: false, is_complete: false, incomplete_reason: '', file_location: '' },
             newNote: { note_type: 'general', content: '', case_provider_id: '', contact_method: '', contact_date: '' },
             noteFilterProvider: '',
@@ -930,6 +1269,8 @@ ob_start();
                     window.location.href = '/MRMS/frontend/pages/cases/index.php';
                     return;
                 }
+                // Set default deadline (2 weeks from today)
+                this.newProvider.deadline = this.getDefaultDeadline();
                 await Promise.all([this.loadCase(), this.loadProviders(), this.loadNotes()]);
 
                 // Auto-expand provider if cp param is present (from tracker)
@@ -1027,6 +1368,12 @@ ob_start();
                 this.providerResults = [];
             },
 
+            getDefaultDeadline() {
+                const date = new Date();
+                date.setDate(date.getDate() + 14); // 2 weeks from today
+                return date.toISOString().split('T')[0];
+            },
+
             async addProvider() {
                 if (!this.selectedProvider) return;
                 this.saving = true;
@@ -1034,8 +1381,6 @@ ob_start();
                     await api.post('case-providers', {
                         case_id: parseInt(this.caseId),
                         provider_id: this.selectedProvider.id,
-                        treatment_start_date: this.newProvider.treatment_start_date || null,
-                        treatment_end_date: this.newProvider.treatment_end_date || null,
                         record_types_needed: this.newProvider.record_types.join(',') || null,
                         deadline: this.newProvider.deadline || null
                     });
@@ -1043,7 +1388,7 @@ ob_start();
                     this.showAddProviderModal = false;
                     this.selectedProvider = null;
                     this.providerSearch = '';
-                    this.newProvider = { treatment_start_date: '', treatment_end_date: '', record_types: [], deadline: '' };
+                    this.newProvider = { record_types: [], deadline: this.getDefaultDeadline() };
                     await this.loadProviders();
                 } catch (e) {
                     showToast(e.data?.message || 'Failed to add provider', 'error');
@@ -1053,7 +1398,6 @@ ob_start();
 
             openRequestModal(p) {
                 this.currentProvider = p;
-                const defaultMethod = p.preferred_method || 'fax';
 
                 // Default next follow-up: +7 days
                 const nextFollowup = new Date();
@@ -1062,12 +1406,14 @@ ob_start();
 
                 this.newRequest = {
                     request_date: new Date().toISOString().split('T')[0],
-                    request_method: defaultMethod,
+                    request_method: 'email',
                     request_type: p.overall_status === 'not_started' ? 'initial' : 'follow_up',
                     sent_to: '',
                     authorization_sent: true,
                     notes: '',
-                    next_followup_date: nextFollowupStr
+                    next_followup_date: nextFollowupStr,
+                    template_id: null,
+                    document_ids: []
                 };
                 this.updateSentToByMethod();
                 this.showRequestModal = true;
@@ -1087,11 +1433,32 @@ ob_start();
                 this.saving = true;
                 try {
                     const endpoint = this.newRequest.request_type === 'follow_up' ? 'requests/followup' : 'requests';
-                    await api.post(endpoint, {
+                    const response = await api.post(endpoint, {
                         case_provider_id: this.currentProvider.id,
                         ...this.newRequest,
                         authorization_sent: this.newRequest.authorization_sent ? 1 : 0
                     });
+
+                    const requestId = response.data.id;
+
+                    // Attach selected documents if any
+                    if (this.newRequest.document_ids && this.newRequest.document_ids.length > 0) {
+                        for (const documentId of this.newRequest.document_ids) {
+                            // Skip invalid document IDs
+                            if (!documentId || documentId === 0 || documentId === '0') {
+                                continue;
+                            }
+                            try {
+                                await api.post(`requests/${requestId}/attach`, {
+                                    document_id: documentId
+                                });
+                            } catch (attachError) {
+                                // Silently continue - attachment errors are not critical
+                                console.error('Failed to attach document:', attachError);
+                            }
+                        }
+                    }
+
                     showToast('Request logged');
                     this.showRequestModal = false;
                     const cpId = this.currentProvider.id;

@@ -29,6 +29,31 @@ dbDelete('record_requests', 'id = ?', [$requestId]);
 // Also delete any send_log entries
 dbDelete('send_log', 'record_request_id = ?', [$requestId]);
 
+// Recalculate case_provider status based on remaining requests
+$cpId = $request['case_provider_id'];
+$remainingRequests = dbFetchAll(
+    "SELECT request_type, send_status FROM record_requests
+     WHERE case_provider_id = ?
+     ORDER BY request_date DESC",
+    [$cpId]
+);
+
+// Determine new status based on remaining requests
+if (empty($remainingRequests)) {
+    // No requests left - back to pending
+    $newStatus = 'pending';
+} else {
+    $latestRequest = $remainingRequests[0];
+    if ($latestRequest['request_type'] === 'follow_up') {
+        $newStatus = 'follow_up';
+    } else {
+        $newStatus = 'requesting';
+    }
+}
+
+// Update case_provider status
+dbUpdate('case_providers', ['overall_status' => $newStatus], 'id = ?', [$cpId]);
+
 // Log activity
 logActivity($userId, 'request_deleted', 'record_request', $requestId, [
     'case_provider_id' => $request['case_provider_id'],

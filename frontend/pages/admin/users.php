@@ -128,6 +128,11 @@ ob_start();
                     <input type="text" x-model="form.full_name" required
                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 </div>
+                <div>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Job Title</label>
+                    <input type="text" x-model="form.title" placeholder="e.g., Legal Assistant, Paralegal, Attorney"
+                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                </div>
                 <template x-if="!isEditing">
                     <div>
                         <label class="block text-sm font-medium text-v2-text mb-1">Password *</label>
@@ -224,7 +229,7 @@ function usersPage() {
         showModal: false,
         isEditing: false,
         editingId: null,
-        form: { username: '', full_name: '', password: '', role: 'staff' },
+        form: { username: '', full_name: '', title: '', password: '', role: 'staff' },
 
         showResetModal: false,
         resetUser: null,
@@ -261,14 +266,14 @@ function usersPage() {
         openCreateModal() {
             this.isEditing = false;
             this.editingId = null;
-            this.form = { username: '', full_name: '', password: '', role: 'staff' };
+            this.form = { username: '', full_name: '', title: '', password: '', role: 'staff' };
             this.showModal = true;
         },
 
         openEditModal(u) {
             this.isEditing = true;
             this.editingId = u.id;
-            this.form = { username: u.username, full_name: u.full_name, role: u.role, smtp_email: u.smtp_email || '', smtp_app_password: '' };
+            this.form = { username: u.username, full_name: u.full_name, title: u.title || '', role: u.role, smtp_email: u.smtp_email || '', smtp_app_password: '' };
             this.showModal = true;
         },
 
@@ -279,6 +284,7 @@ function usersPage() {
                     const payload = {
                         username: this.form.username,
                         full_name: this.form.full_name,
+                        title: this.form.title || null,
                         role: this.form.role,
                         smtp_email: this.form.smtp_email || null
                     };

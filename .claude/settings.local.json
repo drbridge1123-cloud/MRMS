@@ -27,7 +27,17 @@
       "Bash(find:*)",
       "Bash(grep:*)",
       "Bash(wc -l:*)",
-      "Bash(git merge:*)"
+      "Bash(git merge:*)",
+      "Bash(/c/xampp/mysql/bin/mysql:*)",
+      "Bash(php database/migrate.php:*)",
+      "Bash(php -l:*)",
+      "Bash(php check_template.php:*)",
+      "Bash(php:*)",
+      "Bash(ls:*)",
+      "Bash(composer install:*)",
+      "Bash(where:*)",
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root mrms -e \"UPDATE users SET smtp_email = ''bridgelawpllc@gmail.com'' WHERE username = ''miki''; UPDATE users SET smtp_email = ''ella.bridgelaw@gmail.com'' WHERE username = ''ella'';\")",
+      "Bash(/c/xampp/mysql/bin/mysql.exe:*)"
     ]
   }
 }

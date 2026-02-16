@@ -42,7 +42,7 @@ ob_start();
         </div>
 
         <!-- Create button -->
-        <button x-show="$store.auth.isAdminOrManager" @click="showCreateModal = true"
+        <button @click="showCreateModal = true"
                 class="bg-gold text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gold-hover transition-colors flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New Case
@@ -283,7 +283,7 @@ function casesListPage() {
                 // Simple fetch of users - we'll use a basic endpoint
                 this.users = [
                     { id: 1, full_name: 'Ella' },
-                    { id: 2, full_name: 'Micky' }
+                    { id: 2, full_name: 'Miki' }
                 ];
             } catch (e) {}
         }

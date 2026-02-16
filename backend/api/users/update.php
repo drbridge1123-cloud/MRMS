@@ -22,6 +22,10 @@ if (isset($input['full_name']) && trim($input['full_name']) !== '') {
     $data['full_name'] = sanitizeString($input['full_name']);
 }
 
+if (array_key_exists('title', $input)) {
+    $data['title'] = $input['title'] ? sanitizeString($input['title']) : null;
+}
+
 if (isset($input['username']) && trim($input['username']) !== '') {
     $newUsername = sanitizeString($input['username']);
     if ($newUsername !== $user['username']) {
@@ -58,7 +62,7 @@ dbUpdate('users', $data, 'id = ?', [$targetId]);
 logActivity($currentUserId, 'user_updated', 'user', $targetId, $data);
 
 $updated = dbFetchOne(
-    "SELECT id, username, full_name, email, smtp_email, role, is_active, created_at, updated_at FROM users WHERE id = ?",
+    "SELECT id, username, full_name, title, email, smtp_email, role, is_active, created_at, updated_at FROM users WHERE id = ?",
     [$targetId]
 );
 

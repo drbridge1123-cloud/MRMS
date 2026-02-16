@@ -38,7 +38,34 @@ if (empty($recipient)) {
 }
 
 // Render letter
-$html = renderRequestLetter($letterData);
+// Use database template if specified, otherwise use hardcoded template
+$subject = '';
+if (!empty($letterData['template_id'])) {
+    $result = renderLetterFromTemplate($letterData['template_id'], $letterData);
+    $html = $result['html'];
+    $subject = $result['subject'];
+} else {
+    $html = renderRequestLetter($letterData);
+}
+
+// Load attachments if this is an email request
+$attachments = [];
+if ($letterData['request_method'] === 'email') {
+    $attachmentRecords = dbFetchAll(
+        "SELECT cd.file_path, cd.original_file_name
+         FROM request_attachments ra
+         JOIN case_documents cd ON ra.case_document_id = cd.id
+         WHERE ra.record_request_id = ?",
+        [$requestId]
+    );
+
+    foreach ($attachmentRecords as $att) {
+        $fullPath = __DIR__ . '/../../storage/' . $att['file_path'];
+        if (file_exists($fullPath)) {
+            $attachments[] = $fullPath;
+        }
+    }
+}
 
 // Mark as sending
 dbUpdate('record_requests', [
@@ -50,10 +77,13 @@ dbUpdate('record_requests', [
 $result = ['success' => false, 'error' => 'Unknown method'];
 
 if ($letterData['request_method'] === 'email') {
-    $doiFormatted = !empty($letterData['doi']) ? date('m/d/Y', strtotime($letterData['doi'])) : '';
-    $subject = 'Medical Records Request - ' . $letterData['client_name'];
-    if ($doiFormatted) {
-        $subject .= ' (DOI: ' . $doiFormatted . ')';
+    // Use template subject if available, otherwise generate default
+    if (empty($subject)) {
+        $doiFormatted = !empty($letterData['doi']) ? date('m/d/Y', strtotime($letterData['doi'])) : '';
+        $subject = 'Medical Records Request - ' . $letterData['client_name'];
+        if ($doiFormatted) {
+            $subject .= ' (DOI: ' . $doiFormatted . ')';
+        }
     }
     // Use per-user SMTP if configured
     $emailOptions = [];
@@ -62,6 +92,10 @@ if ($letterData['request_method'] === 'email') {
         $emailOptions['smtp_email'] = $sender['smtp_email'];
         $emailOptions['smtp_password'] = $sender['smtp_app_password'];
         $emailOptions['from_name'] = $sender['full_name'];
+    }
+    // Add attachments if any
+    if (!empty($attachments)) {
+        $emailOptions['attachments'] = $attachments;
     }
     $result = sendEmail($recipient, $subject, $html, $emailOptions);
 } elseif ($letterData['request_method'] === 'fax') {

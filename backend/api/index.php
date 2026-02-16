@@ -24,6 +24,7 @@ require_once __DIR__ . '/../helpers/email.php';
 require_once __DIR__ . '/../helpers/fax.php';
 require_once __DIR__ . '/../helpers/letter-template.php';
 require_once __DIR__ . '/../helpers/escalation.php';
+require_once __DIR__ . '/../helpers/file-upload.php';
 
 // Clean any unexpected output from file loading
 ob_end_clean();
@@ -158,11 +159,63 @@ switch ($resource) {
         } elseif ($method === 'POST' && $id && $action === 'send') {
             $_GET['id'] = $id;
             require __DIR__ . '/requests/send.php';
+        } elseif ($method === 'POST' && $id && $action === 'attach') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/requests/attach.php';
+        } elseif ($method === 'DELETE' && $id && $action === 'attachments') {
+            $_GET['id'] = $id;
+            $_GET['document_id'] = $subaction;
+            require __DIR__ . '/requests/detach.php';
         } elseif ($method === 'DELETE' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/requests/delete.php';
         } else {
             errorResponse('Request endpoint not found', 404);
+        }
+        break;
+
+    case 'templates':
+        if ($method === 'GET' && !$id) {
+            require __DIR__ . '/templates/list.php';
+        } elseif ($method === 'GET' && $id && $action === 'versions') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/templates/versions.php';
+        } elseif ($method === 'GET' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/templates/get.php';
+        } elseif ($method === 'POST' && $id === 'preview') {
+            require __DIR__ . '/templates/preview.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/templates/create.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/templates/update.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/templates/delete.php';
+        } else {
+            errorResponse('Template endpoint not found', 404);
+        }
+        break;
+
+    case 'documents':
+        if ($method === 'POST' && $id === 'upload') {
+            require __DIR__ . '/documents/upload.php';
+        } elseif ($method === 'POST' && $id === 'generate-provider-version') {
+            require __DIR__ . '/documents/generate-provider-version.php';
+        } elseif ($method === 'GET' && !$id) {
+            require __DIR__ . '/documents/list.php';
+        } elseif ($method === 'GET' && $id && $action === 'download') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/documents/download.php';
+        } elseif ($method === 'GET' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/documents/get.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/documents/delete.php';
+        } else {
+            errorResponse('Document endpoint not found', 404);
         }
         break;
 

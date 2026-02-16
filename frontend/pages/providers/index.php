@@ -46,7 +46,7 @@ ob_start();
             </select>
         </div>
 
-        <button x-show="$store.auth.isAdminOrManager" @click="showCreateModal = true"
+        <button @click="showCreateModal = true"
                 class="bg-gold text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gold-hover flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             New Provider
@@ -230,29 +230,24 @@ ob_start();
 
                     <!-- Footer -->
                     <div class="px-6 py-4 flex items-center gap-3" style="border-top: 1px solid #E5E5E0; background: #F5F5F0;">
-                        <template x-if="$store.auth.isAdminOrManager">
-                            <div class="flex items-center gap-3 w-full">
-                                <button
-                                    @click="editProvider = selectedProvider; showProviderModal = true; selectedProvider = null"
-                                    class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded text-sm font-bold"
-                                    style="background: #0F1B2D; color: #C9A84C;"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    Edit Provider
-                                </button>
-                                <button
-                                    @click="deleteProvider(selectedProvider.id, selectedProvider.name)"
-                                    class="flex items-center justify-center gap-2 px-5 py-2.5 rounded text-sm font-bold"
-                                    style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </template>
-                        <template x-if="$store.auth.isStaff">
-                            <p class="text-xs italic text-center w-full" style="color: #5A6B82;">View only — contact manager to edit</p>
-                        </template>
+                        <div class="flex items-center gap-3 w-full">
+                            <button
+                                @click="editProvider = selectedProvider; showProviderModal = true; selectedProvider = null"
+                                class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded text-sm font-bold"
+                                style="background: #0F1B2D; color: #C9A84C;"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Edit Provider
+                            </button>
+                            <button
+                                @click="deleteProvider(selectedProvider.id, selectedProvider.name)"
+                                class="flex items-center justify-center gap-2 px-5 py-2.5 rounded text-sm font-bold"
+                                style="background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA;"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             </template>

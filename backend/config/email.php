@@ -17,12 +17,12 @@ define('FAX_CALLER_ID', '');                    // Firm's fax number (E.164 form
 define('FAX_CALLBACK_URL', '');                 // Optional webhook URL for delivery status
 
 // Firm letterhead info
-define('FIRM_NAME', 'Bridge Law & Associates');
-define('FIRM_ADDRESS', '123 Main Street, Suite 400');
-define('FIRM_CITY_STATE_ZIP', 'New York, NY 10001');
-define('FIRM_PHONE', '(212) 555-1234');
-define('FIRM_FAX', '(212) 555-1235');
-define('FIRM_EMAIL', 'records@bridgelawassociates.com');
+define('FIRM_NAME', 'Bridge Law & Associates, PLLC');
+define('FIRM_ADDRESS', '6628 212th St SW, Suite 100');
+define('FIRM_CITY_STATE_ZIP', 'Lynnwood, WA 98036');
+define('FIRM_PHONE', '425-678-0436');
+define('FIRM_FAX', '425-582-0819');
+define('FIRM_EMAIL', 'bridgelawpllc@gmail.com');
 
 // Send settings
 define('SEND_TIMEOUT', 30);

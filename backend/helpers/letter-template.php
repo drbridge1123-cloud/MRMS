@@ -3,9 +3,16 @@
  * Render a Medical Records Request Letter as HTML.
  *
  * @param array $data Letter data from getRequestLetterData()
+ * @param int|null $templateId Optional template ID to use instead of hardcoded template
  * @return string Full HTML document
  */
-function renderRequestLetter($data) {
+function renderRequestLetter($data, $templateId = null) {
+    // If template ID provided, use database template
+    if ($templateId) {
+        return renderLetterFromTemplate($templateId, $data);
+    }
+
+    // Otherwise use hardcoded template (backward compatible)
     $requestDate = !empty($data['request_date'])
         ? date('F j, Y', strtotime($data['request_date']))
         : date('F j, Y');
@@ -108,8 +115,10 @@ function renderRequestLetter($data) {
 <div class="letter">
     <div class="letterhead">
         <div class="firm-name">{$firmName}</div>
-        <div class="firm-info">{$firmAddress} | {$firmCSZ}</div>
-        <div class="firm-info">Tel: {$firmPhone} | Fax: {$firmFax} | {$firmEmail}</div>
+        <div class="firm-info">
+            {$firmAddress}, {$firmCSZ}<br>
+            Phone: {$firmPhone} | Fax: {$firmFax} | Email: {$firmEmail}
+        </div>
     </div>
 
     <div class="date">{$requestDate}</div>
@@ -199,6 +208,7 @@ function getRequestLetterData($requestId) {
             rr.authorization_sent,
             rr.notes,
             rr.send_status,
+            rr.template_id,
             cp.treatment_start_date,
             cp.treatment_end_date,
             cp.record_types_needed AS record_types,
@@ -284,8 +294,10 @@ function renderHealthLedgerLetter($data) {
 <div class="letter">
     <div class="letterhead">
         <div class="firm-name">{$firmName}</div>
-        <div class="firm-info">{$firmAddress} | {$firmCSZ}</div>
-        <div class="firm-info">Tel: {$firmPhone} | Fax: {$firmFax} | {$firmEmail}</div>
+        <div class="firm-info">
+            {$firmAddress}, {$firmCSZ}<br>
+            Phone: {$firmPhone} | Fax: {$firmFax} | Email: {$firmEmail}
+        </div>
     </div>
 
     <div class="date">{$requestDate}</div>
@@ -481,8 +493,8 @@ function renderBulkRequestLetter($casesData, $commonData) {
         <div class="letterhead">
             <div class="firm-name">{$firmName}</div>
             <div class="firm-info">
-                {$firmAddress} &bull; {$firmCSZ}<br>
-                Phone: {$firmPhone} &bull; Fax: {$firmFax} &bull; Email: {$firmEmail}
+                {$firmAddress}, {$firmCSZ}<br>
+                Phone: {$firmPhone} | Fax: {$firmFax} | Email: {$firmEmail}
             </div>
         </div>
 
@@ -532,4 +544,222 @@ function renderBulkRequestLetter($casesData, $commonData) {
 </body>
 </html>
 HTML;
+}
+
+/**
+ * Render letter from database template with placeholder substitution
+ *
+ * @param int $templateId Template ID from letter_templates table
+ * @param array $data Letter data (from getRequestLetterData)
+ * @return string Rendered HTML
+ */
+function renderLetterFromTemplate($templateId, $data) {
+    $template = dbFetchOne("SELECT * FROM letter_templates WHERE id = ? AND is_active = 1", [$templateId]);
+
+    if (!$template) {
+        // Fallback to hardcoded template if template not found
+        return renderRequestLetter($data);
+    }
+
+    // Process placeholders in body template
+    $html = processTemplatePlaceholders($template['body_template'], $data);
+
+    // Process subject template if exists
+    $subject = '';
+    if (!empty($template['subject_template'])) {
+        $subject = processTemplatePlaceholders($template['subject_template'], $data);
+        // Subject should be plain text, strip any HTML tags
+        $subject = strip_tags($subject);
+    }
+
+    return [
+        'subject' => $subject,
+        'html' => $html
+    ];
+}
+
+/**
+ * Process {{placeholder}} variables in template
+ * Supports: {{variable}}, {{variable|date:format}}, {{#if variable}}...{{/if}}, {{variable|default:value}}
+ *
+ * @param string $template Template HTML with placeholders
+ * @param array $data Data to substitute
+ * @return string Processed template with values substituted
+ */
+function processTemplatePlaceholders($template, $data) {
+    // Load firm config
+    require_once __DIR__ . '/../config/email.php';
+
+    // Build placeholder map
+    $placeholders = [
+        // Firm info
+        'firm_name' => FIRM_NAME,
+        'firm_address' => FIRM_ADDRESS,
+        'firm_city_state_zip' => FIRM_CITY_STATE_ZIP,
+        'firm_phone' => FIRM_PHONE,
+        'firm_fax' => FIRM_FAX,
+        'firm_email' => FIRM_EMAIL,
+
+        // Provider info
+        'provider_name' => $data['provider_name'] ?? '',
+        'provider_address' => $data['provider_address'] ?? '',
+        'provider_email' => $data['provider_email'] ?? '',
+        'provider_fax' => $data['provider_fax'] ?? '',
+
+        // Client/Case info
+        'client_name' => $data['client_name'] ?? '',
+        'client_dob' => $data['client_dob'] ?? '',
+        'doi' => $data['doi'] ?? '',
+        'case_number' => $data['case_number'] ?? '',
+        'attorney_name' => $data['attorney_name'] ?? '',
+
+        // Request info
+        'request_date' => $data['request_date'] ?? date('Y-m-d'),
+        'treatment_start_date' => $data['treatment_start_date'] ?? '',
+        'treatment_end_date' => $data['treatment_end_date'] ?? '',
+        'notes' => $data['notes'] ?? '',
+
+        // Boolean flags
+        'authorization_sent' => !empty($data['authorization_sent']),
+
+        // Computed fields
+        'record_types_list' => '', // Will be generated below
+    ];
+
+    // Generate record types list HTML
+    $recordTypeLabels = [
+        'medical_records' => 'Complete Medical Records (including office/chart notes, diagnostic studies, and test results)',
+        'billing' => 'Itemized Billing Statements',
+        'chart' => 'Chart/Progress Notes',
+        'imaging' => 'Imaging Studies (X-rays, MRI, CT scans) and Radiology Reports',
+        'op_report' => 'Operative Reports',
+    ];
+    $requestedTypes = [];
+    if (!empty($data['record_types'])) {
+        foreach (explode(',', $data['record_types']) as $type) {
+            $type = trim($type);
+            if (isset($recordTypeLabels[$type])) {
+                $requestedTypes[] = $recordTypeLabels[$type];
+            }
+        }
+    }
+    if (empty($requestedTypes)) {
+        $requestedTypes[] = 'Complete Medical Records and Billing';
+    }
+
+    $recordsHtml = '<ol style="margin: 0; padding-left: 20px;">';
+    foreach ($requestedTypes as $recordType) {
+        $recordsHtml .= '<li style="margin-bottom: 5px;">' . htmlspecialchars($recordType) . '</li>';
+    }
+    $recordsHtml .= '</ol>';
+    $placeholders['record_types_list'] = $recordsHtml;
+
+    // Process conditional blocks: {{#if variable}}...{{else}}...{{/if}}
+    $template = preg_replace_callback(
+        '/\{\{#if\s+(\w+)\}\}(.*?)(?:\{\{else\}\}(.*?))?\{\{\/if\}\}/s',
+        function($matches) use ($placeholders) {
+            $variable = $matches[1];
+            $ifContent = $matches[2];
+            $elseContent = $matches[3] ?? '';
+
+            $value = $placeholders[$variable] ?? null;
+            $condition = !empty($value) && $value !== false;
+
+            return $condition ? $ifContent : $elseContent;
+        },
+        $template
+    );
+
+    // Process placeholders with filters: {{variable|filter:param}}
+    $template = preg_replace_callback(
+        '/\{\{(\w+)(?:\|(\w+)(?::([^}]+))?)?\}\}/',
+        function($matches) use ($placeholders) {
+            $variable = $matches[1];
+            $filter = $matches[2] ?? null;
+            $param = $matches[3] ?? null;
+
+            $value = $placeholders[$variable] ?? '';
+
+            // Apply filters
+            if ($filter === 'date' && !empty($value)) {
+                $format = $param ?? 'm/d/Y';
+                try {
+                    $value = date($format, strtotime($value));
+                } catch (Exception $e) {
+                    $value = ''; // Invalid date
+                }
+            } elseif ($filter === 'default' && empty($value)) {
+                $value = $param ?? '';
+            }
+
+            // Escape HTML (but not for record_types_list which is already HTML)
+            if ($variable !== 'record_types_list') {
+                $value = htmlspecialchars((string)$value);
+            }
+
+            return $value;
+        },
+        $template
+    );
+
+    return $template;
+}
+
+/**
+ * Get available placeholders for template type
+ *
+ * @param string $templateType Template type (medical_records, health_ledger, etc.)
+ * @return array List of available placeholders with descriptions
+ */
+function getAvailablePlaceholders($templateType) {
+    $commonPlaceholders = [
+        'firm_name' => 'Law firm name',
+        'firm_address' => 'Law firm address',
+        'firm_city_state_zip' => 'Law firm city, state, zip',
+        'firm_phone' => 'Law firm phone number',
+        'firm_fax' => 'Law firm fax number',
+        'firm_email' => 'Law firm email',
+    ];
+
+    $medicalRecordsPlaceholders = [
+        'provider_name' => 'Medical provider name',
+        'provider_address' => 'Medical provider full address',
+        'provider_email' => 'Medical provider email',
+        'provider_fax' => 'Medical provider fax',
+        'client_name' => 'Client/patient full name',
+        'client_dob' => 'Client date of birth (raw date)',
+        'client_dob|date:m/d/Y' => 'Client date of birth (formatted)',
+        'doi' => 'Date of injury (raw date)',
+        'doi|date:m/d/Y' => 'Date of injury (formatted)',
+        'case_number' => 'Case number',
+        'attorney_name' => 'Attorney name',
+        'request_date' => 'Request date (raw date)',
+        'request_date|date:F j, Y' => 'Request date (formatted)',
+        'treatment_start_date' => 'Treatment start date (raw)',
+        'treatment_start_date|date:m/d/Y' => 'Treatment start date (formatted)',
+        'treatment_end_date' => 'Treatment end date (raw)',
+        'treatment_end_date|date:m/d/Y' => 'Treatment end date (formatted)',
+        'record_types_list' => 'HTML list of requested record types',
+        'notes' => 'Additional notes',
+        'authorization_sent' => 'Boolean: true if authorization was sent',
+        '{{#if authorization_sent}}...{{/if}}' => 'Conditional: show if authorization sent',
+        '{{variable|default:Default Text}}' => 'Use default value if variable is empty',
+    ];
+
+    $healthLedgerPlaceholders = [
+        'insurance_carrier' => 'Insurance carrier name',
+        'claim_number' => 'Insurance claim number',
+        'policy_number' => 'Insurance policy number',
+        // Add more as needed
+    ];
+
+    switch ($templateType) {
+        case 'medical_records':
+        case 'bulk_request':
+            return array_merge($commonPlaceholders, $medicalRecordsPlaceholders);
+        case 'health_ledger':
+            return array_merge($commonPlaceholders, $healthLedgerPlaceholders);
+        default:
+            return $commonPlaceholders;
+    }
 }

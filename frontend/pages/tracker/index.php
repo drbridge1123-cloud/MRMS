@@ -302,24 +302,6 @@ ob_start();
                     </tbody>
                 </table>
             </div>
-
-            <!-- Pagination -->
-            <template x-if="pagination && pagination.total_pages > 1">
-                <div class="px-6 py-3 border-t border-v2-card-border flex items-center justify-between">
-                    <span class="text-sm text-v2-text-light"
-                          x-text="'Showing ' + ((pagination.page - 1) * pagination.per_page + 1) + '-' + Math.min(pagination.page * pagination.per_page, pagination.total) + ' of ' + pagination.total"></span>
-                    <div class="flex gap-2">
-                        <button @click="loadData(pagination.page - 1)" :disabled="pagination.page <= 1"
-                                class="px-3 py-1.5 text-sm border rounded-lg hover:bg-v2-bg disabled:opacity-40 disabled:cursor-not-allowed">
-                            Prev
-                        </button>
-                        <button @click="loadData(pagination.page + 1)" :disabled="pagination.page >= pagination.total_pages"
-                                class="px-3 py-1.5 text-sm border rounded-lg hover:bg-v2-bg disabled:opacity-40 disabled:cursor-not-allowed">
-                            Next
-                        </button>
-                    </div>
-                </div>
-            </template>
         </div>
     </template>
 
@@ -623,7 +605,7 @@ function trackerPage() {
         async loadData(page) {
             this.loading = true;
             try {
-                let params = `?page=${page}&per_page=50`;
+                let params = `?per_page=99999`;
                 if (this.search) params += `&search=${encodeURIComponent(this.search)}`;
                 if (this.statusFilter) params += `&status=${this.statusFilter}`;
                 if (this.activeFilter) params += `&filter=${this.activeFilter}`;

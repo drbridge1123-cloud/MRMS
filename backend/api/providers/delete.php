@@ -1,7 +1,6 @@
 <?php
 // DELETE /api/providers/{id} - Delete a provider
 
-requireAdminOrManager();
 $userId = requireAuth();
 
 $providerId = (int)($_GET['id'] ?? 0);

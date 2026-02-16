@@ -50,9 +50,48 @@ const api = {
     post: (endpoint, body) => apiCall(endpoint, { method: 'POST', body }),
     put: (endpoint, body) => apiCall(endpoint, { method: 'PUT', body }),
     delete: (endpoint) => apiCall(endpoint, { method: 'DELETE' }),
-    upload: async (endpoint, formData) => {
+    upload: async (endpoint, formData, onProgress) => {
         const url = `${API_BASE}/${endpoint}`;
         try {
+            // Use XMLHttpRequest if progress callback is provided
+            if (onProgress && typeof onProgress === 'function') {
+                return new Promise((resolve, reject) => {
+                    const xhr = new XMLHttpRequest();
+
+                    xhr.upload.addEventListener('progress', (e) => {
+                        if (e.lengthComputable) {
+                            const percentComplete = (e.loaded / e.total) * 100;
+                            onProgress(Math.round(percentComplete));
+                        }
+                    });
+
+                    xhr.addEventListener('load', () => {
+                        try {
+                            const data = JSON.parse(xhr.responseText);
+                            if (xhr.status === 401) {
+                                window.location.href = '/MRMS/frontend/pages/auth/login.php';
+                                return;
+                            }
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                resolve(data);
+                            } else {
+                                reject({ response: { status: xhr.status }, data });
+                            }
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+
+                    xhr.addEventListener('error', () => {
+                        reject(new Error('Upload failed'));
+                    });
+
+                    xhr.open('POST', url);
+                    xhr.send(formData);
+                });
+            }
+
+            // Fall back to fetch if no progress callback
             const response = await fetch(url, { method: 'POST', body: formData });
             const data = await response.json();
             if (response.status === 401) {
