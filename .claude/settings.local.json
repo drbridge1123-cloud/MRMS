@@ -26,7 +26,8 @@
       "Bash(/c/xampp/php/php.exe:*)",
       "Bash(find:*)",
       "Bash(grep:*)",
-      "Bash(wc -l:*)"
+      "Bash(wc -l:*)",
+      "Bash(git merge:*)"
     ]
   }
 }
