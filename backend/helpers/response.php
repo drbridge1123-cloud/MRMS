@@ -1,5 +1,10 @@
 <?php
 function jsonResponse($data, $statusCode = 200) {
+    // Clean any output buffer content to prevent HTML/PHP errors from corrupting JSON
+    if (ob_get_level() > 0) {
+        ob_clean();
+    }
+
     http_response_code($statusCode);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data, JSON_UNESCAPED_UNICODE);

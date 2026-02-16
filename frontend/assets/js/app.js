@@ -32,10 +32,14 @@ async function apiCall(endpoint, options = {}) {
         return data;
     } catch (error) {
         if (error.data) {
+            // This is an API error with a proper response, just throw it
             throw error;
         }
-        console.error('API call failed:', error);
-        showToast('Network error. Please try again.', 'error');
+        // Only log unexpected network errors, not API validation errors
+        if (error.name !== 'AbortError') {
+            console.error('API call failed:', error);
+            showToast('Network error. Please try again.', 'error');
+        }
         throw error;
     }
 }

@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ngrok version:*)",
+      "Bash(ngrok http:*)",
+      "Bash(ngrok config add-authtoken:*)",
+      "Bash(php -r:*)",
+      "Bash(/xampp/php/php:*)",
+      "Bash(cmd //c \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe -u root < database\\\\schema.sql\")",
+      "Bash(cmd //c \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe -u root < database\\\\seed.sql\")",
+      "Bash(cmd //c \"C:\\\\xampp\\\\php\\\\php.exe -r \"\"echo password_verify\\(''password'', ''$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi''\\) ? ''Match'' : ''No match'';\"\"\")",
+      "Bash(cmd //c \"C:\\\\xampp\\\\php\\\\php.exe test_password.php\")",
+      "Bash(cmd //c \"C:\\\\xampp\\\\php\\\\php.exe check_db.php\")",
+      "Bash(curl:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(cmd //c \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe -u root mrms_db < database\\\\migrations\\\\002_send_capabilities.sql\")",
+      "Bash(cmd //c:*)",
+      "Bash(mysql:*)",
+      "Bash(c:/xampp/mysql/bin/mysql.exe:*)",
+      "Bash(./mysql:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(git checkout:*)",
+      "Bash(/c/xampp/php/php.exe:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(wc -l:*)"
+    ]
+  }
+}

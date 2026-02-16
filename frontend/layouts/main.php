@@ -4,9 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $pageTitle ?? 'MRMS' ?> - Medical Records Management System</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230F1B2D' width='100' height='100' rx='20'/><text x='50' y='65' font-size='48' font-weight='bold' text-anchor='middle' fill='%23C9A84C' font-family='sans-serif'>M</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        // Suppress Tailwind CDN production warning
+        const _warn = console.warn;
+        console.warn = (...args) => {
+            const msg = args.join(' ');
+            if (msg.includes('cdn.tailwindcss.com') || msg.includes('Tailwind')) return;
+            _warn.apply(console, args);
+        };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {

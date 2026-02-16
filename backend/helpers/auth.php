@@ -3,6 +3,15 @@ require_once __DIR__ . '/../config/auth.php';
 
 function startSecureSession() {
     if (session_status() === PHP_SESSION_NONE) {
+        // Configure session cookie parameters for HTTPS/ngrok
+        session_set_cookie_params([
+            'lifetime' => SESSION_LIFETIME,
+            'path' => '/MRMS',
+            'domain' => '',
+            'secure' => true,  // HTTPS only
+            'httponly' => true,
+            'samesite' => 'Lax'
+        ]);
         session_name(SESSION_NAME);
         session_start();
     }

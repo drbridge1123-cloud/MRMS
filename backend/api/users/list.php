@@ -3,7 +3,13 @@ if ($method !== 'GET') {
     errorResponse('Method not allowed', 405);
 }
 
-requireAdmin();
+// If only requesting active users (for dropdowns), allow all authenticated users
+// Otherwise require admin access for full user management
+if (isset($_GET['active_only']) && $_GET['active_only'] == '1') {
+    requireAuth();
+} else {
+    requireAdmin();
+}
 
 [$page, $perPage, $offset] = getPaginationParams();
 
@@ -43,8 +49,13 @@ $sortDir = ($_GET['sort_dir'] ?? 'asc') === 'desc' ? 'DESC' : 'ASC';
 
 $total = dbFetchOne("SELECT COUNT(*) as cnt FROM users WHERE {$whereClause}", $params)['cnt'];
 
+// Select only basic fields for dropdowns (active_only), full fields for admin
+$selectFields = (isset($_GET['active_only']) && $_GET['active_only'] == '1')
+    ? "id, username, full_name, role"
+    : "id, username, full_name, email, smtp_email, role, is_active, created_at, updated_at";
+
 $users = dbFetchAll(
-    "SELECT id, username, full_name, email, smtp_email, role, is_active, created_at, updated_at
+    "SELECT {$selectFields}
      FROM users WHERE {$whereClause} ORDER BY {$sortBy} {$sortDir} LIMIT ? OFFSET ?",
     array_merge($params, [$perPage, $offset])
 );

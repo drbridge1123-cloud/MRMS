@@ -2,10 +2,20 @@
 require_once __DIR__ . '/../config/database.php';
 
 function dbQuery($sql, $params = []) {
-    $pdo = getDBConnection();
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    return $stmt;
+    try {
+        $pdo = getDBConnection();
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt;
+    } catch (PDOException $e) {
+        // Log error to file for debugging (not shown to user)
+        error_log("Database error: " . $e->getMessage() . " | SQL: " . $sql);
+        // Return a proper error response
+        if (function_exists('errorResponse')) {
+            errorResponse('Database error occurred', 500);
+        }
+        throw $e;
+    }
 }
 
 function dbFetchAll($sql, $params = []) {

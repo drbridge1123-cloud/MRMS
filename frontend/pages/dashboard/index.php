@@ -119,7 +119,165 @@ ob_start();
         </div>
     </template>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Staff Workload & System Health Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <!-- Staff Workload Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border">
+            <div class="px-6 py-4 border-b border-v2-card-border">
+                <h2 class="font-semibold text-v2-text">
+                    <span x-show="staffMetrics.view_type === 'personal'">My Workload</span>
+                    <span x-show="staffMetrics.view_type === 'team'">Team Workload</span>
+                </h2>
+            </div>
+            <div class="p-6">
+                <!-- Personal View (Staff) -->
+                <template x-if="staffMetrics.view_type === 'personal'">
+                    <div>
+                        <div class="grid grid-cols-3 gap-4 mb-4">
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-v2-text" x-text="staffMetrics.my_metrics?.my_cases || 0"></p>
+                                <p class="text-xs text-v2-text-light mt-1">My Cases</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-orange-600" x-text="staffMetrics.my_metrics?.my_followup || 0"></p>
+                                <p class="text-xs text-v2-text-light mt-1">Followups Due</p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-2xl font-bold text-red-600" x-text="staffMetrics.my_metrics?.my_overdue || 0"></p>
+                                <p class="text-xs text-v2-text-light mt-1">Overdue</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-v2-card-border pt-3 mt-3">
+                            <p class="text-xs text-v2-text-light mb-2">Team Average</p>
+                            <div class="flex gap-4 text-xs">
+                                <div>Cases: <span class="font-medium" x-text="staffMetrics.team_avg?.avg_cases || 0"></span></div>
+                                <div>Followups: <span class="font-medium" x-text="staffMetrics.team_avg?.avg_followup || 0"></span></div>
+                                <div>Overdue: <span class="font-medium" x-text="staffMetrics.team_avg?.avg_overdue || 0"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- Team View (Manager/Admin) -->
+                <template x-if="staffMetrics.view_type === 'team'">
+                    <div>
+                        <div class="mb-4 grid grid-cols-3 gap-4 text-center">
+                            <div>
+                                <p class="text-2xl font-bold text-v2-text" x-text="staffMetrics.totals?.total_cases || 0"></p>
+                                <p class="text-xs text-v2-text-light mt-1">Total Cases</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-orange-600" x-text="staffMetrics.totals?.total_followup || 0"></p>
+                                <p class="text-xs text-v2-text-light mt-1">Total Followups</p>
+                            </div>
+                            <div>
+                                <p class="text-2xl font-bold text-red-600" x-text="staffMetrics.totals?.total_overdue || 0"></p>
+                                <p class="text-xs text-v2-text-light mt-1">Total Overdue</p>
+                            </div>
+                        </div>
+                        <div class="border-t border-v2-card-border pt-3 mt-3 max-h-48 overflow-y-auto">
+                            <table class="w-full text-xs">
+                                <thead class="sticky top-0 bg-white">
+                                    <tr class="border-b border-v2-card-border">
+                                        <th class="text-left py-1">Staff</th>
+                                        <th class="text-center py-1">Cases</th>
+                                        <th class="text-center py-1">F/U</th>
+                                        <th class="text-center py-1">Overdue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template x-for="staff in staffMetrics.staff_metrics || []" :key="staff.id">
+                                        <tr class="border-b border-v2-bg">
+                                            <td class="py-1.5" x-text="staff.full_name"></td>
+                                            <td class="text-center" x-text="staff.case_count"></td>
+                                            <td class="text-center">
+                                                <span :class="staff.followup_count > 0 ? 'text-orange-600 font-semibold' : ''" x-text="staff.followup_count"></span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span :class="staff.overdue_count > 0 ? 'text-red-600 font-semibold' : ''" x-text="staff.overdue_count"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- System Health Card -->
+        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border">
+            <div class="px-6 py-4 border-b border-v2-card-border">
+                <h2 class="font-semibold text-v2-text">System Health</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Communication Success -->
+                    <div class="text-center p-3 bg-v2-bg rounded-lg">
+                        <p class="text-2xl font-bold" :class="(systemHealth.communication?.overall_rate || 0) >= 90 ? 'text-emerald-600' : ((systemHealth.communication?.overall_rate || 0) >= 75 ? 'text-yellow-600' : 'text-red-600')">
+                            <span x-text="(systemHealth.communication?.overall_rate || 0) + '%'"></span>
+                        </p>
+                        <p class="text-xs text-v2-text-light mt-1">Comm Success</p>
+                        <div class="flex gap-2 justify-center mt-2 text-[10px]">
+                            <span>Email: <span x-text="(systemHealth.communication?.email?.rate || 0) + '%'"></span></span>
+                            <span>Fax: <span x-text="(systemHealth.communication?.fax?.rate || 0) + '%'"></span></span>
+                        </div>
+                    </div>
+
+                    <!-- Cases on Hold -->
+                    <div class="text-center p-3 bg-v2-bg rounded-lg">
+                        <p class="text-2xl font-bold text-v2-text" x-text="systemHealth.on_hold?.total_providers || 0"></p>
+                        <p class="text-xs text-v2-text-light mt-1">Providers on Hold</p>
+                        <p class="text-[10px] text-v2-text-light mt-2">
+                            <span x-text="(systemHealth.on_hold?.cases_affected || 0) + ' cases'"></span>
+                        </p>
+                    </div>
+
+                    <!-- Health Ledger -->
+                    <div class="text-center p-3 bg-v2-bg rounded-lg">
+                        <p class="text-2xl font-bold text-yellow-600" x-text="systemHealth.health_ledger?.active || 0"></p>
+                        <p class="text-xs text-v2-text-light mt-1">HL Active</p>
+                        <p class="text-[10px] text-v2-text-light mt-2">
+                            <span x-text="(systemHealth.health_ledger?.total || 0) + ' total'"></span>
+                        </p>
+                    </div>
+
+                    <!-- Treatment Status -->
+                    <div class="text-center p-3 bg-v2-bg rounded-lg">
+                        <div class="flex gap-1 justify-center items-center mb-1">
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-emerald-600" x-text="systemHealth.treatment_status?.in_treatment || 0"></p>
+                                <p class="text-[9px] text-v2-text-light">Treating</p>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-v2-text" x-text="systemHealth.treatment_status?.treatment_done || 0"></p>
+                                <p class="text-[9px] text-v2-text-light">Done</p>
+                            </div>
+                        </div>
+                        <p class="text-xs text-v2-text-light">Treatment Status</p>
+                    </div>
+                </div>
+
+                <!-- Top Hold Reasons -->
+                <template x-if="(systemHealth.on_hold?.top_reasons || []).length > 0">
+                    <div class="mt-4 pt-4 border-t border-v2-card-border">
+                        <p class="text-xs font-semibold text-v2-text-light mb-2">Top Hold Reasons:</p>
+                        <div class="space-y-1">
+                            <template x-for="reason in (systemHealth.on_hold?.top_reasons || []).slice(0, 3)" :key="reason.hold_reason">
+                                <div class="flex justify-between text-xs">
+                                    <span class="text-v2-text-light truncate" x-text="reason.hold_reason"></span>
+                                    <span class="font-medium text-v2-text ml-2" x-text="reason.count"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <!-- Follow-ups Due -->
         <div class="bg-white rounded-xl shadow-sm border border-v2-card-border">
             <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
@@ -175,6 +333,93 @@ ob_start();
                         <p class="text-xs text-v2-text-light mt-1" x-text="item.client_name"></p>
                     </a>
                 </template>
+            </div>
+        </div>
+    </div>
+
+    <!-- Provider Insights (Expandable) -->
+    <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mb-6">
+        <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between cursor-pointer hover:bg-v2-bg transition-colors" @click="toggleProviderInsights()">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-v2-bg rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                </div>
+                <h2 class="font-semibold text-v2-text">Provider Insights</h2>
+                <span class="text-xs text-v2-text-light" x-text="'Top ' + ((providerAnalytics.top_difficult || []).length) + ' difficult providers'"></span>
+            </div>
+            <svg class="w-5 h-5 text-v2-text-light transition-transform" :class="providerInsightsExpanded ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </div>
+
+        <div x-show="providerInsightsExpanded" x-collapse>
+            <div class="p-6">
+                <!-- Difficulty Distribution Summary -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <template x-for="diff in (providerAnalytics.difficulty_distribution || [])" :key="diff.difficulty_level">
+                        <div class="text-center p-3 rounded-lg" :class="{
+                            'bg-red-50': diff.difficulty_level === 'hard',
+                            'bg-yellow-50': diff.difficulty_level === 'medium',
+                            'bg-emerald-50': diff.difficulty_level === 'easy'
+                        }">
+                            <p class="text-lg font-bold" :class="{
+                                'text-red-600': diff.difficulty_level === 'hard',
+                                'text-yellow-600': diff.difficulty_level === 'medium',
+                                'text-emerald-600': diff.difficulty_level === 'easy'
+                            }" x-text="diff.request_count"></p>
+                            <p class="text-xs text-v2-text-light mt-1 capitalize" x-text="diff.difficulty_level + ' Providers'"></p>
+                            <p class="text-[10px] text-v2-text-light mt-1" x-text="diff.provider_count + ' providers, ' + (diff.avg_response ? Math.round(diff.avg_response) + 'd avg' : 'N/A')"></p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Top Difficult Providers Table -->
+                <div class="border-t border-v2-card-border pt-4">
+                    <h3 class="text-sm font-semibold text-v2-text mb-3">Active Difficult Providers</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b border-v2-card-border">
+                                    <th class="text-left py-2">Provider</th>
+                                    <th class="text-left py-2">Type</th>
+                                    <th class="text-center py-2">Difficulty</th>
+                                    <th class="text-center py-2">Active</th>
+                                    <th class="text-center py-2">Overdue</th>
+                                    <th class="text-center py-2">Avg Days</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template x-if="(providerAnalytics.top_difficult || []).length === 0">
+                                    <tr><td colspan="6" class="text-center text-v2-text-light py-6 text-xs">No difficult providers with active requests</td></tr>
+                                </template>
+                                <template x-for="provider in (providerAnalytics.top_difficult || [])" :key="provider.id">
+                                    <tr class="border-b border-v2-bg hover:bg-v2-bg transition-colors">
+                                        <td class="py-2.5">
+                                            <a :href="'/MRMS/frontend/pages/providers/index.php?highlight=' + provider.id"
+                                               class="font-medium text-v2-text hover:text-gold"
+                                               x-text="provider.name"></a>
+                                        </td>
+                                        <td class="py-2.5 text-xs text-v2-text-light capitalize" x-text="provider.type?.replace('_', ' ')"></td>
+                                        <td class="text-center py-2.5">
+                                            <span class="text-xs px-2 py-0.5 rounded-full font-medium" :class="{
+                                                'bg-red-100 text-red-600': provider.difficulty_level === 'hard',
+                                                'bg-yellow-100 text-yellow-600': provider.difficulty_level === 'medium',
+                                                'bg-emerald-100 text-emerald-600': provider.difficulty_level === 'easy'
+                                            }" x-text="provider.difficulty_level"></span>
+                                        </td>
+                                        <td class="text-center py-2.5 font-medium" x-text="provider.active_requests"></td>
+                                        <td class="text-center py-2.5">
+                                            <span :class="provider.overdue_count > 0 ? 'text-red-600 font-semibold' : 'text-v2-text-light'" x-text="provider.overdue_count"></span>
+                                        </td>
+                                        <td class="text-center py-2.5 text-xs text-v2-text-light" x-text="provider.avg_response_days ? provider.avg_response_days + 'd' : '-'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -250,6 +495,10 @@ function dashboardPage() {
         overdueItems: [],
         escalations: [],
         cases: [],
+        staffMetrics: {},
+        systemHealth: {},
+        providerAnalytics: {},
+        providerInsightsExpanded: false,
         loading: true,
 
         async init() {
@@ -258,7 +507,10 @@ function dashboardPage() {
                 this.loadFollowups(),
                 this.loadOverdue(),
                 this.loadEscalations(),
-                this.loadCases()
+                this.loadCases(),
+                this.loadStaffMetrics(),
+                this.loadSystemHealth(),
+                this.loadProviderAnalytics()
             ]);
             this.loading = false;
         },
@@ -296,6 +548,31 @@ function dashboardPage() {
                 const res = await api.get('cases?status=active&per_page=10');
                 this.cases = res.data || [];
             } catch (e) {}
+        },
+
+        async loadStaffMetrics() {
+            try {
+                const res = await api.get('dashboard/staff-metrics');
+                this.staffMetrics = res.data || {};
+            } catch (e) {}
+        },
+
+        async loadSystemHealth() {
+            try {
+                const res = await api.get('dashboard/system-health');
+                this.systemHealth = res.data || {};
+            } catch (e) {}
+        },
+
+        async loadProviderAnalytics() {
+            try {
+                const res = await api.get('dashboard/provider-analytics');
+                this.providerAnalytics = res.data || {};
+            } catch (e) {}
+        },
+
+        toggleProviderInsights() {
+            this.providerInsightsExpanded = !this.providerInsightsExpanded;
         }
     };
 }

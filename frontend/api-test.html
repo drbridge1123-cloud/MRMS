@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRMS API Test</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%230F1B2D' width='100' height='100' rx='20'/><text x='50' y='65' font-size='48' font-weight='bold' text-anchor='middle' fill='%23C9A84C' font-family='sans-serif'>M</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; background: #f5f5f0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { margin-bottom: 20px; color: #0F1B2D; }
+        .status { padding: 10px; margin-bottom: 20px; border-radius: 8px; font-weight: bold; }
+        .status.loading { background: #EFF6FF; color: #1E40AF; }
+        .status.success { background: #F0FDF4; color: #166534; }
+        .status.error { background: #FEF2F2; color: #DC2626; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px; }
+        .test-card { background: white; padding: 15px; border-radius: 8px; border: 2px solid #E5E5E0; }
+        .test-card.success { border-color: #166534; }
+        .test-card.error { border-color: #DC2626; }
+        .test-card h3 { margin-bottom: 10px; font-size: 14px; color: #0F1B2D; }
+        .test-card pre { font-size: 11px; background: #F5F5F0; padding: 8px; border-radius: 4px; overflow-x: auto; max-height: 200px; }
+        .test-card .status-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-bottom: 8px; }
+        .test-card .status-badge.success { background: #DCFCE7; color: #14532D; }
+        .test-card .status-badge.error { background: #FEE2E2; color: #991B1B; }
+        button { background: #C9A84C; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #B8973F; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 MRMS API 테스트</h1>
+        <div id="overallStatus" class="status loading">테스트 준비 중...</div>
+        <button id="runTests" onclick="runAllTests()">모든 API 테스트 실행</button>
+        <div id="results" class="test-grid" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        const API_BASE = '/MRMS/backend/api';
+        const tests = [
+            { name: 'Auth - Me', url: 'auth/me', method: 'GET' },
+            { name: 'Dashboard - Summary', url: 'dashboard/summary', method: 'GET' },
+            { name: 'Dashboard - Followup', url: 'dashboard/followup-due', method: 'GET' },
+            { name: 'Dashboard - Overdue', url: 'dashboard/overdue', method: 'GET' },
+            { name: 'Dashboard - Escalations', url: 'dashboard/escalations', method: 'GET' },
+            { name: 'Cases List', url: 'cases?per_page=5', method: 'GET' },
+            { name: 'Users List', url: 'users?active_only=1', method: 'GET' },
+            { name: 'Notifications', url: 'notifications?unread_only=1', method: 'GET' },
+        ];
+
+        let passed = 0;
+        let failed = 0;
+
+        async function testAPI(test) {
+            try {
+                const response = await fetch(`${API_BASE}/${test.url}`, {
+                    method: test.method,
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                const contentType = response.headers.get('content-type');
+                const responseText = await response.text();
+
+                // Check if response is actually JSON
+                if (!contentType || !contentType.includes('application/json')) {
+                    return {
+                        success: false,
+                        error: `Wrong content-type: ${contentType}`,
+                        rawResponse: responseText.substring(0, 500)
+                    };
+                }
+
+                // Check if response starts with HTML
+                if (responseText.trim().startsWith('<')) {
+                    return {
+                        success: false,
+                        error: 'Response is HTML, not JSON',
+                        rawResponse: responseText.substring(0, 500)
+                    };
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    return {
+                        success: false,
+                        error: `JSON parse error: ${e.message}`,
+                        rawResponse: responseText.substring(0, 500)
+                    };
+                }
+
+                return {
+                    success: response.ok,
+                    status: response.status,
+                    data: data,
+                    contentType: contentType
+                };
+            } catch (error) {
+                return {
+                    success: false,
+                    error: error.message
+                };
+            }
+        }
+
+        async function runAllTests() {
+            const btn = document.getElementById('runTests');
+            const results = document.getElementById('results');
+            const status = document.getElementById('overallStatus');
+
+            btn.disabled = true;
+            results.innerHTML = '';
+            passed = 0;
+            failed = 0;
+
+            status.className = 'status loading';
+            status.textContent = '테스트 실행 중...';
+
+            for (const test of tests) {
+                const result = await testAPI(test);
+
+                const card = document.createElement('div');
+                card.className = `test-card ${result.success ? 'success' : 'error'}`;
+
+                const badge = document.createElement('span');
+                badge.className = `status-badge ${result.success ? 'success' : 'error'}`;
+                badge.textContent = result.success ? '✓ PASS' : '✗ FAIL';
+
+                const title = document.createElement('h3');
+                title.textContent = test.name;
+
+                const pre = document.createElement('pre');
+                if (result.success) {
+                    passed++;
+                    pre.textContent = JSON.stringify(result.data, null, 2);
+                } else {
+                    failed++;
+                    pre.textContent = `Error: ${result.error || 'Unknown error'}\n\nStatus: ${result.status || 'N/A'}\n\nRaw Response:\n${result.rawResponse || 'No response'}`;
+                }
+
+                card.appendChild(badge);
+                card.appendChild(title);
+                card.appendChild(pre);
+                results.appendChild(card);
+            }
+
+            status.className = `status ${failed === 0 ? 'success' : 'error'}`;
+            status.textContent = `테스트 완료: ${passed} 성공, ${failed} 실패`;
+            btn.disabled = false;
+        }
+
+        // Run tests on page load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 500);
+        });
+    </script>
+</body>
+</html>

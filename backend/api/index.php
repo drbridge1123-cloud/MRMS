@@ -1,5 +1,17 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php';
+// Suppress PHP errors and warnings to prevent HTML output in JSON responses
+error_reporting(0);
+ini_set('display_errors', '0');
+ini_set('display_startup_errors', '0');
+
+// Start output buffering to catch any unexpected output
+ob_start();
+
+// Load Composer autoloader if exists (for PHPMailer and other dependencies)
+$autoloadPath = __DIR__ . '/../../vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+    require_once $autoloadPath;
+}
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/email.php';
@@ -12,6 +24,10 @@ require_once __DIR__ . '/../helpers/email.php';
 require_once __DIR__ . '/../helpers/fax.php';
 require_once __DIR__ . '/../helpers/letter-template.php';
 require_once __DIR__ . '/../helpers/escalation.php';
+
+// Clean any unexpected output from file loading
+ob_end_clean();
+ob_start();
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -130,12 +146,21 @@ switch ($resource) {
             require __DIR__ . '/requests/create.php';
         } elseif ($method === 'POST' && $id === 'followup') {
             require __DIR__ . '/requests/followup.php';
+        } elseif ($method === 'POST' && $id === 'bulk-create') {
+            require __DIR__ . '/requests/bulk-create.php';
+        } elseif ($method === 'POST' && $id === 'bulk-send') {
+            require __DIR__ . '/requests/bulk-send.php';
+        } elseif ($method === 'POST' && $id === 'preview-bulk') {
+            require __DIR__ . '/requests/preview-bulk.php';
         } elseif ($method === 'GET' && $id && $action === 'preview') {
             $_GET['id'] = $id;
             require __DIR__ . '/requests/preview.php';
         } elseif ($method === 'POST' && $id && $action === 'send') {
             $_GET['id'] = $id;
             require __DIR__ . '/requests/send.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/requests/delete.php';
         } else {
             errorResponse('Request endpoint not found', 404);
         }

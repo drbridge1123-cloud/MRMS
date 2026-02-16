@@ -383,3 +383,153 @@ function getHealthLedgerLetterData($requestId) {
         [$requestId]
     );
 }
+
+/**
+ * Render a Combined Bulk Medical Records Request Letter as HTML.
+ * Lists multiple cases in a simple format within one letter.
+ *
+ * @param array $casesData Array of case data (from bulk-create or preview-bulk)
+ * @param array $commonData Common data (request_date, request_type, notes, etc.)
+ * @return string Full HTML document
+ */
+function renderBulkRequestLetter($casesData, $commonData) {
+    $requestDate = !empty($commonData['request_date'])
+        ? date('F j, Y', strtotime($commonData['request_date']))
+        : date('F j, Y');
+
+    // Subject line based on request type
+    $subjectLine = 'MEDICAL RECORDS REQUEST';
+    if (($commonData['request_type'] ?? '') === 'follow_up') {
+        $subjectLine = 'FOLLOW-UP: MEDICAL RECORDS REQUEST';
+    } elseif (($commonData['request_type'] ?? '') === 're_request') {
+        $subjectLine = 'SECOND REQUEST: MEDICAL RECORDS';
+    } elseif (($commonData['request_type'] ?? '') === 'rfd') {
+        $subjectLine = 'REQUEST FOR DOCUMENTS';
+    }
+
+    $authLine = !empty($commonData['authorization_sent'])
+        ? 'Signed HIPAA-compliant authorizations are enclosed/attached herewith.'
+        : 'Signed authorizations will be forwarded under separate cover.';
+
+    $firmName    = htmlspecialchars(FIRM_NAME);
+    $firmAddress = htmlspecialchars(FIRM_ADDRESS);
+    $firmCSZ     = htmlspecialchars(FIRM_CITY_STATE_ZIP);
+    $firmPhone   = htmlspecialchars(FIRM_PHONE);
+    $firmFax     = htmlspecialchars(FIRM_FAX);
+    $firmEmail   = htmlspecialchars(FIRM_EMAIL);
+
+    // Use first case's provider info (all should be same provider)
+    $firstCase = $casesData[0];
+    $provName    = htmlspecialchars($firstCase['provider_name'] ?? '');
+    $provAddress = htmlspecialchars($firstCase['provider_address'] ?? '');
+    $attorneyName = htmlspecialchars($firstCase['attorney_name'] ?? '');
+
+    // Build case list
+    $caseListHtml = '';
+    foreach ($casesData as $i => $case) {
+        $num = $i + 1;
+        $caseNumber = htmlspecialchars($case['case_number'] ?? '');
+        $clientName = htmlspecialchars($case['client_name'] ?? '');
+        $doi = !empty($case['doi']) ? date('m/d/Y', strtotime($case['doi'])) : 'N/A';
+
+        $treatmentStart = !empty($case['treatment_start_date'])
+            ? date('m/d/Y', strtotime($case['treatment_start_date']))
+            : 'Date of Injury';
+        $treatmentEnd = !empty($case['treatment_end_date'])
+            ? date('m/d/Y', strtotime($case['treatment_end_date']))
+            : 'Present';
+
+        $caseListHtml .= "<tr>
+            <td style=\"padding:4px 8px;vertical-align:top;\">{$num}.</td>
+            <td style=\"padding:4px 8px;\"><strong>Case #{$caseNumber}</strong> &ndash; {$clientName}</td>
+            <td style=\"padding:4px 8px;\">DOI: {$doi}</td>
+            <td style=\"padding:4px 8px;\">Treatment: {$treatmentStart} to {$treatmentEnd}</td>
+        </tr>";
+    }
+
+    $notesSection = '';
+    if (!empty($commonData['notes'])) {
+        $notesSection = '<p style="margin-top:15px;"><strong>Additional Instructions:</strong> '
+            . htmlspecialchars($commonData['notes']) . '</p>';
+    }
+
+    $caseCount = count($casesData);
+
+    return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.5; color: #000; margin: 0; padding: 0; }
+        .letter { max-width: 8.5in; margin: 0 auto; padding: 1in; }
+        .letterhead { text-align: center; border-bottom: 3px double #1a365d; padding-bottom: 15px; margin-bottom: 30px; }
+        .firm-name { font-size: 18pt; font-weight: bold; color: #1a365d; letter-spacing: 2px; margin-bottom: 4px; }
+        .firm-info { font-size: 9pt; color: #4a5568; }
+        .date { margin-bottom: 25px; }
+        .recipient { margin-bottom: 20px; line-height: 1.4; }
+        .re-line { margin-bottom: 20px; }
+        .re-line strong { text-decoration: underline; }
+        .body { margin-bottom: 20px; text-align: justify; }
+        .signature { margin-top: 40px; }
+        table { border-collapse: collapse; width: 100%; margin: 10px 0; }
+        .case-table td { border-bottom: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div class="letter">
+        <div class="letterhead">
+            <div class="firm-name">{$firmName}</div>
+            <div class="firm-info">
+                {$firmAddress} &bull; {$firmCSZ}<br>
+                Phone: {$firmPhone} &bull; Fax: {$firmFax} &bull; Email: {$firmEmail}
+            </div>
+        </div>
+
+        <div class="date">{$requestDate}</div>
+
+        <div class="recipient">
+            {$provName}<br>
+            {$provAddress}
+        </div>
+
+        <div class="re-line">
+            <strong>RE: {$subjectLine} &ndash; Multiple Cases</strong><br>
+            Attorney: {$attorneyName}
+        </div>
+
+        <div class="body">
+            <p>Dear Records Custodian:</p>
+
+            <p>Our office represents the above-referenced clients in personal injury matters. We respectfully request complete copies of medical records and itemized billing statements for the following <strong>{$caseCount} cases</strong>:</p>
+
+            <table class="case-table">
+                {$caseListHtml}
+            </table>
+
+            <p><strong>Records Requested for All Cases:</strong></p>
+            <table>
+                <tr><td style="padding:2px 8px;vertical-align:top;">1.</td><td style="padding:2px 0;">Complete Medical Records (including office/chart notes, diagnostic studies, and test results)</td></tr>
+                <tr><td style="padding:2px 8px;vertical-align:top;">2.</td><td style="padding:2px 0;">Itemized Billing Statements</td></tr>
+            </table>
+
+            <p>{$authLine}</p>
+
+            <p>Please forward the requested records to our office at your earliest convenience. If you have any questions or require additional information, please do not hesitate to contact our office.</p>
+
+            {$notesSection}
+
+            <p>Thank you for your prompt attention to this matter.</p>
+        </div>
+
+        <div class="signature">
+            <p>Sincerely,</p>
+            <p style="margin-top:40px;">
+                <strong>{$firmName}</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+HTML;
+}

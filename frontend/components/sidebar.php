@@ -115,14 +115,14 @@
     </nav>
 
     <!-- User info at bottom -->
-    <div class="border-t border-navy-border px-4 py-3" x-data>
+    <div class="border-t border-navy-border px-4 py-3" x-data x-show="!$store.auth.loading">
         <template x-if="$store.auth.user">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-sm font-semibold text-navy flex-shrink-0"
-                     x-text="$store.auth.user.full_name.charAt(0)"></div>
+                     x-text="$store.auth.user?.full_name?.charAt(0) || 'U'"></div>
                 <div class="sidebar-text flex-1 min-w-0">
-                    <div class="text-sm font-medium truncate" x-text="$store.auth.user.full_name"></div>
-                    <div class="text-xs text-slate-400 capitalize" x-text="$store.auth.user.role"></div>
+                    <div class="text-sm font-medium truncate" x-text="$store.auth.user?.full_name || 'User'"></div>
+                    <div class="text-xs text-slate-400 capitalize" x-text="$store.auth.user?.role || 'user'"></div>
                 </div>
                 <button @click="$store.auth.logout()" title="Logout"
                         class="sidebar-text p-1.5 text-slate-400 hover:text-red-400 hover:bg-navy-light rounded transition-colors flex-shrink-0">

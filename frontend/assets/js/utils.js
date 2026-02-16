@@ -9,6 +9,10 @@ const PROVIDER_TYPES = {
     physician: 'Physician',
     surgery_center: 'Surgery Center',
     pharmacy: 'Pharmacy',
+    acupuncture: 'Acupuncture',
+    massage: 'Massage',
+    pain_management: 'Pain Management',
+    pt: 'Physical Therapy',
     other: 'Other',
 };
 
@@ -78,4 +82,23 @@ function timeAgo(dateStr) {
 function truncate(str, len = 50) {
     if (!str) return '';
     return str.length > len ? str.substring(0, len) + '...' : str;
+}
+
+// Format phone number to (XXX) XXX-XXXX
+function formatPhoneNumber(phone) {
+    if (!phone) return '-';
+
+    // Remove all non-digit characters
+    const cleaned = phone.replace(/\D/g, '');
+
+    // Format based on length
+    if (cleaned.length === 10) {
+        return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    } else if (cleaned.length === 11 && cleaned[0] === '1') {
+        // Handle numbers starting with 1
+        return `(${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+    }
+
+    // Return original if format is unexpected
+    return phone;
 }
