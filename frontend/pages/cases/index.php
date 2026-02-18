@@ -26,18 +26,21 @@ ob_start();
                 <button @click="statusFilter = ''; loadData(1)"
                         :class="statusFilter === '' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
                         class="px-3 py-1.5 rounded-lg text-xs font-medium">All</button>
-                <button @click="statusFilter = 'active'; loadData(1)"
-                        :class="statusFilter === 'active' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Active</button>
-                <button @click="statusFilter = 'pending_review'; loadData(1)"
-                        :class="statusFilter === 'pending_review' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Review</button>
+                <button @click="statusFilter = 'collecting'; loadData(1)"
+                        :class="statusFilter === 'collecting' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Collecting</button>
+                <button @click="statusFilter = 'in_review'; loadData(1)"
+                        :class="statusFilter === 'in_review' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">In Review</button>
+                <button @click="statusFilter = 'verification'; loadData(1)"
+                        :class="statusFilter === 'verification' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Verification</button>
                 <button @click="statusFilter = 'completed'; loadData(1)"
                         :class="statusFilter === 'completed' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
                         class="px-3 py-1.5 rounded-lg text-xs font-medium">Completed</button>
-                <button @click="statusFilter = 'on_hold'; loadData(1)"
-                        :class="statusFilter === 'on_hold' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">On Hold</button>
+                <button @click="statusFilter = 'closed'; loadData(1)"
+                        :class="statusFilter === 'closed' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
+                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Closed</button>
             </div>
         </div>
 
@@ -149,25 +152,25 @@ ob_start();
             <form @submit.prevent="createCase()" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Case Number *</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Case Number <span class="text-red-500">*</span></label>
                         <input type="text" x-model="newCase.case_number" required
                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Client Name *</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Client Name <span class="text-red-500">*</span></label>
                         <input type="text" x-model="newCase.client_name" required
                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Birth</label>
-                        <input type="date" x-model="newCase.client_dob"
+                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Birth <span class="text-red-500">*</span></label>
+                        <input type="date" x-model="newCase.client_dob" required
                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Injury</label>
-                        <input type="date" x-model="newCase.doi"
+                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Injury <span class="text-red-500">*</span></label>
+                        <input type="date" x-model="newCase.doi" required
                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                 </div>
@@ -178,10 +181,10 @@ ob_start();
                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Assigned To</label>
-                        <select x-model="newCase.assigned_to"
+                        <label class="block text-sm font-medium text-v2-text mb-1">Assigned To <span class="text-red-500">*</span></label>
+                        <select x-model="newCase.assigned_to" required
                                 class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                            <option value="">Unassigned</option>
+                            <option value="">Select...</option>
                             <template x-for="u in users" :key="u.id">
                                 <option :value="u.id" x-text="u.full_name"></option>
                             </template>
@@ -224,7 +227,8 @@ function casesListPage() {
         async loadData(page = 1) {
             this.loading = true;
             const params = buildQueryString({
-                page,
+                page: 1,
+                per_page: 9999,
                 search: this.searchQuery,
                 status: this.statusFilter,
                 sort_by: this.sortBy,
@@ -252,9 +256,6 @@ function casesListPage() {
             this.saving = true;
             try {
                 const data = { ...this.newCase };
-                if (!data.assigned_to) delete data.assigned_to;
-                if (!data.client_dob) delete data.client_dob;
-                if (!data.doi) delete data.doi;
                 const res = await api.post('cases', data);
                 showToast('Case created successfully');
                 this.showCreateModal = false;

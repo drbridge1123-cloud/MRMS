@@ -37,7 +37,21 @@
       "Bash(composer install:*)",
       "Bash(where:*)",
       "Bash(/c/xampp/mysql/bin/mysql.exe -u root mrms -e \"UPDATE users SET smtp_email = ''bridgelawpllc@gmail.com'' WHERE username = ''miki''; UPDATE users SET smtp_email = ''ella.bridgelaw@gmail.com'' WHERE username = ''ella'';\")",
-      "Bash(/c/xampp/mysql/bin/mysql.exe:*)"
+      "Bash(/c/xampp/mysql/bin/mysql.exe:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git stash:*)",
+      "Bash(powershell.exe -Command \"Get-Content ''C:\\\\Users\\\\Server\\\\Downloads\\\\Medical Records Request.docx'' -ReadCount 0 | Out-Null; Write-Output ''File accessible''\")",
+      "Bash(echo:*)",
+      "Bash(/c/xampp/htdocs/MRMS/extract_logo.php:*)",
+      "Bash(/c/xampp/htdocs/MRMS/tmp_part1.txt:*)",
+      "Bash(/c/xampp/htdocs/MRMS/tmp_part3.txt:*)",
+      "Bash(/c/xampp/htdocs/MRMS/tmp_part4.txt:*)",
+      "Bash(/c/xampp/htdocs/MRMS/tmp_part5.txt:*)",
+      "Bash(/c/xampp/htdocs/MRMS/tmp_part6.txt:*)",
+      "Bash(/c/xampp/htdocs/MRMS/tmp_docx_extract.php:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(git status:*)"
     ]
   }
 }

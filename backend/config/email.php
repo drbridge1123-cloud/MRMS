@@ -24,6 +24,13 @@ define('FIRM_PHONE', '425-678-0436');
 define('FIRM_FAX', '425-582-0819');
 define('FIRM_EMAIL', 'bridgelawpllc@gmail.com');
 
+// Firm attorneys (displayed in letterhead)
+define('FIRM_ATTORNEYS', json_encode([
+    ['name' => 'Sunjung Baek', 'title' => 'Attorney at Law'],
+    ['name' => 'Michael Charbonneau', 'title' => 'Attorney at Law'],
+    ['name' => 'Chong Moon Byun', 'title' => 'Attorney at Law'],
+]));
+
 // Send settings
 define('SEND_TIMEOUT', 30);
 define('MAX_SEND_ATTEMPTS', 3);

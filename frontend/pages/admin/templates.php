@@ -75,8 +75,8 @@ ob_start();
                                 <div class="font-medium text-v2-text" x-text="template.name"></div>
                                 <div class="text-xs text-v2-text-light mt-1" x-text="template.description || 'No description'"></div>
                             </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700" x-text="template.template_type.replace('_', ' ')"></span>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 whitespace-nowrap" x-text="template.template_type.replace('_', ' ')"></span>
                             </td>
                             <td class="px-6 py-4">
                                 <span x-show="template.is_default" class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-gold text-white">

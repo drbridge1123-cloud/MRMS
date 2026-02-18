@@ -61,6 +61,26 @@ function sendEmail($to, $subject, $htmlBody, $options = []) {
 
         $mail->isHTML(true);
         $mail->Subject = $subject;
+
+        // Convert base64 embedded images to CID inline attachments
+        $cidCounter = 0;
+        $htmlBody = preg_replace_callback(
+            '/src=["\']data:image\/(png|jpe?g|gif);base64,([^"\']+)["\']/i',
+            function($matches) use ($mail, &$cidCounter) {
+                $type = $matches[1];
+                $base64Data = $matches[2];
+                $imageData = base64_decode($base64Data);
+                if ($imageData === false) return $matches[0];
+
+                $cidCounter++;
+                $cid = 'img_embed_' . $cidCounter;
+                $ext = ($type === 'jpeg' || $type === 'jpg') ? 'jpg' : $type;
+                $mail->addStringEmbeddedImage($imageData, $cid, "image_{$cidCounter}.{$ext}", 'base64', "image/{$type}");
+                return 'src="cid:' . $cid . '"';
+            },
+            $htmlBody
+        );
+
         $mail->Body    = $htmlBody;
         $mail->AltBody = strip_tags(str_replace(
             ['<br>', '<br/>', '<br />', '</p>'],
@@ -70,9 +90,14 @@ function sendEmail($to, $subject, $htmlBody, $options = []) {
         $mail->CharSet = 'UTF-8';
 
         if (!empty($options['attachments'])) {
-            foreach ($options['attachments'] as $filePath) {
-                if (file_exists($filePath)) {
-                    $mail->addAttachment($filePath);
+            foreach ($options['attachments'] as $attachment) {
+                if (is_array($attachment)) {
+                    // ['path' => ..., 'name' => ...]
+                    if (file_exists($attachment['path'])) {
+                        $mail->addAttachment($attachment['path'], $attachment['name'] ?? '');
+                    }
+                } elseif (is_string($attachment) && file_exists($attachment)) {
+                    $mail->addAttachment($attachment);
                 }
             }
         }

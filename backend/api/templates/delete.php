@@ -6,10 +6,10 @@ if ($method !== 'DELETE') {
 
 $userId = requireAuth();
 
-// Check if user is admin
+// Check if user is admin or manager
 $user = getCurrentUser();
-if ($user['role'] !== 'admin') {
-    errorResponse('Only administrators can delete templates', 403);
+if (!in_array($user['role'], ['admin', 'manager'])) {
+    errorResponse('Only administrators or managers can delete templates', 403);
 }
 
 $templateId = (int)($_GET['id'] ?? 0);
@@ -21,16 +21,6 @@ if (!$templateId) {
 $template = dbFetchOne("SELECT * FROM letter_templates WHERE id = ?", [$templateId]);
 if (!$template) {
     errorResponse('Template not found', 404);
-}
-
-// Check if template is in use by pending requests
-$inUse = dbFetchOne(
-    "SELECT COUNT(*) as count FROM record_requests WHERE template_id = ? AND send_status IN ('draft', 'sending')",
-    [$templateId]
-);
-
-if ($inUse['count'] > 0) {
-    errorResponse('Cannot delete template that is in use by ' . $inUse['count'] . ' pending request(s)', 422);
 }
 
 // Soft delete (set is_active = 0)

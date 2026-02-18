@@ -5,15 +5,21 @@ $userId = requireAuth();
 $input = getInput();
 
 // Validate required fields
-$errors = validateRequired($input, ['case_number', 'client_name']);
+$errors = validateRequired($input, ['case_number', 'client_name', 'client_dob', 'doi', 'assigned_to']);
 if (!empty($errors)) {
     errorResponse(implode(', ', $errors));
 }
 
-// Check for duplicate case_number
-$existing = dbFetchOne("SELECT id FROM cases WHERE case_number = ?", [sanitizeString($input['case_number'])]);
-if ($existing) {
-    errorResponse('A case with this case number already exists');
+// Check for duplicate: same case_number AND same client_dob
+$clientDob = !empty($input['client_dob']) ? $input['client_dob'] : null;
+if ($clientDob) {
+    $existing = dbFetchOne(
+        "SELECT id FROM cases WHERE case_number = ? AND client_dob = ?",
+        [sanitizeString($input['case_number']), $clientDob]
+    );
+    if ($existing) {
+        errorResponse('A case with this case number and date of birth already exists');
+    }
 }
 
 // Validate optional date fields
@@ -27,7 +33,7 @@ if (!empty($input['doi']) && !validateDate($input['doi'])) {
 
 // Validate status if provided
 if (!empty($input['status'])) {
-    $allowedStatuses = ['active', 'pending_review', 'completed', 'on_hold'];
+    $allowedStatuses = ['collecting', 'in_review', 'verification', 'completed', 'closed'];
     if (!validateEnum($input['status'], $allowedStatuses)) {
         errorResponse('Invalid status. Allowed: ' . implode(', ', $allowedStatuses));
     }
@@ -68,6 +74,13 @@ if (isset($input['notes']) && $input['notes'] !== '') {
 }
 if (!empty($input['status'])) {
     $data['status'] = $input['status'];
+}
+
+// Auto-assign based on status owner
+$caseStatus = $data['status'] ?? 'collecting';
+$statusOwner = STATUS_OWNER_MAP[$caseStatus] ?? null;
+if ($statusOwner) {
+    $data['assigned_to'] = $statusOwner;
 }
 
 $newId = dbInsert('cases', $data);

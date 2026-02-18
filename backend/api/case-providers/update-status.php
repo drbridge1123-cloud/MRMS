@@ -56,5 +56,31 @@ logActivity($userId, 'updated_status', 'case_provider', $cpId, [
     'new_status' => $newStatus
 ]);
 
+// Auto-move case to In Review if all providers are received_complete
+if ($newStatus === 'received_complete') {
+    $incomplete = dbFetchOne(
+        "SELECT COUNT(*) as cnt FROM case_providers WHERE case_id = ? AND overall_status != 'received_complete' AND overall_status != 'verified'",
+        [$cp['case_id']]
+    );
+    if ($incomplete && (int)$incomplete['cnt'] === 0) {
+        $newOwner = STATUS_OWNER_MAP['in_review'] ?? null;
+        $updateData = ['status' => 'in_review'];
+        if ($newOwner) {
+            $updateData['assigned_to'] = $newOwner;
+        }
+        dbUpdate('cases', $updateData, 'id = ?', [$cp['case_id']]);
+
+        // Notify the new owner (Ella)
+        if ($newOwner) {
+            dbInsert('notifications', [
+                'user_id' => $newOwner,
+                'type' => 'status_changed',
+                'message' => "Case {$cp['case_number']} auto-moved to In Review — all records complete. Assigned to you.",
+                'due_date' => date('Y-m-d')
+            ]);
+        }
+    }
+}
+
 $updated = dbFetchOne("SELECT * FROM case_providers WHERE id = ?", [$cpId]);
 successResponse($updated, 'Status updated successfully');

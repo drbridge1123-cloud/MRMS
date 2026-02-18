@@ -17,4 +17,14 @@ define('ESCALATION_ADMIN_DAYS', 60);
 
 define('ITEMS_PER_PAGE', 20);
 
+// Status-to-owner auto-assignment mapping
+// Each case status is owned by a specific user
+define('STATUS_OWNER_MAP', [
+    'collecting'   => 2,  // Miki
+    'in_review'    => 1,  // Ella
+    'verification' => 1,  // Ella
+    'completed'    => 4,  // Jimi
+    'closed'       => 4,  // Jimi
+]);
+
 date_default_timezone_set('America/New_York');

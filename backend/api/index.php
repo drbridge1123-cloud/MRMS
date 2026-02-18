@@ -76,6 +76,12 @@ switch ($resource) {
             require __DIR__ . '/cases/get.php';
         } elseif ($method === 'POST' && !$id) {
             require __DIR__ . '/cases/create.php';
+        } elseif ($method === 'POST' && $id && $action === 'send-back') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/cases/send-back.php';
+        } elseif ($method === 'POST' && $id && $action === 'change-status') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/cases/change-status.php';
         } elseif ($method === 'PUT' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/cases/update.php';
@@ -270,6 +276,15 @@ switch ($resource) {
                 break;
             case 'escalations':
                 require __DIR__ . '/dashboard/escalations.php';
+                break;
+            case 'staff-metrics':
+                require __DIR__ . '/dashboard/staff-metrics.php';
+                break;
+            case 'system-health':
+                require __DIR__ . '/dashboard/system-health.php';
+                break;
+            case 'provider-analytics':
+                require __DIR__ . '/dashboard/provider-analytics.php';
                 break;
             default:
                 errorResponse('Dashboard endpoint not found', 404);

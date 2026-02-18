@@ -64,22 +64,29 @@ function documentUploader(caseId, caseProviderId = null) {
          */
         onDocumentTypeChange(documentType) {
             if (documentType === 'hipaa_authorization') {
-                // Auto-fill default coordinates for HIPAA Authorization template
-                // Provider name field
+                // Wet-Signed HIPPA Release defaults
                 this.uploadForm.is_provider_template = true;
                 this.uploadForm.provider_name_x = 80;
-                this.uploadForm.provider_name_y = 88;
+                this.uploadForm.provider_name_y = 91;
                 this.uploadForm.provider_name_width = 150;
                 this.uploadForm.provider_name_height = 5;
                 this.uploadForm.provider_name_font_size = 12;
-
-                // Date field - starting position for testing
-                this.uploadForm.use_date_overlay = true;
-                this.uploadForm.date_x = 170;
-                this.uploadForm.date_y = 250;
-                this.uploadForm.date_width = 90;
-                this.uploadForm.date_height = 5;
-                this.uploadForm.date_font_size = 12;
+            } else if (documentType === 'signed_release') {
+                // E-Signed HIPPA Release defaults
+                this.uploadForm.is_provider_template = true;
+                this.uploadForm.provider_name_x = 80;
+                this.uploadForm.provider_name_y = 100;
+                this.uploadForm.provider_name_width = 150;
+                this.uploadForm.provider_name_height = 5;
+                this.uploadForm.provider_name_font_size = 12;
+            } else {
+                // Other - reset template settings
+                this.uploadForm.is_provider_template = false;
+                this.uploadForm.provider_name_x = null;
+                this.uploadForm.provider_name_y = null;
+                this.uploadForm.provider_name_width = null;
+                this.uploadForm.provider_name_height = null;
+                this.uploadForm.provider_name_font_size = 12;
             }
         },
 
@@ -179,6 +186,15 @@ function documentUploader(caseId, caseProviderId = null) {
             if (!allowedTypes.includes(this.selectedFile.type)) {
                 showToast('Invalid file type. Allowed: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TIFF', 'error');
                 return;
+            }
+
+            // Validate template coordinates if provider template is enabled
+            if (this.uploadForm.is_provider_template) {
+                if (!this.uploadForm.provider_name_x || !this.uploadForm.provider_name_y ||
+                    !this.uploadForm.provider_name_width || !this.uploadForm.provider_name_height) {
+                    showToast('Please set provider name coordinates for the template', 'warning');
+                    return;
+                }
             }
 
             this.uploading = true;
@@ -295,8 +311,8 @@ function documentUploader(caseId, caseProviderId = null) {
          */
         getDocumentTypeLabel(type) {
             const labels = {
-                'hipaa_authorization': 'HIPAA Authorization',
-                'signed_release': 'Signed Release',
+                'hipaa_authorization': 'Wet-Signed HIPPA Release',
+                'signed_release': 'E-Signed HIPPA Release',
                 'other': 'Other'
             };
             return labels[type] || type;
@@ -381,6 +397,12 @@ function documentUploader(caseId, caseProviderId = null) {
          * @param {object} doc - Template document
          */
         promptGenerateProviderVersion(doc) {
+            // Check if coordinates are configured
+            if (!doc.provider_name_x || !doc.provider_name_y || !doc.provider_name_width || !doc.provider_name_height) {
+                showToast('Template coordinates not configured. Please re-upload with coordinates set.', 'warning');
+                return;
+            }
+
             const providerName = prompt(`Enter provider name for ${doc.original_file_name}:`);
             if (providerName) {
                 this.generateProviderVersion(doc.id, providerName.trim());

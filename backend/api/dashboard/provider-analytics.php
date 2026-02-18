@@ -24,7 +24,7 @@ $topDifficult = dbFetchAll("
     INNER JOIN case_providers cp ON cp.provider_id = p.id
     INNER JOIN cases c ON c.id = cp.case_id
     WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-      AND c.status = 'active'
+      AND c.status NOT IN ('completed','closed')
     GROUP BY p.id, p.name, p.type, p.difficulty_level, p.avg_response_days
     HAVING active_requests > 0
     ORDER BY
@@ -52,7 +52,7 @@ $difficultyDist = dbFetchAll("
     INNER JOIN case_providers cp ON cp.provider_id = p.id
     INNER JOIN cases c ON c.id = cp.case_id
     WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-      AND c.status = 'active'
+      AND c.status NOT IN ('completed','closed')
     GROUP BY p.difficulty_level
     ORDER BY FIELD(p.difficulty_level, 'hard', 'medium', 'easy')
 ");

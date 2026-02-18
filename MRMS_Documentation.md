@@ -125,7 +125,7 @@ MRMS/
 | client_dob | DATE NULL | 생년월일 |
 | doi | DATE NULL | Date of Injury |
 | assigned_to | INT FK → users | 담당자 |
-| status | ENUM(active, pending_review, completed, on_hold) | |
+| status | ENUM(collecting, in_review, verification, completed, closed) | Collecting→In Review→Verification→Completed→Closed |
 | attorney_name | VARCHAR(100) NULL | 변호사 |
 | ini_completed | TINYINT(1) | INI 완료 여부 |
 | notes | TEXT NULL | |

@@ -37,10 +37,7 @@ if ($request['send_status'] === 'sent') {
 
 // Verify document exists and belongs to same case
 $document = dbFetchOne(
-    "SELECT cd.*, cp.case_id
-     FROM case_documents cd
-     LEFT JOIN case_providers cp ON cd.case_provider_id = cp.id
-     WHERE cd.id = ?",
+    "SELECT * FROM case_documents WHERE id = ?",
     [$documentId]
 );
 

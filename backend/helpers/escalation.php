@@ -33,7 +33,7 @@ function generateEscalationNotifications() {
         JOIN providers p ON p.id = cp.provider_id
         LEFT JOIN record_requests rr ON rr.case_provider_id = cp.id
         WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-          AND c.status = 'active'
+          AND c.status NOT IN ('completed','closed')
         GROUP BY cp.id
         HAVING first_request_date IS NOT NULL
     ");
@@ -155,7 +155,7 @@ function getEscalatedItems($role, $userId = null) {
         LEFT JOIN users u ON cp.assigned_to = u.id
         LEFT JOIN record_requests rr ON rr.case_provider_id = cp.id
         WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-          AND c.status = 'active'
+          AND c.status NOT IN ('completed','closed')
         GROUP BY cp.id
         HAVING first_request_date IS NOT NULL";
 

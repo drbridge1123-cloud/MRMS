@@ -42,8 +42,7 @@ $templates = dbFetchAll(
      FROM letter_templates
      $whereClause
      ORDER BY
-        is_default DESC,
-        template_type ASC,
+        sort_order ASC,
         name ASC",
     $params
 );

@@ -168,10 +168,29 @@ const STATUS_LABELS = {
     received_partial: 'Partial',
     received_complete: 'Complete',
     verified: 'Verified',
-    active: 'Active',
-    pending_review: 'Pending Review',
+    collecting: 'Collecting',
+    in_review: 'In Review',
+    verification: 'Verification',
     completed: 'Completed',
-    on_hold: 'On Hold',
+    closed: 'Closed',
+};
+
+// Valid forward transitions (used by the status dropdown)
+const FORWARD_TRANSITIONS = {
+    collecting:   ['in_review'],
+    in_review:    ['verification', 'completed'],
+    verification: ['completed'],
+    completed:    ['closed'],
+    closed:       [],
+};
+
+// Valid backward transitions (used by send-back modal)
+const BACKWARD_TRANSITIONS = {
+    collecting:   [],
+    in_review:    ['collecting'],
+    verification: ['collecting', 'in_review'],
+    completed:    ['collecting', 'in_review', 'verification'],
+    closed:       ['collecting', 'in_review', 'verification', 'completed'],
 };
 
 function getStatusLabel(status) {

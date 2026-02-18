@@ -50,12 +50,19 @@ if (!empty($input['template_id']) && !empty($input['request_id'])) {
             'attorney_name' => 'Attorney Name',
             'provider_name' => 'Sample Medical Provider',
             'provider_address' => "123 Medical Plaza\nSeattle, WA 98101",
+            'provider_email' => 'provider@example.com',
+            'provider_fax' => '(206) 555-1234',
             'request_date' => date('Y-m-d'),
+            'initial_request_date' => date('Y-m-d', strtotime('-30 days')),
+            'request_method' => 'email',
             'treatment_start_date' => '2025-06-20',
             'treatment_end_date' => '2025-12-15',
             'record_types' => 'medical_records,billing',
             'notes' => 'Sample notes for preview',
             'authorization_sent' => true,
+            'sender_name' => 'Ella Kim',
+            'sender_email' => 'ella@bridgelawpc.com',
+            'followup_dates' => date('m/d/Y', strtotime('-21 days')) . ', ' . date('m/d/Y', strtotime('-14 days')),
         ];
     }
 

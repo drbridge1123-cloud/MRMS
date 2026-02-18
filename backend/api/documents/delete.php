@@ -24,38 +24,15 @@ if (!$document) {
     errorResponse('Document not found', 404);
 }
 
-// Check if request_attachments table exists
-$tableExists = false;
-try {
-    $pdo = getDBConnection();
-    $result = $pdo->query("SHOW TABLES LIKE 'request_attachments'");
-    $tableExists = $result->rowCount() > 0;
-} catch (Exception $e) {
-    // Table doesn't exist, continue without attachment checks
-    $tableExists = false;
-}
-
-// Check attachment constraints only if table exists
-if ($tableExists) {
-    $attachedToSent = dbFetchOne(
-        "SELECT COUNT(*) as count
-         FROM request_attachments ra
-         JOIN record_requests rr ON ra.record_request_id = rr.id
-         WHERE ra.case_document_id = ? AND rr.send_status = 'sent'",
-        [$documentId]
-    );
-
-    if ($attachedToSent && $attachedToSent['count'] > 0) {
-        errorResponse('Cannot delete document that has been sent with ' . $attachedToSent['count'] . ' request(s)', 422);
-    }
-}
-
+$pdo = getDBConnection();
 $pdo->beginTransaction();
 
 try {
-    // Remove from request_attachments if table exists
-    if ($tableExists) {
+    // Remove from request_attachments if linked
+    try {
         dbDelete('request_attachments', 'case_document_id = ?', [$documentId]);
+    } catch (Exception $e) {
+        // Table may not exist, ignore
     }
 
     // Delete document record

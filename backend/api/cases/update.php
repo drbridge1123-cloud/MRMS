@@ -30,7 +30,7 @@ if (isset($input['doi']) && $input['doi'] !== '' && !validateDate($input['doi'])
 
 // Validate status if provided
 if (!empty($input['status'])) {
-    $allowedStatuses = ['active', 'pending_review', 'completed', 'on_hold'];
+    $allowedStatuses = ['collecting', 'in_review', 'verification', 'completed', 'closed'];
     if (!validateEnum($input['status'], $allowedStatuses)) {
         errorResponse('Invalid status. Allowed: ' . implode(', ', $allowedStatuses));
     }
@@ -44,14 +44,17 @@ if (isset($input['assigned_to']) && $input['assigned_to'] !== '' && $input['assi
     }
 }
 
-// If case_number is being changed, check for duplicates
-if (!empty($input['case_number']) && $input['case_number'] !== $existingCase['case_number']) {
-    $duplicate = dbFetchOne("SELECT id FROM cases WHERE case_number = ? AND id != ?", [
-        sanitizeString($input['case_number']),
-        $caseId
-    ]);
-    if ($duplicate) {
-        errorResponse('A case with this case number already exists');
+// If case_number or client_dob is being changed, check for duplicates (same case_number + same dob)
+$newCaseNumber = !empty($input['case_number']) ? sanitizeString($input['case_number']) : $existingCase['case_number'];
+$newDob = isset($input['client_dob']) ? $input['client_dob'] : $existingCase['client_dob'];
+if ($newCaseNumber !== $existingCase['case_number'] || $newDob !== $existingCase['client_dob']) {
+    if (!empty($newDob)) {
+        $duplicate = dbFetchOne("SELECT id FROM cases WHERE case_number = ? AND client_dob = ? AND id != ?", [
+            $newCaseNumber, $newDob, $caseId
+        ]);
+        if ($duplicate) {
+            errorResponse('A case with this case number and date of birth already exists');
+        }
     }
 }
 

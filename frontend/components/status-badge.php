@@ -8,10 +8,11 @@ function renderStatusBadge($status) {
         'received_partial' => 'Partial',
         'received_complete' => 'Complete',
         'verified' => 'Verified',
-        'active' => 'Active',
-        'pending_review' => 'Review',
+        'collecting' => 'Collecting',
+        'in_review' => 'In Review',
+        'verification' => 'Verification',
         'completed' => 'Completed',
-        'on_hold' => 'On Hold',
+        'closed' => 'Closed',
     ];
     $display = $labels[$status] ?? $label;
     return '<span class="status-badge status-' . htmlspecialchars($status) . '">' . htmlspecialchars($display) . '</span>';

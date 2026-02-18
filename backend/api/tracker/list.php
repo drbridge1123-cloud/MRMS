@@ -6,8 +6,8 @@ $userId = requireAuth();
 [$page, $perPage, $offset] = getPaginationParams();
 
 // Build WHERE clauses
-$where = ['c.status = ?'];
-$params = ['active'];
+$where = ["c.status NOT IN ('completed','closed')"];
+$params = [];
 
 // Filter: search (case_number, client_name, provider_name)
 if (!empty($_GET['search'])) {
@@ -189,7 +189,7 @@ $summaryResult = dbFetchOne("
         SUM(CASE WHEN cp.overall_status = 'not_started'
             THEN 1 ELSE 0 END) AS not_started_count
     {$summaryJoins}
-    WHERE c.status = 'active'
+    WHERE c.status NOT IN ('completed','closed')
 ", []);
 
 // Custom response with summary

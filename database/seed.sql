@@ -26,9 +26,9 @@ INSERT INTO provider_contacts (provider_id, department, contact_type, contact_va
 
 -- Sample cases
 INSERT INTO cases (case_number, client_name, client_dob, doi, assigned_to, status, attorney_name, ini_completed) VALUES
-('2024-001', 'John Smith', '1985-03-15', '2024-01-10', 2, 'active', 'Mr. Kim', 1),
-('2024-002', 'Maria Garcia', '1990-07-22', '2024-02-05', 2, 'active', 'Mr. Park', 1),
-('2024-003', 'David Johnson', '1978-11-30', '2024-01-25', 1, 'active', 'Mr. Kim', 1);
+('2024-001', 'John Smith', '1985-03-15', '2024-01-10', 2, 'collecting', 'Mr. Kim', 1),
+('2024-002', 'Maria Garcia', '1990-07-22', '2024-02-05', 2, 'collecting', 'Mr. Park', 1),
+('2024-003', 'David Johnson', '1978-11-30', '2024-01-25', 1, 'collecting', 'Mr. Kim', 1);
 
 -- Sample case providers
 INSERT INTO case_providers (case_id, provider_id, treatment_start_date, treatment_end_date, record_types_needed, overall_status, assigned_to, deadline) VALUES

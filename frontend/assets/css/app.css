@@ -61,10 +61,11 @@
 .status-received_complete { background-color: #F0FDF4; color: #166534; }
 .status-verified { background-color: #DCFCE7; color: #14532D; }
 
-.status-active { background-color: #F0FDF4; color: #166534; }
-.status-pending_review { background-color: #FFFBEB; color: #D97706; }
+.status-collecting { background-color: #EFF6FF; color: #1E40AF; }
+.status-in_review { background-color: #FFFBEB; color: #D97706; }
+.status-verification { background-color: #FFF7ED; color: #C2410C; }
 .status-completed { background-color: #DCFCE7; color: #14532D; }
-.status-on_hold { background-color: #F5F5F0; color: #5A6B82; }
+.status-closed { background-color: #F5F5F0; color: #5A6B82; }
 
 /* ===== Difficulty Badges ===== */
 .difficulty-easy { background-color: #F0FDF4; color: #166534; }

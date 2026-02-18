@@ -29,20 +29,29 @@ ob_start();
                         <h2 class="text-2xl font-bold text-v2-text" x-text="caseData.case_number"></h2>
                         <p class="text-v2-text-light" x-text="caseData.client_name"></p>
                     </div>
-                    <span class="status-badge" :class="'status-' + caseData.status"
-                        x-text="getStatusLabel(caseData.status)"></span>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 items-center">
                     <button @click="showEditModal = true"
                         class="px-4 py-2 text-sm border border-v2-card-border rounded-lg hover:bg-v2-bg">Edit
                         Case</button>
-                    <select x-model="caseData.status" @change="updateCaseStatus()"
-                        class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
-                        <option value="active">Active</option>
-                        <option value="pending_review">Pending Review</option>
-                        <option value="completed">Completed</option>
-                        <option value="on_hold">On Hold</option>
+                    <span class="status-badge text-sm px-3 py-1.5" :class="'status-' + caseData.status"
+                        x-text="getStatusLabel(caseData.status)"></span>
+                    <select x-model="nextStatus" @change="changeStatus()"
+                        class="border border-v2-card-border rounded-lg px-3 py-2 text-sm"
+                        x-show="FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0">
+                        <option value="">Move to...</option>
+                        <template x-for="s in (FORWARD_TRANSITIONS[caseData.status] || [])" :key="s">
+                            <option :value="s" x-text="getStatusLabel(s)"></option>
+                        </template>
                     </select>
+                    <button x-show="BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0"
+                        @click="openSendBackModal()"
+                        class="px-4 py-2 text-sm border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 flex items-center gap-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                        </svg>
+                        Send Back
+                    </button>
                 </div>
             </div>
 
@@ -429,8 +438,8 @@ ob_start();
                                             <label class="block text-xs font-medium text-v2-text mb-1">Document Type</label>
                                             <select x-model="uploadForm.document_type"
                                                 class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                                                <option value="hipaa_authorization">HIPAA Authorization</option>
-                                                <option value="signed_release">Signed Release</option>
+                                                <option value="hipaa_authorization">Wet-Signed HIPPA Release</option>
+                                                <option value="signed_release">E-Signed HIPPA Release</option>
                                                 <option value="other">Other</option>
                                             </select>
                                         </div>
@@ -999,24 +1008,35 @@ ob_start();
     <!-- Preview & Send Modal -->
     <div x-show="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
         style="display:none;">
-        <div class="modal-overlay fixed inset-0" @click="showPreviewModal = false"></div>
+        <div class="modal-overlay fixed inset-0" @click="closePreviewModal()"></div>
         <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] z-10 flex flex-col"
             @click.stop>
             <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
                 <div>
-                    <h3 class="text-lg font-semibold">Preview Request Letter</h3>
+                    <h3 class="text-lg font-semibold" x-text="isEditingLetter ? 'Edit Request Letter' : 'Preview Request Letter'"></h3>
                     <p class="text-sm text-v2-text-light">
                         Sending via <span class="font-medium"
                             x-text="previewData.method === 'email' ? 'Email' : 'Fax'"></span>
                         to <span class="font-medium" x-text="previewData.provider_name"></span>
                     </p>
                 </div>
-                <button @click="showPreviewModal = false" class="text-v2-text-light hover:text-v2-text-mid">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
+                <div class="flex items-center gap-3">
+                    <button @click="toggleLetterEdit()"
+                        class="px-3 py-1.5 text-sm rounded-lg border flex items-center gap-1.5 transition-colors"
+                        :class="isEditingLetter ? 'bg-gold text-white border-gold' : 'border-v2-card-border text-v2-text-mid hover:bg-v2-bg'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        <span x-text="isEditingLetter ? 'Editing' : 'Edit Letter'"></span>
+                    </button>
+                    <button @click="closePreviewModal()" class="text-v2-text-light hover:text-v2-text-mid">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
             </div>
             <div class="px-6 py-3 border-b border-v2-card-border bg-v2-bg">
                 <label class="block text-sm font-medium text-v2-text mb-1"
@@ -1025,24 +1045,41 @@ ob_start();
                     class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
                     :placeholder="previewData.method === 'email' ? 'provider@example.com' : '(212) 555-1234'">
             </div>
-            <div x-show="previewData.subject && previewData.method === 'email'" class="px-6 py-3 border-b border-v2-card-border bg-v2-bg">
+            <div x-show="previewData.method === 'email'" class="px-6 py-3 border-b border-v2-card-border bg-v2-bg">
                 <label class="block text-sm font-medium text-v2-text mb-1">Subject</label>
-                <div class="px-3 py-2 bg-white border border-v2-card-border rounded-lg text-sm" x-text="previewData.subject"></div>
+                <input type="text" x-model="previewData.subject"
+                    :readonly="!isEditingLetter"
+                    class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm outline-none transition-colors"
+                    :class="isEditingLetter ? 'bg-white focus:ring-2 focus:ring-gold' : 'bg-gray-50 text-v2-text-mid cursor-default'">
             </div>
             <div class="flex-1 overflow-y-auto px-6 py-4">
-                <div class="border rounded-lg bg-white shadow-inner">
-                    <iframe :srcdoc="previewData.letter_html" class="w-full border-0" style="min-height: 600px;"
-                        sandbox=""></iframe>
+                <div class="border rounded-lg bg-white shadow-inner transition-colors"
+                    :class="isEditingLetter ? 'border-gold ring-2 ring-gold/20' : ''">
+                    <iframe x-ref="letterIframe" :srcdoc="previewData.letter_html" class="w-full border-0" style="min-height: 600px;"></iframe>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-v2-card-border flex items-center justify-between">
-                <div class="text-sm text-v2-text-light">
+                <div class="text-sm text-v2-text-light flex items-center gap-3">
                     <template x-if="previewData.send_status === 'failed'">
                         <span class="text-red-600">Previous attempt failed. You can retry.</span>
                     </template>
+                    <template x-if="isEditingLetter && originalLetterHtml">
+                        <button @click="resetLetterToOriginal()"
+                            class="text-v2-text-mid hover:text-v2-text underline text-sm">
+                            Reset to Original
+                        </button>
+                    </template>
+                    <template x-if="originalLetterHtml && !isEditingLetter">
+                        <span class="inline-flex items-center gap-1 text-amber-600 text-xs font-medium">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/>
+                            </svg>
+                            Letter has been modified
+                        </span>
+                    </template>
                 </div>
                 <div class="flex gap-3">
-                    <button @click="showPreviewModal = false"
+                    <button @click="closePreviewModal()"
                         class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
                     <button @click="confirmAndSend()" :disabled="sending || !previewData.recipient"
                         class="px-4 py-2 text-sm text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
@@ -1128,25 +1165,25 @@ ob_start();
             <form @submit.prevent="updateCase()" class="p-6 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Case Number</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Case Number <span class="text-red-500">*</span></label>
                         <input type="text" x-model="editData.case_number" required
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Client Name</label>
+                        <label class="block text-sm font-medium text-v2-text mb-1">Client Name <span class="text-red-500">*</span></label>
                         <input type="text" x-model="editData.client_name" required
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">DOB</label>
-                        <input type="date" x-model="editData.client_dob"
+                        <label class="block text-sm font-medium text-v2-text mb-1">DOB <span class="text-red-500">*</span></label>
+                        <input type="date" x-model="editData.client_dob" required
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">DOI</label>
-                        <input type="date" x-model="editData.doi"
+                        <label class="block text-sm font-medium text-v2-text mb-1">DOI <span class="text-red-500">*</span></label>
+                        <input type="date" x-model="editData.doi" required
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                     </div>
                 </div>
@@ -1157,12 +1194,13 @@ ob_start();
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Assigned To</label>
-                        <select x-model="editData.assigned_to"
+                        <label class="block text-sm font-medium text-v2-text mb-1">Assigned To <span class="text-red-500">*</span></label>
+                        <select x-model="editData.assigned_to" required
                             class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                            <option value="">Unassigned</option>
+                            <option value="">Select...</option>
                             <option value="1">Ella</option>
                             <option value="2">Miki</option>
+                            <option value="4">Jimi</option>
                         </select>
                     </div>
                 </div>
@@ -1179,6 +1217,39 @@ ob_start();
                         class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
                     <button type="submit" :disabled="saving"
                         class="px-4 py-2 text-sm text-white bg-gold rounded-lg hover:bg-gold-hover disabled:opacity-50">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Send Back Modal -->
+    <div x-show="showSendBackModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+        <div class="modal-overlay fixed inset-0" @click="showSendBackModal = false"></div>
+        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10" @click.stop>
+            <div class="px-6 py-4 border-b border-v2-card-border">
+                <h3 class="text-lg font-semibold text-orange-600">Send Case Back</h3>
+            </div>
+            <form @submit.prevent="submitSendBack()" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Send Back To <span class="text-red-500">*</span></label>
+                    <select x-model="sendBackForm.target_status" required
+                        class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                        <option value="">Select status...</option>
+                        <template x-for="s in (BACKWARD_TRANSITIONS[caseData.status] || [])" :key="s">
+                            <option :value="s" x-text="getStatusLabel(s)"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-v2-text mb-1">Reason <span class="text-red-500">*</span></label>
+                    <textarea x-model="sendBackForm.reason" required rows="3" placeholder="Explain why this case needs to be sent back..."
+                        class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm"></textarea>
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" @click="showSendBackModal = false"
+                        class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
+                    <button type="submit" :disabled="saving"
+                        class="px-4 py-2 text-sm text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50">Send Back</button>
                 </div>
             </form>
         </div>
@@ -1238,6 +1309,9 @@ ob_start();
 
             showEditModal: false,
             showAddProviderModal: false,
+            showSendBackModal: false,
+            sendBackForm: { target_status: '', reason: '' },
+            nextStatus: '',
             showRequestModal: false,
             showReceiptModal: false,
             showPreviewModal: false,
@@ -1250,6 +1324,9 @@ ob_start();
             expandedProvider: null,
             requestHistory: [],
             previewData: { method: '', recipient: '', provider_name: '', client_name: '', send_status: '', subject: '', letter_html: '', request_id: null },
+            isEditingLetter: false,
+            originalLetterHtml: '',
+            originalSubject: '',
             sending: false,
             deadlineProvider: null,
             deadlineForm: { deadline: '', reason: '' },
@@ -1339,18 +1416,54 @@ ob_start();
                     showToast('Case updated');
                     this.showEditModal = false;
                     await this.loadCase();
+                    await this.loadProviders();
                 } catch (e) {
                     showToast(e.data?.message || 'Update failed', 'error');
                 }
                 this.saving = false;
             },
 
-            async updateCaseStatus() {
+            async changeStatus() {
+                if (!this.nextStatus) return;
+                this.saving = true;
                 try {
-                    await api.put('cases/' + this.caseId, { status: this.caseData.status });
+                    await api.post('cases/' + this.caseId + '/change-status', {
+                        new_status: this.nextStatus
+                    });
                     showToast('Status updated');
+                    this.nextStatus = '';
+                    await this.loadCase();
                 } catch (e) {
-                    showToast('Failed to update status', 'error');
+                    showToast(e.data?.message || 'Failed to update status', 'error');
+                } finally {
+                    this.saving = false;
+                }
+            },
+
+            async openSendBackModal() {
+                this.sendBackForm = { target_status: '', reason: '' };
+                const backTargets = BACKWARD_TRANSITIONS[this.caseData.status] || [];
+                if (backTargets.length > 0) {
+                    this.sendBackForm.target_status = backTargets[0];
+                }
+                this.showSendBackModal = true;
+            },
+
+            async submitSendBack() {
+                if (!this.sendBackForm.target_status || !this.sendBackForm.reason.trim()) {
+                    showToast('Please fill in all required fields', 'error');
+                    return;
+                }
+                this.saving = true;
+                try {
+                    await api.post('cases/' + this.caseId + '/send-back', this.sendBackForm);
+                    showToast('Case sent back successfully');
+                    this.showSendBackModal = false;
+                    await this.loadCase();
+                } catch (e) {
+                    showToast(e.data?.message || 'Failed to send back', 'error');
+                } finally {
+                    this.saving = false;
                 }
             },
 
@@ -1516,7 +1629,7 @@ ob_start();
                 try {
                     await api.put('case-providers/' + cp.id + '/status', { overall_status: 'received_complete' });
                     showToast('Provider marked as complete', 'success');
-                    this.loadProviders();
+                    await this.loadProviders();
                 } catch (e) {
                     showToast('Failed to mark complete', 'error');
                 }
@@ -1609,7 +1722,8 @@ ob_start();
                     showToast('Request deleted successfully', 'success');
                     // Reload request history
                     await this.loadRequestHistory(req.case_provider_id);
-                    // Reload case data to update counts
+                    // Reload providers to update dates/status and case data
+                    await this.loadProviders();
                     await this.loadCase();
                 } catch (e) {
                     showToast(e.response?.data?.error || 'Failed to delete request', 'error');
@@ -1620,9 +1734,99 @@ ob_start();
                 try {
                     const res = await api.get('requests/' + req.id + '/preview');
                     this.previewData = res.data;
+                    this.isEditingLetter = false;
+                    this.originalLetterHtml = '';
+                    this.originalSubject = '';
                     this.showPreviewModal = true;
                 } catch (e) {
                     showToast(e.data?.message || 'Failed to load preview', 'error');
+                }
+            },
+
+            toggleLetterEdit() {
+                const iframe = this.$refs.letterIframe;
+                if (!iframe) return;
+
+                if (this.isEditingLetter) {
+                    // Switching OFF edit mode - save edits from iframe
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        this.previewData.letter_html = '<!DOCTYPE html>' + iframeDoc.documentElement.outerHTML;
+                        iframeDoc.designMode = 'off';
+                    } catch (e) { /* ignore */ }
+                    this.isEditingLetter = false;
+                } else {
+                    // Switching ON edit mode - store originals on first edit
+                    if (!this.originalLetterHtml) {
+                        this.originalLetterHtml = this.previewData.letter_html;
+                        this.originalSubject = this.previewData.subject;
+                    }
+                    this.isEditingLetter = true;
+                    // Wait for iframe to be ready then enable designMode
+                    const enableEdit = () => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            if (iframeDoc && iframeDoc.body) {
+                                iframeDoc.designMode = 'on';
+                            } else {
+                                setTimeout(enableEdit, 50);
+                            }
+                        } catch (e) {
+                            setTimeout(enableEdit, 50);
+                        }
+                    };
+                    this.$nextTick(() => enableEdit());
+                }
+            },
+
+            resetLetterToOriginal() {
+                if (this.originalLetterHtml) {
+                    this.previewData.letter_html = this.originalLetterHtml;
+                    this.previewData.subject = this.originalSubject;
+                    // Re-enable designMode after iframe reloads with original content
+                    if (this.isEditingLetter) {
+                        const iframe = this.$refs.letterIframe;
+                        const enableEdit = () => {
+                            try {
+                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                                if (iframeDoc && iframeDoc.body && iframeDoc.readyState === 'complete') {
+                                    iframeDoc.designMode = 'on';
+                                } else {
+                                    setTimeout(enableEdit, 50);
+                                }
+                            } catch (e) {
+                                setTimeout(enableEdit, 50);
+                            }
+                        };
+                        iframe.addEventListener('load', enableEdit, { once: true });
+                    }
+                    showToast('Letter reset to original');
+                }
+            },
+
+            closePreviewModal() {
+                // If in edit mode, save any pending edits to previewData before closing
+                if (this.isEditingLetter) {
+                    try {
+                        const iframe = this.$refs.letterIframe;
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        iframeDoc.designMode = 'off';
+                    } catch (e) { /* ignore */ }
+                }
+                this.isEditingLetter = false;
+                this.originalLetterHtml = '';
+                this.originalSubject = '';
+                this.showPreviewModal = false;
+            },
+
+            getEditedLetterHtml() {
+                // Extract current HTML from iframe (may have been edited)
+                try {
+                    const iframe = this.$refs.letterIframe;
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    return '<!DOCTYPE html>' + iframeDoc.documentElement.outerHTML;
+                } catch (e) {
+                    return this.previewData.letter_html;
                 }
             },
 
@@ -1637,11 +1841,24 @@ ob_start();
 
                 this.sending = true;
                 try {
-                    const res = await api.post('requests/' + this.previewData.request_id + '/send', {
+                    const payload = {
                         recipient: this.previewData.recipient
-                    });
+                    };
+
+                    // If letter was edited, send the edited content
+                    if (this.originalLetterHtml) {
+                        const currentHtml = this.isEditingLetter ? this.getEditedLetterHtml() : this.previewData.letter_html;
+                        if (currentHtml !== this.originalLetterHtml) {
+                            payload.letter_html = currentHtml;
+                        }
+                        if (this.previewData.subject !== this.originalSubject) {
+                            payload.subject = this.previewData.subject;
+                        }
+                    }
+
+                    const res = await api.post('requests/' + this.previewData.request_id + '/send', payload);
                     showToast(res.message || 'Sent successfully!');
-                    this.showPreviewModal = false;
+                    this.closePreviewModal();
                     if (this.expandedProvider) {
                         await this.loadRequestHistory(this.expandedProvider);
                     }

@@ -137,8 +137,8 @@ function documentSelector(caseId, caseProviderId = null) {
          */
         getDocumentTypeLabel(type) {
             const labels = {
-                'hipaa_authorization': 'HIPAA Auth',
-                'signed_release': 'Signed Release',
+                'hipaa_authorization': 'Wet-Signed',
+                'signed_release': 'E-Signed',
                 'other': 'Other'
             };
             return labels[type] || type;

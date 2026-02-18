@@ -23,17 +23,17 @@ ob_start();
             <select x-model="typeFilter" @change="loadData()"
                     class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
                 <option value="">All Types</option>
-                <option value="hospital">Hospital</option>
-                <option value="er">Emergency Room</option>
-                <option value="chiro">Chiropractor</option>
-                <option value="imaging">Imaging</option>
-                <option value="physician">Physician</option>
-                <option value="surgery_center">Surgery Center</option>
-                <option value="pharmacy">Pharmacy</option>
                 <option value="acupuncture">Acupuncture</option>
+                <option value="chiro">Chiropractor</option>
                 <option value="massage">Massage</option>
                 <option value="pain_management">Pain Management</option>
                 <option value="pt">Physical Therapy</option>
+                <option value="er">Emergency Room</option>
+                <option value="hospital">Hospital</option>
+                <option value="physician">Physician</option>
+                <option value="imaging">Imaging</option>
+                <option value="pharmacy">Pharmacy</option>
+                <option value="surgery_center">Surgery Center</option>
                 <option value="other">Other</option>
             </select>
 
@@ -275,17 +275,17 @@ ob_start();
                         <label class="block text-sm font-medium text-v2-text mb-1">Type *</label>
                         <select x-model="newProvider.type" required
                                 class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                            <option value="hospital">Hospital</option>
-                            <option value="er">Emergency Room</option>
-                            <option value="chiro">Chiropractor</option>
-                            <option value="imaging">Imaging Center</option>
-                            <option value="physician">Physician</option>
-                            <option value="surgery_center">Surgery Center</option>
-                            <option value="pharmacy">Pharmacy</option>
                             <option value="acupuncture">Acupuncture</option>
+                            <option value="chiro">Chiropractor</option>
                             <option value="massage">Massage</option>
                             <option value="pain_management">Pain Management</option>
                             <option value="pt">Physical Therapy</option>
+                            <option value="er">Emergency Room</option>
+                            <option value="hospital">Hospital</option>
+                            <option value="physician">Physician</option>
+                            <option value="imaging">Imaging Center</option>
+                            <option value="pharmacy">Pharmacy</option>
+                            <option value="surgery_center">Surgery Center</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
@@ -420,17 +420,17 @@ ob_start();
                         <label class="block text-sm font-medium text-v2-text mb-1">Type *</label>
                         <select x-model="editProvider.type" required
                                 class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                            <option value="hospital">Hospital</option>
-                            <option value="er">Emergency Room</option>
-                            <option value="chiro">Chiropractor</option>
-                            <option value="imaging">Imaging Center</option>
-                            <option value="physician">Physician</option>
-                            <option value="surgery_center">Surgery Center</option>
-                            <option value="pharmacy">Pharmacy</option>
                             <option value="acupuncture">Acupuncture</option>
+                            <option value="chiro">Chiropractor</option>
                             <option value="massage">Massage</option>
                             <option value="pain_management">Pain Management</option>
                             <option value="pt">Physical Therapy</option>
+                            <option value="er">Emergency Room</option>
+                            <option value="hospital">Hospital</option>
+                            <option value="physician">Physician</option>
+                            <option value="imaging">Imaging Center</option>
+                            <option value="pharmacy">Pharmacy</option>
+                            <option value="surgery_center">Surgery Center</option>
                             <option value="other">Other</option>
                         </select>
                     </div>

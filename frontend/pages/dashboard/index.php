@@ -14,7 +14,7 @@ ob_start();
         <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-6 card-hover stat-card">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-v2-text-light">Active Cases</p>
+                    <p class="text-sm text-v2-text-light">Open Cases</p>
                     <p class="v2-stat-number text-v2-text mt-1" x-text="summary.active_cases ?? '-'"></p>
                 </div>
                 <div class="w-12 h-12 bg-v2-bg rounded-xl flex items-center justify-center">
@@ -427,7 +427,7 @@ ob_start();
     <!-- Recent Cases -->
     <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mt-6">
         <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-            <h2 class="font-semibold text-v2-text" x-text="$store.auth.isStaff ? 'My Active Cases' : 'All Active Cases'">My Active Cases</h2>
+            <h2 class="font-semibold text-v2-text" x-text="$store.auth.isStaff ? 'My Open Cases' : 'All Open Cases'">My Open Cases</h2>
             <a href="/MRMS/frontend/pages/cases/index.php" class="text-sm text-gold hover:text-gold">View All</a>
         </div>
         <div class="overflow-x-auto">
@@ -446,7 +446,7 @@ ob_start();
                 </thead>
                 <tbody>
                     <template x-if="cases.length === 0">
-                        <tr><td colspan="8" class="text-center text-v2-text-light py-8">No active cases</td></tr>
+                        <tr><td colspan="8" class="text-center text-v2-text-light py-8">No open cases</td></tr>
                     </template>
                     <template x-for="c in cases" :key="c.id">
                         <tr class="cursor-pointer" @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id='+c.id">
@@ -545,7 +545,7 @@ function dashboardPage() {
 
         async loadCases() {
             try {
-                const res = await api.get('cases?status=active&per_page=10');
+                const res = await api.get('cases?per_page=10');
                 this.cases = res.data || [];
             } catch (e) {}
         },

@@ -221,7 +221,16 @@ function getRequestLetterData($requestId) {
             p.address AS provider_address,
             p.fax AS provider_fax,
             p.email AS provider_email,
-            p.preferred_method AS provider_preferred_method
+            p.preferred_method AS provider_preferred_method,
+            (SELECT MIN(rr2.request_date) FROM record_requests rr2
+             WHERE rr2.case_provider_id = rr.case_provider_id
+             AND rr2.request_type = 'initial') AS initial_request_date,
+            (SELECT GROUP_CONCAT(DATE_FORMAT(rr3.request_date, '%m/%d/%Y') ORDER BY rr3.request_date SEPARATOR ', ')
+             FROM record_requests rr3
+             WHERE rr3.case_provider_id = rr.case_provider_id
+             AND rr3.request_type = 'follow_up'
+             AND rr3.id != rr.id
+             AND rr3.send_status = 'sent') AS followup_dates
         FROM record_requests rr
         JOIN case_providers cp ON rr.case_provider_id = cp.id
         JOIN cases c ON cp.case_id = c.id
@@ -615,15 +624,32 @@ function processTemplatePlaceholders($template, $data) {
 
         // Request info
         'request_date' => $data['request_date'] ?? date('Y-m-d'),
+        'initial_request_date' => $data['initial_request_date'] ?? '',
         'treatment_start_date' => $data['treatment_start_date'] ?? '',
         'treatment_end_date' => $data['treatment_end_date'] ?? '',
         'notes' => $data['notes'] ?? '',
+
+        // Sender info (passed from preview/send endpoints)
+        'sender_name' => $data['sender_name'] ?? '',
+        'sender_email' => $data['sender_email'] ?? '',
+
+        // Follow-up dates (comma-separated, pre-formatted from SQL)
+        'followup_dates' => $data['followup_dates'] ?? '',
+
+        // Request method info
+        'request_method' => ucfirst($data['request_method'] ?? 'Email'),
+        'recipient_contact' => ($data['request_method'] ?? 'email') === 'fax'
+            ? ($data['provider_fax'] ?? '')
+            : ($data['provider_email'] ?? ''),
 
         // Boolean flags
         'authorization_sent' => !empty($data['authorization_sent']),
 
         // Computed fields
         'record_types_list' => '', // Will be generated below
+        'record_types_checkbox' => '', // Will be generated below
+        'firm_attorneys' => '', // Will be generated below
+        'firm_logo_base64' => '', // Will be generated below
     ];
 
     // Generate record types list HTML
@@ -653,6 +679,47 @@ function processTemplatePlaceholders($template, $data) {
     }
     $recordsHtml .= '</ol>';
     $placeholders['record_types_list'] = $recordsHtml;
+
+    // Generate checkbox-style record types (X) list
+    $checkboxLabels = [
+        'medical_records' => 'Medical records, including exams, any imaging &amp; readings, and chart notes',
+        'billing'         => 'Itemized medical charges',
+        'chart'           => 'Chart/Progress notes',
+        'imaging'         => 'Imaging studies (X-rays, MRI, CT scans) and readings',
+        'op_report'       => 'Operative Reports',
+    ];
+    $checkboxHtml = '';
+    if (!empty($data['record_types'])) {
+        foreach (explode(',', $data['record_types']) as $type) {
+            $type = trim($type);
+            if (isset($checkboxLabels[$type])) {
+                $checkboxHtml .= '<p style="margin: 2px 0; padding-left: 40px; text-indent: 0;">(X)&nbsp;&nbsp;&nbsp;' . $checkboxLabels[$type] . '</p>';
+            }
+        }
+    }
+    if (empty($checkboxHtml)) {
+        $checkboxHtml = '<p style="margin: 2px 0; padding-left: 40px;">(X)&nbsp;&nbsp;&nbsp;Medical records, including exams, any imaging &amp; readings, and chart notes</p>'
+                      . '<p style="margin: 2px 0; padding-left: 40px;">(X)&nbsp;&nbsp;&nbsp;Itemized medical charges</p>';
+    }
+    $placeholders['record_types_checkbox'] = $checkboxHtml;
+
+    // Generate firm attorneys list HTML
+    $attorneysHtml = '';
+    if (defined('FIRM_ATTORNEYS')) {
+        $attorneys = json_decode(FIRM_ATTORNEYS, true);
+        if ($attorneys) {
+            foreach ($attorneys as $att) {
+                $attorneysHtml .= htmlspecialchars($att['name']) . ', ' . htmlspecialchars($att['title']) . '<br>';
+            }
+        }
+    }
+    $placeholders['firm_attorneys'] = $attorneysHtml;
+
+    // Generate firm logo base64
+    $logoPath = __DIR__ . '/../../frontend/assets/images/firm-logo.png';
+    if (file_exists($logoPath)) {
+        $placeholders['firm_logo_base64'] = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+    }
 
     // Process conditional blocks: {{#if variable}}...{{else}}...{{/if}}
     $template = preg_replace_callback(
@@ -692,8 +759,9 @@ function processTemplatePlaceholders($template, $data) {
                 $value = $param ?? '';
             }
 
-            // Escape HTML (but not for record_types_list which is already HTML)
-            if ($variable !== 'record_types_list') {
+            // Escape HTML (but not for pre-built HTML placeholders)
+            $rawHtmlPlaceholders = ['record_types_list', 'record_types_checkbox', 'firm_attorneys', 'firm_logo_base64'];
+            if (!in_array($variable, $rawHtmlPlaceholders)) {
                 $value = htmlspecialchars((string)$value);
             }
 
@@ -719,6 +787,10 @@ function getAvailablePlaceholders($templateType) {
         'firm_phone' => 'Law firm phone number',
         'firm_fax' => 'Law firm fax number',
         'firm_email' => 'Law firm email',
+        'firm_attorneys' => 'HTML list of firm attorneys from config',
+        'firm_logo_base64' => 'Base64-encoded firm logo image (use in img src)',
+        'sender_name' => 'Name of the user sending the request',
+        'sender_email' => 'Email of the user sending the request',
     ];
 
     $medicalRecordsPlaceholders = [
@@ -735,11 +807,17 @@ function getAvailablePlaceholders($templateType) {
         'attorney_name' => 'Attorney name',
         'request_date' => 'Request date (raw date)',
         'request_date|date:F j, Y' => 'Request date (formatted)',
+        'initial_request_date' => 'Date of initial request (auto-detected)',
+        'initial_request_date|date:m/d/Y' => 'Initial request date (formatted)',
+        'followup_dates' => 'Comma-separated list of previous follow-up dates (pre-formatted mm/dd/yyyy)',
         'treatment_start_date' => 'Treatment start date (raw)',
         'treatment_start_date|date:m/d/Y' => 'Treatment start date (formatted)',
         'treatment_end_date' => 'Treatment end date (raw)',
         'treatment_end_date|date:m/d/Y' => 'Treatment end date (formatted)',
-        'record_types_list' => 'HTML list of requested record types',
+        'record_types_list' => 'HTML numbered list of requested record types',
+        'record_types_checkbox' => 'HTML (X) checkbox-style list of record types',
+        'request_method' => 'Send method: Email or Fax',
+        'recipient_contact' => 'Provider email or fax based on send method',
         'notes' => 'Additional notes',
         'authorization_sent' => 'Boolean: true if authorization was sent',
         '{{#if authorization_sent}}...{{/if}}' => 'Conditional: show if authorization sent',

@@ -37,15 +37,38 @@ if (empty($recipient)) {
     errorResponse("No recipient {$label} specified");
 }
 
-// Render letter
-// Use database template if specified, otherwise use hardcoded template
-$subject = '';
-if (!empty($letterData['template_id'])) {
-    $result = renderLetterFromTemplate($letterData['template_id'], $letterData);
-    $html = $result['html'];
-    $subject = $result['subject'];
+// Add sender info for template placeholders
+$senderInfo = dbFetchOne("SELECT full_name, smtp_email FROM users WHERE id = ?", [$userId]);
+if ($senderInfo) {
+    $letterData['sender_name'] = $senderInfo['full_name'] ?? '';
+    $letterData['sender_email'] = $senderInfo['smtp_email'] ?? '';
+}
+
+// Check if user sent edited letter content
+$userEditedHtml = !empty($input['letter_html']) ? $input['letter_html'] : null;
+$userEditedSubject = isset($input['subject']) ? sanitizeString($input['subject']) : null;
+$isEdited = false;
+
+if ($userEditedHtml) {
+    // Use user-edited HTML (sanitized)
+    $html = sanitizeLetterHtml($userEditedHtml);
+    $subject = $userEditedSubject ?: '';
+    $isEdited = true;
 } else {
-    $html = renderRequestLetter($letterData);
+    // Render letter from template (existing behavior)
+    $subject = '';
+    if (!empty($letterData['template_id'])) {
+        $result = renderLetterFromTemplate($letterData['template_id'], $letterData);
+        $html = $result['html'];
+        $subject = $result['subject'];
+    } else {
+        $html = renderRequestLetter($letterData);
+    }
+    // Allow subject override even without body edit
+    if ($userEditedSubject !== null) {
+        $subject = $userEditedSubject;
+        $isEdited = true;
+    }
 }
 
 // Load attachments if this is an email request
@@ -60,9 +83,12 @@ if ($letterData['request_method'] === 'email') {
     );
 
     foreach ($attachmentRecords as $att) {
-        $fullPath = __DIR__ . '/../../storage/' . $att['file_path'];
+        $fullPath = __DIR__ . '/../../../storage/' . $att['file_path'];
         if (file_exists($fullPath)) {
-            $attachments[] = $fullPath;
+            $attachments[] = [
+                'path' => $fullPath,
+                'name' => $att['original_file_name']
+            ];
         }
     }
 }
@@ -128,7 +154,8 @@ if ($result['success']) {
 
     logActivity($userId, 'request_delivered', 'record_request', $requestId, [
         'method'    => $letterData['request_method'],
-        'recipient' => $recipient
+        'recipient' => $recipient,
+        'edited'    => $isEdited
     ]);
 
     successResponse([
@@ -146,7 +173,8 @@ if ($result['success']) {
     logActivity($userId, 'request_send_failed', 'record_request', $requestId, [
         'method'    => $letterData['request_method'],
         'recipient' => $recipient,
-        'error'     => $result['error']
+        'error'     => $result['error'],
+        'edited'    => $isEdited
     ]);
 
     errorResponse('Failed to send: ' . $result['error'], 422);

@@ -18,16 +18,14 @@ if (!$request) {
     errorResponse('Request not found', 404);
 }
 
-// Only allow deleting draft or failed requests
-if (!in_array($request['send_status'], ['draft', 'failed'])) {
-    errorResponse('Can only delete draft or failed requests. This request has status: ' . $request['send_status'], 422);
-}
+// Delete attachments first
+dbDelete('request_attachments', 'record_request_id = ?', [$requestId]);
+
+// Delete any send_log entries
+dbDelete('send_log', 'record_request_id = ?', [$requestId]);
 
 // Delete the request
 dbDelete('record_requests', 'id = ?', [$requestId]);
-
-// Also delete any send_log entries
-dbDelete('send_log', 'record_request_id = ?', [$requestId]);
 
 // Recalculate case_provider status based on remaining requests
 $cpId = $request['case_provider_id'];
@@ -40,8 +38,8 @@ $remainingRequests = dbFetchAll(
 
 // Determine new status based on remaining requests
 if (empty($remainingRequests)) {
-    // No requests left - back to pending
-    $newStatus = 'pending';
+    // No requests left - back to not_started
+    $newStatus = 'not_started';
 } else {
     $latestRequest = $remainingRequests[0];
     if ($latestRequest['request_type'] === 'follow_up') {

@@ -12,7 +12,7 @@ ob_start();
     <div class="flex items-center justify-between mb-6">
         <div>
             <h1 class="text-2xl font-bold text-v2-text">MR Tracker</h1>
-            <p class="text-sm text-v2-text-light mt-1">All medical record requests across active cases</p>
+            <p class="text-sm text-v2-text-light mt-1">All medical record requests across open cases</p>
         </div>
     </div>
 

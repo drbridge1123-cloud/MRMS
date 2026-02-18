@@ -5,7 +5,7 @@ if ($method !== 'GET') {
 
 $userId = requireAuth();
 
-$activeCases = dbCount('cases', "status = 'active'");
+$activeCases = dbCount('cases', "status NOT IN ('completed','closed')");
 
 $requestingCount = dbCount(
     'case_providers',
@@ -39,7 +39,7 @@ $escRows = dbFetchAll("
     JOIN cases c ON c.id = cp.case_id
     LEFT JOIN record_requests rr ON rr.case_provider_id = cp.id
     WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-      AND c.status = 'active'
+      AND c.status NOT IN ('completed','closed')
     GROUP BY cp.id
     HAVING MIN(rr.request_date) IS NOT NULL
 ");

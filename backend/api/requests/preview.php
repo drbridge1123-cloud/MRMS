@@ -19,6 +19,13 @@ if (!in_array($letterData['request_method'], ['email', 'fax'])) {
     errorResponse('Only email and fax requests can be previewed');
 }
 
+// Add sender info for template placeholders
+$sender = dbFetchOne("SELECT full_name, smtp_email FROM users WHERE id = ?", [$userId]);
+if ($sender) {
+    $letterData['sender_name'] = $sender['full_name'] ?? '';
+    $letterData['sender_email'] = $sender['smtp_email'] ?? '';
+}
+
 // Use database template if specified, otherwise use hardcoded template
 $subject = '';
 if (!empty($letterData['template_id'])) {
