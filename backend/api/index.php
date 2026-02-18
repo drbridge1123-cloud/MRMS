@@ -326,6 +326,44 @@ switch ($resource) {
         }
         break;
 
+    case 'mbds':
+        if ($method === 'GET' && !$id) {
+            require __DIR__ . '/mbds/list.php';
+        } elseif ($method === 'GET' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/get.php';
+        } elseif ($method === 'POST' && $id && $action === 'lines') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/add-line.php';
+        } elseif ($method === 'POST' && $id && $action === 'complete') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/complete.php';
+        } elseif ($method === 'POST' && $id && $action === 'approve') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/approve.php';
+        } elseif ($method === 'POST' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/create.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/update.php';
+        } else {
+            errorResponse('MBDS endpoint not found', 404);
+        }
+        break;
+
+    case 'mbds-lines':
+        if ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/update-line.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/delete-line.php';
+        } else {
+            errorResponse('MBDS lines endpoint not found', 404);
+        }
+        break;
+
     case 'health-ledger':
         if ($method === 'GET' && $id === 'list') {
             require __DIR__ . '/health-ledger/list.php';

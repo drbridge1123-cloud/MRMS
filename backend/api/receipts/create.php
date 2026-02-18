@@ -50,7 +50,11 @@ if (isset($input['notes'])) $data['notes'] = sanitizeString($input['notes']);
 $newId = dbInsert('record_receipts', $data);
 
 $newStatus = $isComplete ? 'received_complete' : 'received_partial';
-dbUpdate('case_providers', ['overall_status' => $newStatus], 'id = ?', [$cpId]);
+$statusUpdate = ['overall_status' => $newStatus];
+if (!$cp['received_date']) {
+    $statusUpdate['received_date'] = $input['received_date'];
+}
+dbUpdate('case_providers', $statusUpdate, 'id = ?', [$cpId]);
 
 if ($isComplete) {
     $adminUser = dbFetchOne("SELECT id FROM users WHERE role = 'admin' AND is_active = 1 LIMIT 1");

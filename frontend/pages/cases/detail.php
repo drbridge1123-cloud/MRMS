@@ -26,30 +26,37 @@ ob_start();
                         </svg>
                     </a>
                     <div>
-                        <h2 class="text-2xl font-bold text-v2-text" x-text="caseData.case_number"></h2>
-                        <p class="text-v2-text-light" x-text="caseData.client_name"></p>
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-2xl font-bold text-v2-text" x-text="caseData.case_number"></h2>
+                            <span class="status-badge text-xs px-2.5 py-1" :class="'status-' + caseData.status"
+                                x-text="getStatusLabel(caseData.status)"></span>
+                        </div>
+                        <p class="text-v2-text-light text-sm" x-text="caseData.client_name"></p>
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <button @click="showEditModal = true"
-                        class="px-4 py-2 text-sm border border-v2-card-border rounded-lg hover:bg-v2-bg">Edit
-                        Case</button>
-                    <span class="status-badge text-sm px-3 py-1.5" :class="'status-' + caseData.status"
-                        x-text="getStatusLabel(caseData.status)"></span>
+                        class="px-3 py-1.5 text-sm text-v2-text-mid hover:text-v2-text border border-v2-card-border rounded-lg hover:bg-v2-bg">
+                        Edit
+                    </button>
+                    <a x-show="caseData && ['in_review','verification','completed','closed'].includes(caseData.status)"
+                       :href="'/MRMS/frontend/pages/mbds/edit.php?case_id=' + caseId"
+                       class="px-3 py-1.5 text-sm text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">
+                        MBDS
+                    </a>
+                    <div class="w-px h-6 bg-v2-card-border mx-1"
+                         x-show="caseData && ((FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0) || (BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0))"></div>
                     <select x-model="nextStatus" @change="changeStatus()"
-                        class="border border-v2-card-border rounded-lg px-3 py-2 text-sm"
-                        x-show="FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0">
+                        class="border border-v2-card-border rounded-lg px-3 py-1.5 text-sm"
+                        x-show="caseData && FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0">
                         <option value="">Move to...</option>
-                        <template x-for="s in (FORWARD_TRANSITIONS[caseData.status] || [])" :key="s">
+                        <template x-for="s in (caseData && FORWARD_TRANSITIONS[caseData.status] || [])" :key="s">
                             <option :value="s" x-text="getStatusLabel(s)"></option>
                         </template>
                     </select>
-                    <button x-show="BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0"
+                    <button x-show="caseData && BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0"
                         @click="openSendBackModal()"
-                        class="px-4 py-2 text-sm border border-orange-300 text-orange-600 rounded-lg hover:bg-orange-50 flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
-                        </svg>
+                        class="px-3 py-1.5 text-sm text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-50">
                         Send Back
                     </button>
                 </div>
@@ -140,6 +147,7 @@ ob_start();
                                                     d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
                                             </svg></template></div>
                                 </th>
+                                <th>Received</th>
                                 <th>Days Elapsed</th>
                                 <th class="cursor-pointer select-none" @click="sortProviders('deadline')">
                                     <div class="flex items-center gap-1">Deadline <template
@@ -164,7 +172,7 @@ ob_start();
                         </thead>
                         <tbody x-show="providers.length === 0">
                             <tr>
-                                <td colspan="9" class="text-center text-v2-text-light py-8">No providers added yet</td>
+                                <td colspan="10" class="text-center text-v2-text-light py-8">No providers added yet</td>
                             </tr>
                         </tbody>
                         <template x-for="p in providers" :key="p.id">
@@ -184,12 +192,22 @@ ob_start();
                                     </td>
                                     <td><span class="text-xs text-v2-text-light"
                                             x-text="getProviderTypeLabel(p.provider_type)"></span></td>
-                                    <td>
-                                        <span class="status-badge" :class="'status-' + p.overall_status"
-                                            x-text="getStatusLabel(p.overall_status)"></span>
+                                    <td @click.stop>
+                                        <select :value="p.overall_status"
+                                            @change="updateProviderStatus(p, $event.target.value)"
+                                            class="text-xs font-semibold border-0 bg-transparent cursor-pointer rounded px-1 py-0.5 focus:ring-1 focus:ring-gold outline-none"
+                                            :class="'status-' + p.overall_status">
+                                            <option value="not_started">Not Started</option>
+                                            <option value="requesting">Requesting</option>
+                                            <option value="follow_up">Follow Up</option>
+                                            <option value="received_partial">Partial</option>
+                                            <option value="received_complete">Complete</option>
+                                            <option value="verified">Verified</option>
+                                        </select>
                                     </td>
                                     <td x-text="formatDate(p.first_request_date) || '-'"></td>
                                     <td x-text="formatDate(p.last_request_date) || '-'"></td>
+                                    <td x-text="formatDate(p.received_date) || '-'"></td>
                                     <td>
                                         <span
                                             :class="p.days_since_request > 14 ? 'text-red-600 font-semibold' : 'text-v2-text-mid'"
@@ -368,26 +386,28 @@ ob_start();
 
             <!-- Documents Section -->
             <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mb-6"
-                x-data="documentUploader(caseId)" x-init="init()">
-                <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                    <h3 class="font-semibold text-v2-text">Documents</h3>
-                    <button @click="$refs.fileInput.click()"
-                        class="bg-gold text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gold-hover flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                x-data="{...documentUploader(caseId), docsOpen: false}" x-init="init()">
+                <div class="px-6 py-3 flex items-center justify-between cursor-pointer" @click="docsOpen = !docsOpen">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="docsOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
+                        <h3 class="font-semibold text-v2-text text-sm">Documents</h3>
+                        <span class="text-xs text-v2-text-light" x-text="'(' + documents.length + ')'"></span>
+                    </div>
+                    <button @click.stop="docsOpen = true; $nextTick(() => $refs.fileInput.click())"
+                        class="bg-gold text-white px-2.5 py-1 rounded-lg text-xs hover:bg-gold-hover">
                         Upload
                     </button>
                 </div>
-                <div class="p-6">
+                <div class="px-6 pb-4" x-show="docsOpen" x-collapse>
                     <!-- Upload Area -->
-                    <div class="mb-6"
+                    <div class="mb-4"
                         @dragover="handleDragOver($event)"
                         @dragleave="handleDragLeave()"
                         @drop="handleDrop($event)">
                         <!-- Drag and Drop Zone -->
-                        <div class="border-2 border-dashed rounded-lg p-6 text-center transition-colors"
+                        <div class="border-2 border-dashed rounded-lg p-3 text-center transition-colors"
                             :class="dragOver ? 'border-gold bg-gold/5' : 'border-v2-card-border hover:border-gold/50'">
                             <input type="file" x-ref="fileInput" @change="handleFileSelect($event)"
                                 accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.tif,.tiff"
@@ -395,17 +415,12 @@ ob_start();
 
                             <template x-if="!selectedFile">
                                 <div>
-                                    <svg class="w-12 h-12 mx-auto text-v2-text-light mb-3" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                                    </svg>
-                                    <p class="text-sm text-v2-text mb-1">Drag and drop files here, or</p>
-                                    <button type="button" @click="$refs.fileInput.click()"
-                                        class="text-sm text-gold hover:text-gold-hover font-medium">
-                                        Browse files
-                                    </button>
-                                    <p class="text-xs text-v2-text-light mt-2">PDF, DOC, DOCX, XLS, XLSX, JPG, PNG, TIFF (max 10MB)</p>
+                                    <p class="text-xs text-v2-text-light">
+                                        Drag files here or
+                                        <button type="button" @click="$refs.fileInput.click()"
+                                            class="text-gold hover:text-gold-hover font-medium">browse</button>
+                                        — PDF, DOC, XLS, JPG, PNG, TIFF (max 10MB)
+                                    </p>
                                 </div>
                             </template>
 
@@ -529,7 +544,7 @@ ob_start();
                     </template>
 
                     <template x-if="!loading && documents.length === 0">
-                        <p class="text-sm text-v2-text-light text-center py-8">No documents uploaded yet</p>
+                        <p class="text-sm text-v2-text-light text-center py-3">No documents uploaded yet</p>
                     </template>
 
                     <template x-if="!loading && documents.length > 0">
@@ -591,20 +606,26 @@ ob_start();
             </div>
 
             <!-- Activity Log section -->
-            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border">
-                <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                    <h3 class="font-semibold text-v2-text">Activity Log</h3>
-                    <select x-model="noteFilterProvider" @change="loadNotes()"
-                        class="border border-v2-card-border rounded-lg px-2 py-1.5 text-xs">
+            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border" x-data="{logOpen: false}">
+                <div class="px-6 py-3 flex items-center justify-between cursor-pointer" @click="logOpen = !logOpen">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="logOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        <h3 class="font-semibold text-v2-text text-sm">Activity Log</h3>
+                        <span class="text-xs text-v2-text-light" x-text="'(' + notes.length + ')'"></span>
+                    </div>
+                    <select x-model="noteFilterProvider" @change="loadNotes()" @click.stop
+                        class="border border-v2-card-border rounded-lg px-2 py-1 text-xs">
                         <option value="">All Providers</option>
                         <template x-for="prov in providers" :key="prov.id">
                             <option :value="prov.id" x-text="prov.provider_name"></option>
                         </template>
                     </select>
                 </div>
-                <div class="p-6">
+                <div class="px-6 pb-4" x-show="logOpen" x-collapse>
                     <!-- Add note form -->
-                    <form @submit.prevent="addNote()" class="mb-6 space-y-3">
+                    <form @submit.prevent="addNote()" class="mb-4 space-y-2">
                         <div class="flex flex-wrap gap-2">
                             <select x-model="newNote.note_type"
                                 class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
@@ -1235,7 +1256,7 @@ ob_start();
                     <select x-model="sendBackForm.target_status" required
                         class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                         <option value="">Select status...</option>
-                        <template x-for="s in (BACKWARD_TRANSITIONS[caseData.status] || [])" :key="s">
+                        <template x-for="s in (caseData && BACKWARD_TRANSITIONS[caseData.status] || [])" :key="s">
                             <option :value="s" x-text="getStatusLabel(s)"></option>
                         </template>
                     </select>
@@ -1621,6 +1642,17 @@ ob_start();
                     await this.loadProviders();
                 } catch (e) {
                     showToast('Failed to remove provider', 'error');
+                }
+            },
+
+            async updateProviderStatus(cp, newStatus) {
+                try {
+                    await api.put('case-providers/' + cp.id + '/status', { overall_status: newStatus });
+                    showToast('Status updated', 'success');
+                    await this.loadProviders();
+                    await this.loadCase();
+                } catch (e) {
+                    showToast('Failed to update status', 'error');
                 }
             },
 

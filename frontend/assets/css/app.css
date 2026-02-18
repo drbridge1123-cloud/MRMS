@@ -144,7 +144,8 @@
 /* ===== Table Styles ===== */
 .data-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .data-table thead th {
@@ -157,6 +158,10 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 2px solid var(--card-border);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 0 var(--card-border);
 }
 
 .data-table tbody td {

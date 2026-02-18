@@ -26,6 +26,24 @@ if (!empty($_GET['assigned_to'])) {
     $params[] = (int)$_GET['assigned_to'];
 }
 
+// Filter: escalation tier
+if (!empty($_GET['tier'])) {
+    $tierMap = [
+        'action' => [ESCALATION_ACTION_NEEDED_DAYS, ESCALATION_MANAGER_DAYS - 1],
+        'manager' => [ESCALATION_MANAGER_DAYS, ESCALATION_ADMIN_DAYS - 1],
+        'admin' => [ESCALATION_ADMIN_DAYS, 9999],
+    ];
+    if (isset($tierMap[$_GET['tier']])) {
+        $range = $tierMap[$_GET['tier']];
+        $where[] = "DATEDIFF(CURDATE(), (SELECT MIN(r2.request_date) FROM hl_requests r2 WHERE r2.item_id = hli.id)) >= ?";
+        $params[] = $range[0];
+        if ($range[1] < 9999) {
+            $where[] = "DATEDIFF(CURDATE(), (SELECT MIN(r3.request_date) FROM hl_requests r3 WHERE r3.item_id = hli.id)) <= ?";
+            $params[] = $range[1];
+        }
+    }
+}
+
 // Special filters
 $filter = $_GET['filter'] ?? '';
 if ($filter === 'followup_due') {
@@ -103,6 +121,19 @@ foreach ($rows as &$row) {
     $row['is_followup_due'] = $row['next_followup_date']
         && $row['next_followup_date'] <= date('Y-m-d')
         && in_array($row['overall_status'], ['requesting', 'follow_up']);
+
+    // Escalation tier
+    $firstReq = dbFetchOne(
+        "SELECT MIN(request_date) AS first_date FROM hl_requests WHERE item_id = ?",
+        [$row['id']]
+    );
+    $daysSinceFirst = $firstReq && $firstReq['first_date']
+        ? (int)((strtotime('today') - strtotime($firstReq['first_date'])) / 86400)
+        : null;
+    $esc = getEscalationInfo($daysSinceFirst);
+    $row['escalation_tier'] = $esc['tier'];
+    $row['escalation_label'] = $esc['label'];
+    $row['escalation_css'] = $esc['css'];
 }
 unset($row);
 

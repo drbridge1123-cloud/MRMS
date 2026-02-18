@@ -430,7 +430,6 @@ ob_start();
             <h2 class="font-semibold text-v2-text" x-text="$store.auth.isStaff ? 'My Open Cases' : 'All Open Cases'">My Open Cases</h2>
             <a href="/MRMS/frontend/pages/cases/index.php" class="text-sm text-gold hover:text-gold">View All</a>
         </div>
-        <div class="overflow-x-auto">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -483,7 +482,6 @@ ob_start();
                     </template>
                 </tbody>
             </table>
-        </div>
     </div>
 </div>
 

@@ -36,7 +36,11 @@ if (!$cp) {
 $oldStatus = $cp['overall_status'];
 $newStatus = $input['overall_status'];
 
-dbUpdate('case_providers', ['overall_status' => $newStatus], 'id = ?', [$cpId]);
+$statusUpdate = ['overall_status' => $newStatus];
+if (in_array($newStatus, ['received_complete', 'received_partial']) && !$cp['received_date']) {
+    $statusUpdate['received_date'] = date('Y-m-d');
+}
+dbUpdate('case_providers', $statusUpdate, 'id = ?', [$cpId]);
 
 if ($newStatus === 'received_complete' && $oldStatus !== 'received_complete') {
     $adminUser = dbFetchOne("SELECT id FROM users WHERE role = 'admin' AND is_active = 1 LIMIT 1");

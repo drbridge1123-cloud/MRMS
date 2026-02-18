@@ -1,0 +1,77 @@
+<?php
+// PUT /api/mbds/{id} - Update report settings (insurance names, toggles)
+$userId = requireAuth();
+
+$reportId = (int)($_GET['id'] ?? 0);
+if (!$reportId) {
+    errorResponse('Report ID is required', 400);
+}
+
+$report = dbFetchOne("SELECT * FROM mbds_reports WHERE id = ?", [$reportId]);
+if (!$report) {
+    errorResponse('Report not found', 404);
+}
+
+$input = getInput();
+$updateData = [];
+
+// Insurance carrier names
+foreach (['pip1_name', 'pip2_name', 'health1_name', 'health2_name'] as $field) {
+    if (array_key_exists($field, $input)) {
+        $updateData[$field] = $input[$field] ? sanitizeString($input[$field]) : null;
+    }
+}
+
+// Toggle special line types
+$toggleMap = [
+    'has_wage_loss' => 'wage_loss',
+    'has_essential_service' => 'essential_service',
+    'has_health_subrogation' => 'health_subrogation',
+];
+
+$labelMap = [
+    'wage_loss' => 'WAGE LOSS',
+    'essential_service' => 'ESSENTIAL SERVICE',
+    'health_subrogation' => 'HEALTH SUBROGATION',
+];
+
+foreach ($toggleMap as $field => $lineType) {
+    if (array_key_exists($field, $input)) {
+        $newVal = $input[$field] ? 1 : 0;
+        $updateData[$field] = $newVal;
+
+        if ($newVal && !(int)$report[$field]) {
+            // Toggled ON: create the line
+            $maxSort = dbFetchOne(
+                "SELECT MAX(sort_order) AS ms FROM mbds_lines WHERE report_id = ? AND line_type IN ('wage_loss','essential_service','health_subrogation')",
+                [$reportId]
+            );
+            dbInsert('mbds_lines', [
+                'report_id' => $reportId,
+                'line_type' => $lineType,
+                'provider_name' => $labelMap[$lineType],
+                'sort_order' => ((int)($maxSort['ms'] ?? 0)) + 1
+            ]);
+        } elseif (!$newVal && (int)$report[$field]) {
+            // Toggled OFF: delete the line
+            dbDelete('mbds_lines', 'report_id = ? AND line_type = ?', [$reportId, $lineType]);
+        }
+    }
+}
+
+if (!empty($input['notes'])) {
+    $updateData['notes'] = sanitizeString($input['notes']);
+} elseif (array_key_exists('notes', $input)) {
+    $updateData['notes'] = null;
+}
+
+if (!empty($updateData)) {
+    dbUpdate('mbds_reports', $updateData, 'id = ?', [$reportId]);
+}
+
+$updated = dbFetchOne("SELECT * FROM mbds_reports WHERE id = ?", [$reportId]);
+$updated['has_wage_loss'] = (int)$updated['has_wage_loss'];
+$updated['has_essential_service'] = (int)$updated['has_essential_service'];
+$updated['has_health_subrogation'] = (int)$updated['has_health_subrogation'];
+
+successResponse($updated, 'Report updated');

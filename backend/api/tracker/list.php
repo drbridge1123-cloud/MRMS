@@ -9,6 +9,11 @@ $userId = requireAuth();
 $where = ["c.status NOT IN ('completed','closed')"];
 $params = [];
 
+// By default hide completed providers (unless explicitly filtered)
+if (empty($_GET['status']) || !in_array($_GET['status'], ['received_complete','verified'])) {
+    $where[] = "cp.overall_status NOT IN ('received_complete','verified')";
+}
+
 // Filter: search (case_number, client_name, provider_name)
 if (!empty($_GET['search'])) {
     $term = '%' . sanitizeString($_GET['search']) . '%';

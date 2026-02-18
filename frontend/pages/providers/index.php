@@ -55,8 +55,7 @@ ob_start();
 
     <!-- Providers Table (full width) -->
     <div>
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
-                <div class="overflow-x-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border">
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -93,7 +92,6 @@ ob_start();
                             </template>
                         </tbody>
                     </table>
-                </div>
 
                 <div class="px-6 py-3 border-t border-v2-card-border">
                     <div class="text-sm text-v2-text-light">

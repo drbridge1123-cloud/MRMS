@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS case_providers (
     treatment_end_date DATE NULL,
     record_types_needed SET('medical_records','billing','chart','imaging','op_report') NULL,
     overall_status ENUM('not_started','requesting','follow_up','received_partial','received_complete','verified') NOT NULL DEFAULT 'not_started',
+    received_date DATE NULL,
     assigned_to INT NULL,
     deadline DATE NULL,
     notes TEXT NULL,
@@ -239,3 +240,58 @@ CREATE TABLE IF NOT EXISTS deadline_changes (
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_deadline_changes_cp ON deadline_changes(case_provider_id);
+
+-- MBDS Reports (Medical Bills Summary)
+CREATE TABLE IF NOT EXISTS mbds_reports (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id INT NOT NULL UNIQUE,
+    pip1_name VARCHAR(255) NULL,
+    pip2_name VARCHAR(255) NULL,
+    health1_name VARCHAR(255) NULL,
+    health2_name VARCHAR(255) NULL,
+    has_wage_loss TINYINT(1) DEFAULT 0,
+    has_essential_service TINYINT(1) DEFAULT 0,
+    has_health_subrogation TINYINT(1) DEFAULT 0,
+    status ENUM('draft','completed','approved') DEFAULT 'draft',
+    completed_by INT NULL,
+    completed_at DATETIME NULL,
+    approved_by INT NULL,
+    approved_at DATETIME NULL,
+    notes TEXT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+    FOREIGN KEY (completed_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_mbds_reports_case ON mbds_reports(case_id);
+CREATE INDEX idx_mbds_reports_status ON mbds_reports(status);
+
+-- MBDS Lines (Individual line items in MBDS report)
+CREATE TABLE IF NOT EXISTS mbds_lines (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    report_id INT NOT NULL,
+    line_type ENUM('provider','bridge_law','wage_loss','essential_service','health_subrogation','rx') NOT NULL,
+    provider_name VARCHAR(255) NULL,
+    case_provider_id INT NULL,
+    charges DECIMAL(12,2) DEFAULT 0,
+    pip1_amount DECIMAL(12,2) DEFAULT 0,
+    pip2_amount DECIMAL(12,2) DEFAULT 0,
+    health1_amount DECIMAL(12,2) DEFAULT 0,
+    health2_amount DECIMAL(12,2) DEFAULT 0,
+    discount DECIMAL(12,2) DEFAULT 0,
+    office_paid DECIMAL(12,2) DEFAULT 0,
+    client_paid DECIMAL(12,2) DEFAULT 0,
+    balance DECIMAL(12,2) DEFAULT 0,
+    treatment_dates VARCHAR(100) NULL,
+    visits VARCHAR(50) NULL,
+    note TEXT NULL,
+    sort_order INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (report_id) REFERENCES mbds_reports(id) ON DELETE CASCADE,
+    FOREIGN KEY (case_provider_id) REFERENCES case_providers(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_mbds_lines_report ON mbds_lines(report_id);

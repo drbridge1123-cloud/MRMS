@@ -68,6 +68,22 @@ ob_start();
                        placeholder="Search client, case #, or carrier..."
                        class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
             </div>
+            <select x-model="statusFilter" @change="loadData(1)"
+                    class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                <option value="">All Statuses</option>
+                <option value="not_started">Not Started</option>
+                <option value="requesting">Requesting</option>
+                <option value="follow_up">Follow Up</option>
+                <option value="received">Received</option>
+                <option value="done">Done</option>
+            </select>
+            <select x-model="tierFilter" @change="loadData(1)"
+                    class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                <option value="">All Tiers</option>
+                <option value="admin">Admin Escalation (60d+)</option>
+                <option value="manager">Manager Review (42d+)</option>
+                <option value="action">Action Needed (30d+)</option>
+            </select>
             <select x-model="assignedFilter" @change="loadData(1)"
                     class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 <option value="">All Staff</option>
@@ -77,7 +93,7 @@ ob_start();
             </select>
             <button @click="resetFilters()"
                     class="px-3 py-2 text-sm text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-v2-bg"
-                    x-show="search || statusFilter || assignedFilter">
+                    x-show="search || statusFilter || tierFilter || assignedFilter">
                 Reset
             </button>
         </div>
@@ -90,8 +106,9 @@ ob_start();
 
     <!-- Table -->
     <template x-if="!loading">
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border"
+             x-init="$nextTick(() => { const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px'; $el.style.overflowY = 'auto'; })"
+             @resize.window.debounce.100ms="const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px';">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -254,7 +271,6 @@ ob_start();
                         </template>
                     </tbody>
                 </table>
-            </div>
         </div>
     </template>
 
@@ -458,7 +474,7 @@ function healthLedgerPage() {
     return {
         items: [], pagination: null, loading: true, saving: false, sending: false,
         summary: {},
-        search: '', statusFilter: '', assignedFilter: '',
+        search: '', statusFilter: '', tierFilter: '', assignedFilter: '',
         sortBy: 'created_at', sortDir: 'desc',
         staffList: [],
         expandedId: null, requestHistory: [],
@@ -490,6 +506,7 @@ function healthLedgerPage() {
                 let p = `?per_page=99999`;
                 if (this.search) p += `&search=${encodeURIComponent(this.search)}`;
                 if (this.statusFilter) p += `&status=${this.statusFilter}`;
+                if (this.tierFilter) p += `&tier=${this.tierFilter}`;
                 if (this.assignedFilter) p += `&assigned_to=${this.assignedFilter}`;
                 p += `&sort_by=${this.sortBy}&sort_dir=${this.sortDir}`;
                 const r = await api.get('health-ledger/list' + p);
@@ -507,7 +524,7 @@ function healthLedgerPage() {
         },
 
         toggleStatusFilter(s) { this.statusFilter = this.statusFilter === s ? '' : s; this.loadData(1); },
-        resetFilters() { this.search = ''; this.statusFilter = ''; this.assignedFilter = ''; this.sortBy = 'created_at'; this.sortDir = 'desc'; this.loadData(1); },
+        resetFilters() { this.search = ''; this.statusFilter = ''; this.tierFilter = ''; this.assignedFilter = ''; this.sortBy = 'created_at'; this.sortDir = 'desc'; this.loadData(1); },
 
         async toggleExpand(id) {
             if (this.expandedId === id) { this.expandedId = null; return; }

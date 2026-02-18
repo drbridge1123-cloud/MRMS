@@ -6,7 +6,7 @@ $currentPage = 'cases';
 ob_start();
 ?>
 
-<div x-data="casesListPage()" x-init="loadData()">
+<div x-data="casesListPage()">
 
     <!-- Top bar -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -20,6 +20,15 @@ ob_start();
                        placeholder="Search cases..."
                        class="w-64 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold focus:border-gold outline-none">
             </div>
+
+            <!-- Staff filter -->
+            <select x-model="assignedFilter" @change="loadData(1)"
+                    class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                <option value="">All Staff</option>
+                <template x-for="u in staffList" :key="u.id">
+                    <option :value="u.id" x-text="u.full_name"></option>
+                </template>
+            </select>
 
             <!-- Status filter tabs -->
             <div class="flex gap-1.5">
@@ -53,8 +62,9 @@ ob_start();
     </div>
 
     <!-- Cases table -->
-    <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
-        <div class="overflow-x-auto">
+    <div class="bg-white rounded-xl shadow-sm border border-v2-card-border"
+         x-init="$nextTick(() => { const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px'; $el.style.overflowY = 'auto'; })"
+         @resize.window.debounce.100ms="const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px';">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -121,7 +131,6 @@ ob_start();
                     </template>
                 </tbody>
             </table>
-        </div>
 
         <!-- Pagination -->
         <template x-if="pagination && pagination.total_pages > 1">
@@ -217,11 +226,13 @@ function casesListPage() {
         loading: true,
         searchQuery: '',
         statusFilter: '',
+        assignedFilter: '',
         sortBy: '',
         sortDir: 'desc',
         showCreateModal: false,
         saving: false,
         users: [],
+        staffList: [],
         newCase: { case_number: '', client_name: '', client_dob: '', doi: '', attorney_name: '', assigned_to: '', notes: '' },
 
         async loadData(page = 1) {
@@ -231,6 +242,7 @@ function casesListPage() {
                 per_page: 9999,
                 search: this.searchQuery,
                 status: this.statusFilter,
+                assigned_to: this.assignedFilter,
                 sort_by: this.sortBy,
                 sort_dir: this.sortDir
             });
@@ -279,14 +291,29 @@ function casesListPage() {
         },
 
         async init() {
-            // Load users for dropdown
+            // Load staff list
             try {
-                // Simple fetch of users - we'll use a basic endpoint
-                this.users = [
-                    { id: 1, full_name: 'Ella' },
-                    { id: 2, full_name: 'Miki' }
-                ];
+                const res = await api.get('users?active_only=1');
+                this.staffList = res.data || [];
+                this.users = this.staffList;
             } catch (e) {}
+
+            // Wait for auth if still loading
+            const auth = Alpine.store('auth');
+            if (auth.loading) {
+                await new Promise(r => {
+                    const iv = setInterval(() => { if (!auth.loading) { clearInterval(iv); r(); } }, 50);
+                });
+            }
+
+            // Default status filter by user
+            const uid = auth.user?.id;
+            const defaults = { 2: 'collecting', 1: 'in_review', 4: 'completed' };
+            if (uid && defaults[uid]) {
+                this.statusFilter = defaults[uid];
+            }
+
+            await this.loadData();
         }
     };
 }

@@ -137,8 +137,9 @@ ob_start();
 
     <!-- Table -->
     <template x-if="!loading">
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border overflow-hidden">
-            <div class="overflow-x-auto">
+        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border"
+             x-init="$nextTick(() => { const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px'; $el.style.overflowY = 'auto'; })"
+             @resize.window.debounce.100ms="const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px';">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -301,7 +302,6 @@ ob_start();
                         </template>
                     </tbody>
                 </table>
-            </div>
         </div>
     </template>
 
