@@ -13,7 +13,11 @@ if (!empty($errors)) {
 
 $cpId = (int) $input['case_provider_id'];
 
-$cp = dbFetchOne("SELECT id FROM case_providers WHERE id = ?", [$cpId]);
+$cp = dbFetchOne("SELECT cp.id, cp.case_id, c.case_number, c.client_name, p.name AS provider_name
+    FROM case_providers cp
+    JOIN cases c ON c.id = cp.case_id
+    JOIN providers p ON p.id = cp.provider_id
+    WHERE cp.id = ?", [$cpId]);
 if (!$cp) {
     errorResponse('Case provider not found', 404);
 }
@@ -45,6 +49,7 @@ $data['send_status'] = 'draft';
 
 $newId = dbInsert('record_requests', $data);
 
+// Set status to follow_up (deadline-based escalation handled by cron)
 dbUpdate('case_providers', ['overall_status' => 'follow_up'], 'id = ?', [$cpId]);
 
 logActivity($userId, 'followup_sent', 'record_request', $newId, ['case_provider_id' => $cpId]);

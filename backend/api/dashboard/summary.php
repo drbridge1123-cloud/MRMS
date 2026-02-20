@@ -9,14 +9,14 @@ $activeCases = dbCount('cases', "status NOT IN ('completed','closed')");
 
 $requestingCount = dbCount(
     'case_providers',
-    "overall_status IN ('requesting', 'follow_up')"
+    "overall_status IN ('requesting', 'follow_up', 'action_needed')"
 );
 
 $followupDue = dbFetchOne(
     "SELECT COUNT(DISTINCT cp.id) AS cnt
      FROM case_providers cp
      INNER JOIN record_requests r ON r.case_provider_id = cp.id
-     WHERE cp.overall_status IN ('requesting', 'follow_up')
+     WHERE cp.overall_status IN ('requesting', 'follow_up', 'action_needed')
        AND r.next_followup_date <= CURDATE()
        AND r.id = (
            SELECT r2.id FROM record_requests r2
@@ -31,25 +31,21 @@ $overdueCount = dbCount(
     "deadline < CURDATE() AND overall_status NOT IN ('received_complete', 'verified')"
 );
 
-// Escalation counts
+// Escalation counts (deadline-based)
 $escRows = dbFetchAll("
-    SELECT cp.id,
-           DATEDIFF(CURDATE(), MIN(rr.request_date)) AS days_since
+    SELECT cp.id, DATEDIFF(CURDATE(), cp.deadline) AS days_past_deadline
     FROM case_providers cp
     JOIN cases c ON c.id = cp.case_id
-    LEFT JOIN record_requests rr ON rr.case_provider_id = cp.id
     WHERE cp.overall_status NOT IN ('received_complete', 'verified')
       AND c.status NOT IN ('completed','closed')
-    GROUP BY cp.id
-    HAVING MIN(rr.request_date) IS NOT NULL
+      AND cp.deadline IS NOT NULL AND cp.deadline <= CURDATE()
 ");
 
-$escCounts = ['action_needed' => 0, 'manager' => 0, 'admin' => 0];
+$escCounts = ['action_needed' => 0, 'admin' => 0];
 foreach ($escRows as $er) {
-    $tier = getEscalationTier((int)$er['days_since']);
-    if ($tier === 'action_needed') $escCounts['action_needed']++;
-    elseif ($tier === 'manager') { $escCounts['action_needed']++; $escCounts['manager']++; }
-    elseif ($tier === 'admin') { $escCounts['action_needed']++; $escCounts['manager']++; $escCounts['admin']++; }
+    $daysPast = (int)$er['days_past_deadline'];
+    $escCounts['action_needed']++;
+    if ($daysPast >= ADMIN_ESCALATION_DAYS_AFTER_DEADLINE) $escCounts['admin']++;
 }
 
 successResponse([
@@ -58,6 +54,5 @@ successResponse([
     'followup_due' => (int)($followupDue['cnt'] ?? 0),
     'overdue_count' => $overdueCount,
     'escalation_action_needed' => $escCounts['action_needed'],
-    'escalation_manager' => $escCounts['manager'],
     'escalation_admin' => $escCounts['admin']
 ]);

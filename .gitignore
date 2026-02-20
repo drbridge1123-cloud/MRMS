@@ -21,6 +21,10 @@ desktop.ini
 # Dependencies (if added later)
 node_modules/
 vendor/
+composer.phar
+
+# Storage documents
+storage/documents/
 
 # Session & cache
 *.log

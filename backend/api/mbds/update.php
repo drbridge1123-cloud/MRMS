@@ -15,6 +15,40 @@ if (!$report) {
 $input = getInput();
 $updateData = [];
 
+// Reopen as draft
+if (!empty($input['status']) && $input['status'] === 'draft') {
+    if (!in_array($report['status'], ['completed', 'approved'])) {
+        errorResponse('Report is already in draft status');
+    }
+
+    // Get case info for logging and status revert
+    $case = dbFetchOne("SELECT id, case_number FROM cases WHERE id = ?", [$report['case_id']]);
+
+    dbUpdate('mbds_reports', [
+        'status' => 'draft',
+        'completed_by' => null,
+        'completed_at' => null,
+        'approved_by' => null,
+        'approved_at' => null,
+    ], 'id = ?', [$reportId]);
+
+    // Revert case status to in_review (pre-completion stage)
+    $newOwner = STATUS_OWNER_MAP['in_review'] ?? null;
+    $caseUpdate = ['status' => 'in_review'];
+    if ($newOwner) {
+        $caseUpdate['assigned_to'] = $newOwner;
+    }
+    dbUpdate('cases', $caseUpdate, 'id = ?', [$report['case_id']]);
+
+    logActivity($userId, 'mbds_reopened', 'mbds_report', $reportId, [
+        'case_number' => $case['case_number'] ?? '',
+        'previous_status' => $report['status'],
+    ]);
+
+    $updated = dbFetchOne("SELECT * FROM mbds_reports WHERE id = ?", [$reportId]);
+    successResponse($updated, 'Report reopened as draft');
+}
+
 // Insurance carrier names
 foreach (['pip1_name', 'pip2_name', 'health1_name', 'health2_name'] as $field) {
     if (array_key_exists($field, $input)) {

@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
 $pageTitle = 'Letter Templates';
 $currentPage = 'admin-templates';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/admin/templates.js'];
 ob_start();
 ?>
 
@@ -121,37 +122,37 @@ ob_start();
     </div>
 
     <!-- Create/Edit Modal -->
-    <div x-show="showModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeModal()">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col">
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="display:none;">
+        <div class="modal-v2-backdrop fixed inset-0" @click="closeModal()"></div>
+        <div class="modal-v2 relative w-full max-w-6xl z-10 max-h-[90vh] flex flex-col" @click.stop>
             <!-- Modal Header -->
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                <h2 class="text-xl font-bold text-v2-text" x-text="editingTemplate ? 'Edit Template' : 'Create Template'"></h2>
-                <button @click="closeModal()" class="text-v2-text-light hover:text-v2-text">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+            <div class="modal-v2-header">
+                <div class="modal-v2-title" x-text="editingTemplate ? 'Edit Template' : 'Create Template'"></div>
+                <button type="button" class="modal-v2-close" @click="closeModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
 
             <!-- Modal Body -->
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="modal-v2-body flex-1 overflow-y-auto">
                 <div class="grid grid-cols-3 gap-6">
                     <!-- Main Form (2 columns) -->
                     <div class="col-span-2 space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-v2-text mb-1">Template Name *</label>
-                            <input type="text" x-model="form.name" class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none" placeholder="e.g., Medical Records Request - Standard">
+                            <label class="form-v2-label">Template Name *</label>
+                            <input type="text" x-model="form.name" class="form-v2-input" placeholder="e.g., Medical Records Request - Standard">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-v2-text mb-1">Description</label>
-                            <textarea x-model="form.description" rows="2" class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none" placeholder="Brief description of this template"></textarea>
+                            <label class="form-v2-label">Description</label>
+                            <textarea x-model="form.description" rows="2" class="form-v2-textarea" placeholder="Brief description of this template"></textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-v2-text mb-1">Template Type *</label>
-                                <select x-model="form.template_type" class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none">
+                                <label class="form-v2-label">Template Type *</label>
+                                <select x-model="form.template_type" class="form-v2-select">
                                     <option value="medical_records">Medical Records</option>
                                     <option value="health_ledger">Health Ledger</option>
                                     <option value="bulk_request">Bulk Request</option>
@@ -167,19 +168,19 @@ ob_start();
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-v2-text mb-1">Subject Template</label>
-                            <input type="text" x-model="form.subject_template" class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none" placeholder="e.g., Medical Records Request - {{client_name}}">
+                            <label class="form-v2-label">Subject Template</label>
+                            <input type="text" x-model="form.subject_template" class="form-v2-input" placeholder="e.g., Medical Records Request - {{client_name}}">
                         </div>
 
                         <div>
-                            <label class="block text-sm font-medium text-v2-text mb-1">Body Template * (HTML with placeholders)</label>
-                            <textarea x-model="form.body_template" rows="20" class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none font-mono text-sm" placeholder="Enter HTML template with {{placeholders}}"></textarea>
+                            <label class="form-v2-label">Body Template * (HTML with placeholders)</label>
+                            <textarea x-model="form.body_template" rows="20" class="form-v2-textarea font-mono text-sm" placeholder="Enter HTML template with {{placeholders}}"></textarea>
                         </div>
 
                         <template x-if="editingTemplate">
                             <div>
-                                <label class="block text-sm font-medium text-v2-text mb-1">Change Notes</label>
-                                <input type="text" x-model="form.change_notes" class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none" placeholder="Describe what changed in this version">
+                                <label class="form-v2-label">Change Notes</label>
+                                <input type="text" x-model="form.change_notes" class="form-v2-input" placeholder="Describe what changed in this version">
                             </div>
                         </template>
                     </div>
@@ -212,15 +213,18 @@ Text if false
             </div>
 
             <!-- Modal Footer -->
-            <div class="px-6 py-4 border-t border-v2-card-border flex justify-between bg-v2-bg">
-                <button @click="closeModal()" class="px-4 py-2 text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-white">
+            <div class="modal-v2-footer" style="justify-content:space-between;">
+                <button type="button" @click="closeModal()" class="btn-v2-cancel">
                     Cancel
                 </button>
                 <div class="flex gap-3">
-                    <button @click="previewCurrent()" class="px-4 py-2 border border-gold text-gold rounded-lg hover:bg-gold hover:text-white">
+                    <button type="button" @click="previewCurrent()" class="btn-v2-cancel" style="border-color:var(--gold);color:var(--gold);">
                         Preview
                     </button>
-                    <button @click="saveTemplate()" class="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold-dark">
+                    <button type="button" @click="saveTemplate()" class="btn-v2-primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                         <span x-text="editingTemplate ? 'Update Template' : 'Create Template'"></span>
                     </button>
                 </div>
@@ -229,34 +233,37 @@ Text if false
     </div>
 
     <!-- Preview Modal -->
-    <div x-show="showPreviewModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closePreviewModal()">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                <h2 class="text-xl font-bold text-v2-text">Template Preview</h2>
-                <button @click="closePreviewModal()" class="text-v2-text-light hover:text-v2-text">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+    <div x-show="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="display:none;">
+        <div class="modal-v2-backdrop fixed inset-0" @click="closePreviewModal()"></div>
+        <div class="modal-v2 relative w-full max-w-4xl z-10 max-h-[90vh] flex flex-col" @click.stop>
+            <div class="modal-v2-header">
+                <div class="modal-v2-title">Template Preview</div>
+                <button type="button" class="modal-v2-close" @click="closePreviewModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="modal-v2-body flex-1 overflow-y-auto">
                 <div x-html="previewHtml"></div>
+            </div>
+            <div class="modal-v2-footer">
+                <button type="button" @click="closePreviewModal()" class="btn-v2-cancel">Close</button>
             </div>
         </div>
     </div>
 
     <!-- Version History Modal -->
-    <div x-show="showVersionsModal" x-cloak class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeVersionsModal()">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                <h2 class="text-xl font-bold text-v2-text">Version History</h2>
-                <button @click="closeVersionsModal()" class="text-v2-text-light hover:text-v2-text">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
+    <div x-show="showVersionsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="display:none;">
+        <div class="modal-v2-backdrop fixed inset-0" @click="closeVersionsModal()"></div>
+        <div class="modal-v2 relative w-full max-w-3xl z-10 max-h-[90vh] flex flex-col" @click.stop>
+            <div class="modal-v2-header">
+                <div class="modal-v2-title">Version History</div>
+                <button type="button" class="modal-v2-close" @click="closeVersionsModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="modal-v2-body flex-1 overflow-y-auto">
                 <div class="space-y-3">
                     <template x-for="version in versions" :key="version.id">
                         <div class="border border-v2-card-border rounded-lg p-4">
@@ -272,179 +279,12 @@ Text if false
                     </template>
                 </div>
             </div>
+            <div class="modal-v2-footer">
+                <button type="button" @click="closeVersionsModal()" class="btn-v2-cancel">Close</button>
+            </div>
         </div>
     </div>
 </div>
-
-<script>
-function templatesPage() {
-    return {
-        templates: [],
-        loading: false,
-        filterType: '',
-        activeOnly: true,
-
-        // Modal state
-        showModal: false,
-        editingTemplate: null,
-        form: {
-            name: '',
-            description: '',
-            template_type: 'medical_records',
-            subject_template: '',
-            body_template: '',
-            is_default: false,
-            change_notes: ''
-        },
-
-        // Preview modal
-        showPreviewModal: false,
-        previewHtml: '',
-
-        // Versions modal
-        showVersionsModal: false,
-        versions: [],
-
-        async init() {
-            await this.loadTemplates();
-        },
-
-        async loadTemplates() {
-            this.loading = true;
-            try {
-                let params = [];
-                if (this.filterType) params.push(`type=${this.filterType}`);
-                if (this.activeOnly) params.push('active_only=1');
-
-                const query = params.length > 0 ? '?' + params.join('&') : '';
-                const res = await api.get('templates' + query);
-                this.templates = res.data || [];
-            } catch (e) {
-                showToast('Failed to load templates: ' + (e.response?.data?.error || e.message), 'error');
-            }
-            this.loading = false;
-        },
-
-        openCreateModal() {
-            this.editingTemplate = null;
-            this.form = {
-                name: '',
-                description: '',
-                template_type: 'medical_records',
-                subject_template: '',
-                body_template: '',
-                is_default: false,
-                change_notes: ''
-            };
-            this.showModal = true;
-        },
-
-        editTemplate(template) {
-            this.editingTemplate = template;
-            this.form = {
-                name: template.name,
-                description: template.description || '',
-                template_type: template.template_type,
-                subject_template: template.subject_template || '',
-                body_template: template.body_template,
-                is_default: template.is_default == 1,
-                change_notes: ''
-            };
-            this.showModal = true;
-        },
-
-        closeModal() {
-            this.showModal = false;
-            this.editingTemplate = null;
-        },
-
-        async saveTemplate() {
-            if (!this.form.name || !this.form.body_template) {
-                showToast('Name and body template are required', 'error');
-                return;
-            }
-
-            try {
-                if (this.editingTemplate) {
-                    await api.put(`templates/${this.editingTemplate.id}`, this.form);
-                    showToast('Template updated successfully', 'success');
-                } else {
-                    await api.post('templates', this.form);
-                    showToast('Template created successfully', 'success');
-                }
-                this.closeModal();
-                await this.loadTemplates();
-            } catch (e) {
-                showToast('Failed to save template: ' + (e.response?.data?.error || e.message), 'error');
-            }
-        },
-
-        async deleteTemplate(template) {
-            if (!confirm(`Delete template "${template.name}"?`)) return;
-
-            try {
-                await api.delete(`templates/${template.id}`);
-                showToast('Template deleted successfully', 'success');
-                await this.loadTemplates();
-            } catch (e) {
-                showToast('Failed to delete template: ' + (e.response?.data?.error || e.message), 'error');
-            }
-        },
-
-        async previewTemplate(template) {
-            try {
-                // First fetch full template (list doesn't include body_template)
-                const fullTemplate = await api.get(`templates/${template.id}`);
-
-                // Then preview it
-                const res = await api.post('templates/preview', {
-                    body_template: fullTemplate.data.body_template
-                });
-                this.previewHtml = res.data.html;
-                this.showPreviewModal = true;
-            } catch (e) {
-                showToast('Failed to preview: ' + (e.data?.message || e.message), 'error');
-            }
-        },
-
-        async previewCurrent() {
-            if (!this.form.body_template) {
-                showToast('Body template is required for preview', 'error');
-                return;
-            }
-
-            try {
-                const res = await api.post('templates/preview', {
-                    body_template: this.form.body_template
-                });
-                this.previewHtml = res.data.html;
-                this.showPreviewModal = true;
-            } catch (e) {
-                showToast('Failed to preview: ' + (e.response?.data?.error || e.message), 'error');
-            }
-        },
-
-        closePreviewModal() {
-            this.showPreviewModal = false;
-        },
-
-        async viewVersions(template) {
-            try {
-                const res = await api.get(`templates/${template.id}/versions`);
-                this.versions = res.data.versions || [];
-                this.showVersionsModal = true;
-            } catch (e) {
-                showToast('Failed to load versions: ' + (e.response?.data?.error || e.message), 'error');
-            }
-        },
-
-        closeVersionsModal() {
-            this.showVersionsModal = false;
-            this.versions = [];
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

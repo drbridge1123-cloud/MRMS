@@ -47,9 +47,17 @@
             },
         }
     </script>
+    <!-- PDF.js for PDF preview rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (typeof pdfjsLib !== 'undefined') {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
     <link rel="stylesheet" href="/MRMS/frontend/assets/css/app.css">
     <script src="/MRMS/frontend/assets/js/app.js"></script>
     <script src="/MRMS/frontend/assets/js/utils.js"></script>
+    <script src="/MRMS/frontend/assets/js/shared.js"></script>
 </head>
 <body class="bg-v2-bg font-franklin min-h-screen" x-data x-init="$store.auth.init(); $store.notifications.load();">
 
@@ -70,6 +78,11 @@
     <!-- Toast container -->
     <div id="toast-container"></div>
 
+    <?php if (!empty($pageScripts)): ?>
+        <?php foreach ($pageScripts as $script): ?>
+            <script src="<?= $script ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
     <script src="/MRMS/frontend/assets/js/alpine-stores.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>

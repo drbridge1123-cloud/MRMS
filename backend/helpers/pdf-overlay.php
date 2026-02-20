@@ -18,6 +18,12 @@ use setasign\Fpdi\Fpdi;
  */
 function generateProviderPDF($templatePath, $providerName, $x, $y, $width, $height, $fontSize = 12, $dateOverlay = null) {
     try {
+        // Debug: log coordinates being used
+        error_log("[PDF Overlay Debug] Provider: x=$x, y=$y, w=$width, h=$height, fontSize=$fontSize");
+        if ($dateOverlay) {
+            error_log("[PDF Overlay Debug] Date: x={$dateOverlay['x']}, y={$dateOverlay['y']}, w={$dateOverlay['width']}, h={$dateOverlay['height']}, fontSize={$dateOverlay['fontSize']}");
+        }
+
         // Create new PDF instance
         $pdf = new Fpdi();
 
@@ -32,10 +38,16 @@ function generateProviderPDF($templatePath, $providerName, $x, $y, $width, $heig
 
             // Add a page with the same orientation and size
             $orientation = $size['width'] > $size['height'] ? 'L' : 'P';
+            if ($pageNo === 1) {
+                error_log("[PDF Overlay Debug] FPDI page size: w={$size['width']}mm, h={$size['height']}mm, orientation=$orientation");
+            }
             $pdf->AddPage($orientation, [$size['width'], $size['height']]);
 
             // Use the imported page as template
             $pdf->useTemplate($templateId);
+
+            // Disable auto page break to prevent text near bottom from creating new pages
+            $pdf->SetAutoPageBreak(false);
 
             // Only overlay on first page (where provider name and date typically are)
             if ($pageNo === 1) {
@@ -67,10 +79,9 @@ function generateProviderPDF($templatePath, $providerName, $x, $y, $width, $heig
                     // Format today's date (MM/DD/YYYY format for US)
                     $currentDate = date('m/d/Y');
 
-                    // Position and write the date
-                    $dateLineHeight = $dateFontSize * 0.6;
+                    // Position and write the date (use Cell since date is always single-line)
                     $pdf->SetXY($dateOverlay['x'], $dateOverlay['y']);
-                    $pdf->MultiCell($dateOverlay['width'], $dateLineHeight, $currentDate, 0, 'L');
+                    $pdf->Cell($dateOverlay['width'], $dateOverlay['height'], $currentDate, 0, 0, 'L');
                 }
             }
         }
@@ -155,10 +166,10 @@ function generateProviderDocument($documentId, $providerName, $outputDir) {
         if ($doc['use_date_overlay'] && $doc['date_x'] && $doc['date_y'] &&
             $doc['date_width'] && $doc['date_height']) {
             $dateOverlay = [
-                'x' => (int)$doc['date_x'],
-                'y' => (int)$doc['date_y'],
-                'width' => (int)$doc['date_width'],
-                'height' => (int)$doc['date_height'],
+                'x' => (float)$doc['date_x'],
+                'y' => (float)$doc['date_y'],
+                'width' => (float)$doc['date_width'],
+                'height' => (float)$doc['date_height'],
                 'fontSize' => (int)$doc['date_font_size'] ?: 12
             ];
         }
@@ -167,10 +178,10 @@ function generateProviderDocument($documentId, $providerName, $outputDir) {
         $pdfContent = generateProviderPDF(
             $templatePath,
             $providerName,
-            (int)$doc['provider_name_x'],
-            (int)$doc['provider_name_y'],
-            (int)$doc['provider_name_width'],
-            (int)$doc['provider_name_height'],
+            (float)$doc['provider_name_x'],
+            (float)$doc['provider_name_y'],
+            (float)$doc['provider_name_width'],
+            (float)$doc['provider_name_height'],
             (int)$doc['provider_name_font_size'] ?: 12,
             $dateOverlay
         );

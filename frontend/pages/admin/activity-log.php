@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAdmin();
 $pageTitle = 'Activity Log';
 $currentPage = 'admin-activity';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/admin/activity-log.js'];
 ob_start();
 ?>
 
@@ -39,7 +40,7 @@ ob_start();
         <input type="date" x-model="dateTo" @change="loadData(1)"
                class="border border-v2-card-border rounded-lg px-3 py-2 text-sm">
 
-        <button @click="clearFilters()" class="text-sm text-v2-text-light hover:text-v2-text underline">Clear</button>
+        <button @click="resetFilters()" x-show="hasActiveFilters()" class="text-sm text-v2-text-light hover:text-v2-text underline">Clear</button>
     </div>
 
     <!-- Log table -->
@@ -60,10 +61,10 @@ ob_start();
                     <template x-if="loading">
                         <tr><td colspan="6" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
-                    <template x-if="!loading && logs.length === 0">
+                    <template x-if="!loading && items.length === 0">
                         <tr><td colspan="6" class="text-center text-v2-text-light py-8">No activity logs found</td></tr>
                     </template>
-                    <template x-for="log in logs" :key="log.id">
+                    <template x-for="log in items" :key="log.id">
                         <tr>
                             <td class="text-v2-text-light text-xs whitespace-nowrap" x-text="log.created_at"></td>
                             <td>
@@ -113,75 +114,6 @@ ob_start();
         </template>
     </div>
 </div>
-
-<script>
-function activityLogPage() {
-    return {
-        logs: [],
-        allUsers: [],
-        pagination: null,
-        loading: true,
-        userFilter: '',
-        actionFilter: '',
-        entityFilter: '',
-        dateFrom: '',
-        dateTo: '',
-        sortBy: '',
-        sortDir: 'desc',
-
-        async loadData(page = 1) {
-            this.loading = true;
-            const params = buildQueryString({
-                page,
-                per_page: 30,
-                user_id: this.userFilter,
-                action: this.actionFilter,
-                entity_type: this.entityFilter,
-                date_from: this.dateFrom,
-                date_to: this.dateTo,
-                sort_by: this.sortBy,
-                sort_dir: this.sortDir
-            });
-            try {
-                const res = await api.get('activity-log' + params);
-                this.logs = (res.data || []).map(l => ({ ...l, _showDetails: false }));
-                this.pagination = res.pagination || null;
-            } catch (e) {}
-            this.loading = false;
-
-            if (this.allUsers.length === 0) this.loadUsers();
-        },
-
-        sort(column) {
-            if (this.sortBy === column) {
-                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortBy = column;
-                this.sortDir = 'asc';
-            }
-            this.loadData(1);
-        },
-
-        async loadUsers() {
-            try {
-                const res = await api.get('users?per_page=100');
-                this.allUsers = res.data || [];
-            } catch (e) {}
-        },
-
-        clearFilters() {
-            this.userFilter = '';
-            this.actionFilter = '';
-            this.entityFilter = '';
-            this.dateFrom = '';
-            this.dateTo = '';
-            this.sortBy = '';
-            this.sortDir = 'desc';
-            this.loadData(1);
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

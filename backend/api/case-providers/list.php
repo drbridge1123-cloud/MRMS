@@ -35,7 +35,8 @@ $sql = "SELECT cp.*,
             u.full_name AS assigned_name,
             (SELECT MIN(r.request_date) FROM record_requests r WHERE r.case_provider_id = cp.id) AS first_request_date,
             (SELECT MAX(r.request_date) FROM record_requests r WHERE r.case_provider_id = cp.id) AS last_request_date,
-            (SELECT COUNT(*) FROM record_requests r WHERE r.case_provider_id = cp.id) AS request_count
+            (SELECT COUNT(*) FROM record_requests r WHERE r.case_provider_id = cp.id) AS request_count,
+            (SELECT COUNT(*) FROM record_requests r WHERE r.case_provider_id = cp.id AND r.request_type = 'follow_up') AS followup_count
         FROM case_providers cp
         JOIN providers p ON cp.provider_id = p.id
         LEFT JOIN users u ON cp.assigned_to = u.id
@@ -49,8 +50,8 @@ foreach ($rows as &$row) {
     $row['is_overdue'] = isOverdue($row['deadline']);
     $row['days_until_deadline'] = daysUntil($row['deadline']);
 
-    $daysSinceFirst = $row['first_request_date'] ? daysElapsed($row['first_request_date']) : null;
-    $esc = getEscalationInfo($daysSinceFirst);
+    $daysPastDeadline = $row['deadline'] ? (int)((strtotime('today') - strtotime($row['deadline'])) / 86400) : null;
+    $esc = getEscalationInfo($daysPastDeadline);
     $row['escalation_tier'] = $esc['tier'];
     $row['escalation_label'] = $esc['label'];
     $row['escalation_css'] = $esc['css'];

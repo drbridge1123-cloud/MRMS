@@ -25,7 +25,7 @@ if (!empty($_GET['search'])) {
 
 // Filter: overall_status
 if (!empty($_GET['status'])) {
-    $allowed = ['not_started','requesting','follow_up','received_partial','received_complete','verified'];
+    $allowed = ['not_started','requesting','follow_up','action_needed','received_partial','received_complete','verified'];
     if (in_array($_GET['status'], $allowed)) {
         $where[] = 'cp.overall_status = ?';
         $params[] = $_GET['status'];
@@ -38,21 +38,12 @@ if (!empty($_GET['assigned_to'])) {
     $params[] = (int)$_GET['assigned_to'];
 }
 
-// Filter: escalation tier
+// Filter: escalation tier (deadline-based)
 if (!empty($_GET['tier'])) {
-    $tierMap = [
-        'action' => [ESCALATION_ACTION_NEEDED_DAYS, ESCALATION_MANAGER_DAYS - 1],
-        'manager' => [ESCALATION_MANAGER_DAYS, ESCALATION_ADMIN_DAYS - 1],
-        'admin' => [ESCALATION_ADMIN_DAYS, 9999],
-    ];
-    if (isset($tierMap[$_GET['tier']])) {
-        $range = $tierMap[$_GET['tier']];
-        $where[] = "DATEDIFF(CURDATE(), (SELECT MIN(rr2.request_date) FROM record_requests rr2 WHERE rr2.case_provider_id = cp.id)) >= ?";
-        $params[] = $range[0];
-        if ($range[1] < 9999) {
-            $where[] = "DATEDIFF(CURDATE(), (SELECT MIN(rr3.request_date) FROM record_requests rr3 WHERE rr3.case_provider_id = cp.id)) <= ?";
-            $params[] = $range[1];
-        }
+    if ($_GET['tier'] === 'action') {
+        $where[] = "cp.deadline IS NOT NULL AND cp.deadline <= CURDATE()";
+    } elseif ($_GET['tier'] === 'admin') {
+        $where[] = "cp.deadline IS NOT NULL AND DATEDIFF(CURDATE(), cp.deadline) >= " . ADMIN_ESCALATION_DAYS_AFTER_DEADLINE;
     }
 }
 
@@ -63,7 +54,7 @@ if ($filter === 'overdue') {
     $where[] = "cp.overall_status NOT IN ('received_complete','verified')";
 } elseif ($filter === 'followup_due') {
     $where[] = 'lr.next_followup_date <= CURDATE()';
-    $where[] = "cp.overall_status IN ('requesting','follow_up')";
+    $where[] = "cp.overall_status IN ('requesting','follow_up','action_needed')";
 } elseif ($filter === 'no_request') {
     $where[] = 'lr.request_date IS NULL';
 }
@@ -153,15 +144,11 @@ foreach ($rows as &$row) {
     $row['days_since_request'] = $row['days_since_request'] !== null ? (int)$row['days_since_request'] : null;
     $row['days_until_deadline'] = $row['days_until_deadline'] !== null ? (int)$row['days_until_deadline'] : null;
 
-    // Add escalation tier info
-    $firstReqDate = dbFetchOne(
-        "SELECT MIN(request_date) AS first_date FROM record_requests WHERE case_provider_id = ?",
-        [$row['id']]
-    );
-    $daysSinceFirst = $firstReqDate && $firstReqDate['first_date']
-        ? (int)((strtotime('today') - strtotime($firstReqDate['first_date'])) / 86400)
+    // Add escalation tier info (deadline-based)
+    $daysPastDeadline = $row['deadline'] && $row['days_until_deadline'] !== null
+        ? -$row['days_until_deadline']
         : null;
-    $esc = getEscalationInfo($daysSinceFirst);
+    $esc = getEscalationInfo($daysPastDeadline);
     $row['escalation_tier'] = $esc['tier'];
     $row['escalation_label'] = $esc['label'];
     $row['escalation_css'] = $esc['css'];
@@ -189,7 +176,7 @@ $summaryResult = dbFetchOne("
             AND cp.overall_status NOT IN ('received_complete','verified')
             THEN 1 ELSE 0 END) AS overdue_count,
         SUM(CASE WHEN slr.next_followup_date <= CURDATE()
-            AND cp.overall_status IN ('requesting','follow_up')
+            AND cp.overall_status IN ('requesting','follow_up','action_needed')
             THEN 1 ELSE 0 END) AS followup_due_count,
         SUM(CASE WHEN cp.overall_status = 'not_started'
             THEN 1 ELSE 0 END) AS not_started_count

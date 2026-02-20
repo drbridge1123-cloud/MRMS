@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
 $pageTitle = 'MR Tracker';
 $currentPage = 'tracker';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/mr-tracker.js'];
 ob_start();
 ?>
 
@@ -96,7 +97,9 @@ ob_start();
                 <option value="not_started">Not Started</option>
                 <option value="requesting">Requesting</option>
                 <option value="follow_up">Follow Up</option>
+                <option value="action_needed">Action Needed</option>
                 <option value="received_partial">Partial</option>
+                <option value="on_hold">On Hold</option>
                 <option value="received_complete">Complete</option>
                 <option value="verified">Verified</option>
             </select>
@@ -105,9 +108,8 @@ ob_start();
             <select x-model="tierFilter" @change="loadData(1)"
                     class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold focus:border-gold outline-none">
                 <option value="">All Tiers</option>
-                <option value="admin">Admin Escalation (60d+)</option>
-                <option value="manager">Manager Review (42d+)</option>
-                <option value="action">Action Needed (30d+)</option>
+                <option value="admin">Admin Escalation (deadline+14d)</option>
+                <option value="action">Action Needed (past deadline)</option>
             </select>
 
             <!-- Assigned Staff filter -->
@@ -138,8 +140,7 @@ ob_start();
     <!-- Table -->
     <template x-if="!loading">
         <div class="bg-white rounded-xl shadow-sm border border-v2-card-border"
-             x-init="$nextTick(() => { const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px'; $el.style.overflowY = 'auto'; })"
-             @resize.window.debounce.100ms="const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px';">
+             x-init="initScrollContainer($el)">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -329,21 +330,22 @@ ob_start();
     </div>
 
     <!-- Bulk Request Modal -->
-    <div x-show="showBulkRequestModal"
-         x-cloak
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-         @click.self="closeBulkRequestModal()">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between sticky top-0 bg-white">
-                <h2 class="text-xl font-bold text-v2-text">Bulk Follow-Up Request</h2>
-                <button @click="closeBulkRequestModal()" class="text-v2-text-light hover:text-v2-text">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    <div x-show="showBulkRequestModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="display:none;">
+        <div class="modal-v2-backdrop fixed inset-0" @click="closeBulkRequestModal()"></div>
+        <div class="modal-v2 relative w-full max-w-4xl z-10 max-h-[90vh] flex flex-col" @click.stop>
+            <div class="modal-v2-header">
+                <div>
+                    <div class="modal-v2-title">Bulk Follow-Up Request</div>
+                </div>
+                <button type="button" class="modal-v2-close" @click="closeBulkRequestModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <div class="p-6">
+            <div class="modal-v2-body" style="overflow-y:auto;">
                 <!-- Provider Info Alert -->
                 <template x-if="bulkRequestProviderName">
                     <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -365,27 +367,27 @@ ob_start();
                 <!-- Request Configuration -->
                 <div class="mb-6 grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Request Date</label>
+                        <label class="form-v2-label">Request Date</label>
                         <input type="date" x-model="bulkRequestForm.request_date"
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none">
+                               class="form-v2-input">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Request Method</label>
+                        <label class="form-v2-label">Request Method</label>
                         <select x-model="bulkRequestForm.request_method"
-                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none">
+                                class="form-v2-select">
                             <option value="email">Email</option>
                             <option value="fax">Fax</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Follow-up Date (applies to all)</label>
+                        <label class="form-v2-label">Follow-up Date (applies to all)</label>
                         <input type="date" x-model="bulkRequestForm.followup_date"
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none">
+                               class="form-v2-input">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Request Type</label>
+                        <label class="form-v2-label">Request Type</label>
                         <select x-model="bulkRequestForm.request_type"
-                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none">
+                                class="form-v2-select">
                             <option value="follow_up">Follow-Up</option>
                             <option value="re_request">Re-Request</option>
                             <option value="initial">Initial</option>
@@ -394,9 +396,9 @@ ob_start();
                 </div>
 
                 <div class="mb-6">
-                    <label class="block text-sm font-medium text-v2-text mb-1">Notes (optional, applies to all)</label>
+                    <label class="form-v2-label">Notes (optional, applies to all)</label>
                     <textarea x-model="bulkRequestForm.notes" rows="2"
-                              class="w-full px-3 py-2 border border-v2-card-border rounded-lg focus:ring-2 focus:ring-gold outline-none"
+                              class="form-v2-textarea"
                               placeholder="Additional notes for all requests..."></textarea>
                 </div>
 
@@ -420,7 +422,7 @@ ob_start();
                                         <td class="px-3 py-2" x-text="caseItem.client_name"></td>
                                         <td class="px-3 py-2">
                                             <input type="text" x-model="caseItem.recipient"
-                                                   class="w-full px-2 py-1 border border-v2-card-border rounded text-sm focus:ring-1 focus:ring-gold outline-none"
+                                                   class="form-v2-input"
                                                    placeholder="Auto-detect from provider">
                                         </td>
                                         <td class="px-3 py-2 text-center">
@@ -439,20 +441,23 @@ ob_start();
                 </div>
             </div>
 
-            <!-- Modal Actions -->
-            <div class="px-6 py-4 border-t border-v2-card-border flex justify-between bg-v2-bg">
-                <button @click="closeBulkRequestModal()"
-                        class="px-4 py-2 text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-white transition-colors">
-                    Cancel
-                </button>
+            <div class="modal-v2-footer" style="justify-content:space-between;">
+                <button @click="closeBulkRequestModal()" class="btn-v2-cancel">Cancel</button>
                 <div class="flex gap-3">
                     <button @click="previewBulkRequests()"
-                            class="px-4 py-2 border border-gold text-gold rounded-lg hover:bg-gold hover:text-white transition-colors">
+                            class="btn-v2-cancel" style="border-color:var(--gold);color:var(--gold);">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
                         Preview All
                     </button>
                     <button @click="createAndSendBulkRequests()"
                             :disabled="bulkRequestCases.length === 0"
-                            class="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            class="btn-v2-primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                        </svg>
                         Create & Send
                     </button>
                 </div>
@@ -461,40 +466,35 @@ ob_start();
     </div>
 
     <!-- Bulk Preview Modal -->
-    <div x-show="showBulkPreviewModal"
-         x-cloak
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-         @click.self="closeBulkPreviewModal()">
-        <div class="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col">
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                <h2 class="text-xl font-bold text-v2-text">Preview Bulk Requests</h2>
-                <button @click="closeBulkPreviewModal()" class="text-v2-text-light hover:text-v2-text">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+    <div x-show="showBulkPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        style="display:none;">
+        <div class="modal-v2-backdrop fixed inset-0" @click="closeBulkPreviewModal()"></div>
+        <div class="modal-v2 relative w-full max-w-5xl z-10 max-h-[90vh] flex flex-col" @click.stop>
+            <div class="modal-v2-header">
+                <div>
+                    <div class="modal-v2-title">Preview Bulk Requests</div>
+                    <div class="modal-v2-subtitle">
+                        Combined letter for <span x-text="bulkPreviewCaseCount"></span> case(s) to <span x-text="bulkPreviewProviderName"></span>
+                    </div>
+                </div>
+                <button type="button" class="modal-v2-close" @click="closeBulkPreviewModal()">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
 
-            <!-- Preview Info -->
-            <div class="border-b border-v2-card-border bg-v2-bg px-6 py-3">
-                <p class="text-sm text-v2-text-mid">
-                    Combined letter for <span class="font-semibold text-v2-text" x-text="bulkPreviewCaseCount"></span> case(s) to <span class="font-semibold text-v2-text" x-text="bulkPreviewProviderName"></span>
-                </p>
-            </div>
-
             <!-- Preview Content -->
-            <div class="flex-1 overflow-y-auto p-6">
+            <div class="modal-v2-body" style="flex:1;overflow-y:auto;">
                 <div x-html="bulkPreviewHtml"></div>
             </div>
 
-            <!-- Preview Actions -->
-            <div class="px-6 py-4 border-t border-v2-card-border flex justify-between bg-v2-bg">
-                <button @click="closeBulkPreviewModal()"
-                        class="px-4 py-2 text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-white transition-colors">
-                    Close
-                </button>
-                <button @click="confirmAndSendBulk()"
-                        class="px-4 py-2 bg-gold text-white rounded-lg hover:bg-gold-dark transition-colors">
+            <div class="modal-v2-footer" style="justify-content:space-between;">
+                <button @click="closeBulkPreviewModal()" class="btn-v2-cancel">Close</button>
+                <button @click="confirmAndSendBulk()" class="btn-v2-primary" style="background:#16a34a;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
                     Send All
                 </button>
             </div>
@@ -543,306 +543,6 @@ ob_start();
         border: 1px solid #fde68a;
     }
 </style>
-
-<script>
-function trackerPage() {
-    return {
-        items: [],
-        pagination: null,
-        summary: { total: 0, overdue: 0, followup_due: 0, not_started: 0 },
-        loading: true,
-
-        // Filters
-        search: '',
-        statusFilter: '',
-        activeFilter: '',
-        tierFilter: '',
-        assignedFilter: '',
-
-        // Staff list for assigned filter
-        staffList: [],
-
-        // Sorting
-        sortBy: 'deadline',
-        sortDir: 'asc',
-
-        // Bulk selection
-        selectedItems: [],
-        allSelected: false,
-        lastClickedIndex: null,
-
-        // Bulk request modal
-        showBulkRequestModal: false,
-        bulkRequestForm: {
-            request_date: new Date().toISOString().split('T')[0],
-            request_method: 'email',
-            request_type: 'follow_up',
-            followup_date: '',
-            notes: ''
-        },
-        bulkRequestCases: [],
-        bulkRequestProviderName: '',
-        bulkRequestError: '',
-
-        // Bulk preview modal
-        showBulkPreviewModal: false,
-        bulkPreviewHtml: '',
-        bulkPreviewProviderName: '',
-        bulkPreviewCaseCount: 0,
-
-        async init() {
-            this.loadStaff();
-            await this.loadData(1);
-        },
-
-        async loadStaff() {
-            try {
-                const res = await api.get('users?active_only=1');
-                this.staffList = res.data || [];
-            } catch(e) { this.staffList = []; }
-        },
-
-        async loadData(page) {
-            this.loading = true;
-            try {
-                let params = `?per_page=99999`;
-                if (this.search) params += `&search=${encodeURIComponent(this.search)}`;
-                if (this.statusFilter) params += `&status=${this.statusFilter}`;
-                if (this.activeFilter) params += `&filter=${this.activeFilter}`;
-                if (this.tierFilter) params += `&tier=${this.tierFilter}`;
-                if (this.assignedFilter) params += `&assigned_to=${this.assignedFilter}`;
-                params += `&sort_by=${this.sortBy}&sort_dir=${this.sortDir}`;
-
-                const res = await api.get('tracker/list' + params);
-                this.items = res.data || [];
-                this.pagination = res.pagination || null;
-                if (res.summary) this.summary = res.summary;
-            } catch (e) {
-                showToast('Failed to load tracker data', 'error');
-            }
-            this.loading = false;
-        },
-
-        sort(column) {
-            if (this.sortBy === column) {
-                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortBy = column;
-                this.sortDir = 'asc';
-            }
-            this.loadData(1);
-        },
-
-        toggleFilter(filter) {
-            this.activeFilter = this.activeFilter === filter ? '' : filter;
-            this.loadData(1);
-        },
-
-        resetFilters() {
-            this.search = '';
-            this.statusFilter = '';
-            this.activeFilter = '';
-            this.tierFilter = '';
-            this.assignedFilter = '';
-            this.sortBy = 'deadline';
-            this.sortDir = 'asc';
-            this.loadData(1);
-        },
-
-        goToCase(caseId, cpId) {
-            let url = '/MRMS/frontend/pages/cases/detail.php?id=' + caseId;
-            if (cpId) url += '&cp=' + cpId;
-            window.location.href = url;
-        },
-
-        getMethodLabel(method) {
-            const labels = { email: 'Email', fax: 'Fax', portal: 'Portal', phone: 'Phone', mail: 'Mail' };
-            return labels[method] || method || '';
-        },
-
-        // Bulk selection methods
-        toggleSelect(id, event) {
-            const currentIndex = this.items.findIndex(item => item.id === id);
-
-            // Shift-click range selection
-            if (event && event.shiftKey && this.lastClickedIndex !== null) {
-                event.preventDefault(); // Prevent default checkbox behavior
-
-                const start = Math.min(this.lastClickedIndex, currentIndex);
-                const end = Math.max(this.lastClickedIndex, currentIndex);
-
-                // Select all items in range
-                for (let i = start; i <= end; i++) {
-                    const itemId = this.items[i].id;
-                    if (!this.selectedItems.includes(itemId)) {
-                        this.selectedItems.push(itemId);
-                    }
-                }
-            } else {
-                // Normal toggle
-                const index = this.selectedItems.indexOf(id);
-                if (index > -1) {
-                    this.selectedItems.splice(index, 1);
-                } else {
-                    this.selectedItems.push(id);
-                }
-            }
-
-            this.lastClickedIndex = currentIndex;
-            this.updateAllSelected();
-        },
-
-        toggleSelectAll() {
-            if (this.allSelected) {
-                this.selectedItems = [];
-            } else {
-                this.selectedItems = this.items.map(item => item.id);
-            }
-            this.updateAllSelected();
-        },
-
-        updateAllSelected() {
-            this.allSelected = this.items.length > 0 && this.selectedItems.length === this.items.length;
-        },
-
-        clearSelections() {
-            this.selectedItems = [];
-            this.allSelected = false;
-        },
-
-        // Bulk request modal methods
-        async openBulkRequestModal() {
-            if (this.selectedItems.length === 0) {
-                showToast('Please select at least one case', 'error');
-                return;
-            }
-
-            // Reset form
-            this.bulkRequestForm.request_date = new Date().toISOString().split('T')[0];
-            const nextWeek = new Date();
-            nextWeek.setDate(nextWeek.getDate() + 7);
-            this.bulkRequestForm.followup_date = nextWeek.toISOString().split('T')[0];
-            this.bulkRequestForm.notes = '';
-            this.bulkRequestError = '';
-
-            // Get selected items details
-            const selectedCases = this.items.filter(item => this.selectedItems.includes(item.id));
-
-            // Validate same provider
-            const providers = [...new Set(selectedCases.map(c => c.provider_name))];
-            if (providers.length > 1) {
-                this.bulkRequestError = 'Selected cases must be from the same provider. Found: ' + providers.join(', ');
-                this.showBulkRequestModal = true;
-                return;
-            }
-
-            this.bulkRequestProviderName = providers[0];
-
-            // Populate cases with default recipients
-            this.bulkRequestCases = selectedCases.map(c => ({
-                id: c.id,
-                case_number: c.case_number,
-                client_name: c.client_name,
-                provider_name: c.provider_name,
-                recipient: '' // Will auto-detect from provider
-            }));
-
-            this.showBulkRequestModal = true;
-        },
-
-        closeBulkRequestModal() {
-            this.showBulkRequestModal = false;
-            this.bulkRequestCases = [];
-            this.bulkRequestProviderName = '';
-            this.bulkRequestError = '';
-        },
-
-        removeFromBulk(index) {
-            this.bulkRequestCases.splice(index, 1);
-            if (this.bulkRequestCases.length === 0) {
-                this.closeBulkRequestModal();
-            }
-        },
-
-        async previewBulkRequests() {
-            if (this.bulkRequestCases.length === 0) {
-                showToast('No cases to preview', 'error');
-                return;
-            }
-
-            try {
-                const payload = {
-                    requests: this.bulkRequestCases.map(c => ({
-                        case_provider_id: c.id,
-                        recipient: c.recipient || undefined
-                    })),
-                    request_date: this.bulkRequestForm.request_date,
-                    request_method: this.bulkRequestForm.request_method,
-                    request_type: this.bulkRequestForm.request_type,
-                    next_followup_date: this.bulkRequestForm.followup_date,
-                    notes: this.bulkRequestForm.notes
-                };
-
-                const res = await api.post('requests/preview-bulk', payload);
-                this.bulkPreviewHtml = res.data.letter_html || '';
-                this.bulkPreviewProviderName = res.data.provider_name || '';
-                this.bulkPreviewCaseCount = res.data.case_count || 0;
-                this.showBulkPreviewModal = true;
-            } catch (e) {
-                showToast('Failed to generate preview: ' + (e.response?.data?.error || e.message), 'error');
-            }
-        },
-
-        closeBulkPreviewModal() {
-            this.showBulkPreviewModal = false;
-            this.bulkPreviewHtml = '';
-            this.bulkPreviewProviderName = '';
-            this.bulkPreviewCaseCount = 0;
-        },
-
-        async createAndSendBulkRequests() {
-            if (this.bulkRequestCases.length === 0) {
-                showToast('No cases to process', 'error');
-                return;
-            }
-
-            if (!confirm(`Create and send ${this.bulkRequestCases.length} request(s) to ${this.bulkRequestProviderName}?`)) {
-                return;
-            }
-
-            try {
-                const payload = {
-                    requests: this.bulkRequestCases.map(c => ({
-                        case_provider_id: c.id,
-                        recipient: c.recipient || undefined
-                    })),
-                    request_date: this.bulkRequestForm.request_date,
-                    request_method: this.bulkRequestForm.request_method,
-                    request_type: this.bulkRequestForm.request_type,
-                    next_followup_date: this.bulkRequestForm.followup_date,
-                    notes: this.bulkRequestForm.notes,
-                    auto_send: true
-                };
-
-                const res = await api.post('requests/bulk-create', payload);
-                showToast(res.message || 'Bulk requests created and sent successfully', 'success');
-
-                // Close modal and refresh
-                this.closeBulkRequestModal();
-                this.clearSelections();
-                await this.loadData(this.pagination?.page || 1);
-            } catch (e) {
-                showToast('Failed to create bulk requests: ' + (e.response?.data?.error || e.message), 'error');
-            }
-        },
-
-        async confirmAndSendBulk() {
-            this.closeBulkPreviewModal();
-            await this.createAndSendBulkRequests();
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

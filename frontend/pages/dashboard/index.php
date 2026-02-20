@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
 $pageTitle = 'Dashboard';
 $currentPage = 'dashboard';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/dashboard.js'];
 ob_start();
 ?>
 
@@ -81,14 +82,11 @@ ob_start();
                     </div>
                     <h2 class="font-semibold text-v2-text">Escalated Items</h2>
                     <span class="text-xs text-v2-text-light ml-2"
-                          x-text="$store.auth.isStaff ? 'Your items — manager & admin have been notified' : ($store.auth.isManager ? 'All escalations — you\'re notified at 42+ days' : 'All escalations — you\'re notified at 60+ days')"></span>
+                          x-text="$store.auth.isStaff ? 'Your items — manager & admin have been notified' : ($store.auth.isManager ? 'All escalations — you\'re notified when deadline is reached' : 'All escalations — you\'re notified at deadline+14 days')"></span>
                 </div>
                 <div class="flex gap-2">
                     <template x-if="summary.escalation_admin > 0">
                         <span class="escalation-badge escalation-admin escalation-pulse" x-text="summary.escalation_admin + ' Admin'"></span>
-                    </template>
-                    <template x-if="summary.escalation_manager > 0">
-                        <span class="escalation-badge escalation-manager" x-text="summary.escalation_manager + ' Manager'"></span>
                     </template>
                     <template x-if="summary.escalation_action_needed > 0">
                         <span class="escalation-badge escalation-action-needed" x-text="summary.escalation_action_needed + ' Action Needed'"></span>
@@ -109,8 +107,8 @@ ob_start();
                             </div>
                             <div class="flex items-center gap-3">
                                 <span class="text-xs text-v2-text-light" x-text="item.assigned_name || 'Unassigned'"></span>
-                                <span class="text-xs font-semibold" :class="item.escalation_tier === 'admin' ? 'text-red-600' : (item.escalation_tier === 'manager' ? 'text-orange-600' : 'text-yellow-600')"
-                                      x-text="item.days_since_first_request + ' days'"></span>
+                                <span class="text-xs font-semibold" :class="item.escalation_tier === 'admin' ? 'text-red-600' : 'text-orange-600'"
+                                      x-text="item.days_past_deadline + 'd past deadline'"></span>
                             </div>
                         </div>
                     </a>
@@ -484,97 +482,6 @@ ob_start();
             </table>
     </div>
 </div>
-
-<script>
-function dashboardPage() {
-    return {
-        summary: {},
-        followups: [],
-        overdueItems: [],
-        escalations: [],
-        cases: [],
-        staffMetrics: {},
-        systemHealth: {},
-        providerAnalytics: {},
-        providerInsightsExpanded: false,
-        loading: true,
-
-        async init() {
-            await Promise.all([
-                this.loadSummary(),
-                this.loadFollowups(),
-                this.loadOverdue(),
-                this.loadEscalations(),
-                this.loadCases(),
-                this.loadStaffMetrics(),
-                this.loadSystemHealth(),
-                this.loadProviderAnalytics()
-            ]);
-            this.loading = false;
-        },
-
-        async loadSummary() {
-            try {
-                const res = await api.get('dashboard/summary');
-                this.summary = res.data || {};
-            } catch (e) {}
-        },
-
-        async loadFollowups() {
-            try {
-                const res = await api.get('dashboard/followup-due');
-                this.followups = res.data || [];
-            } catch (e) {}
-        },
-
-        async loadOverdue() {
-            try {
-                const res = await api.get('dashboard/overdue');
-                this.overdueItems = res.data || [];
-            } catch (e) {}
-        },
-
-        async loadEscalations() {
-            try {
-                const res = await api.get('dashboard/escalations');
-                this.escalations = res.data || [];
-            } catch (e) {}
-        },
-
-        async loadCases() {
-            try {
-                const res = await api.get('cases?per_page=10');
-                this.cases = res.data || [];
-            } catch (e) {}
-        },
-
-        async loadStaffMetrics() {
-            try {
-                const res = await api.get('dashboard/staff-metrics');
-                this.staffMetrics = res.data || {};
-            } catch (e) {}
-        },
-
-        async loadSystemHealth() {
-            try {
-                const res = await api.get('dashboard/system-health');
-                this.systemHealth = res.data || {};
-            } catch (e) {}
-        },
-
-        async loadProviderAnalytics() {
-            try {
-                const res = await api.get('dashboard/provider-analytics');
-                this.providerAnalytics = res.data || {};
-            } catch (e) {}
-        },
-
-        toggleProviderInsights() {
-            this.providerInsightsExpanded = !this.providerInsightsExpanded;
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

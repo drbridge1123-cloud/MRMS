@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAdmin();
 $pageTitle = 'User Management';
 $currentPage = 'admin-users';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/admin/users.js'];
 ob_start();
 ?>
 
@@ -15,7 +16,7 @@ ob_start();
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
-                <input type="text" x-model="searchQuery" @input.debounce.300ms="loadData(1)"
+                <input type="text" x-model="search" @input.debounce.300ms="loadData(1)"
                        placeholder="Search users..."
                        class="w-56 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
             </div>
@@ -60,10 +61,10 @@ ob_start();
                     <template x-if="loading">
                         <tr><td colspan="8" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
-                    <template x-if="!loading && users.length === 0">
+                    <template x-if="!loading && items.length === 0">
                         <tr><td colspan="8" class="text-center text-v2-text-light py-8">No users found</td></tr>
                     </template>
-                    <template x-for="u in users" :key="u.id">
+                    <template x-for="u in items" :key="u.id">
                         <tr>
                             <td class="text-v2-text-light" x-text="u.id"></td>
                             <td class="font-medium" x-text="u.username"></td>
@@ -109,75 +110,71 @@ ob_start();
 
     <!-- Create/Edit User Modal -->
     <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-overlay fixed inset-0" @click="showModal = false"></div>
-        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md z-10" @click.stop>
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                <h3 class="text-lg font-semibold" x-text="isEditing ? 'Edit User' : 'New User'"></h3>
-                <button @click="showModal = false" class="text-v2-text-light hover:text-v2-text-mid">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <form @submit.prevent="saveUser()" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">Username *</label>
-                    <input type="text" x-model="form.username" required
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+        <div class="modal-v2-backdrop fixed inset-0" @click="showModal = false"></div>
+        <div class="modal-v2 relative w-full max-w-md z-10" @click.stop>
+            <form @submit.prevent="saveUser()">
+                <div class="modal-v2-header">
+                    <div class="modal-v2-title" x-text="isEditing ? 'Edit User' : 'New User'"></div>
+                    <button type="button" class="modal-v2-close" @click="showModal = false">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">Full Name *</label>
-                    <input type="text" x-model="form.full_name" required
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">Job Title</label>
-                    <input type="text" x-model="form.title" placeholder="e.g., Legal Assistant, Paralegal, Attorney"
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                </div>
-                <template x-if="!isEditing">
+                <div class="modal-v2-body">
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Password *</label>
-                        <input type="password" x-model="form.password" :required="!isEditing" minlength="6"
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
-                               placeholder="Min 6 characters">
+                        <label class="form-v2-label">Username *</label>
+                        <input type="text" x-model="form.username" required class="form-v2-input">
                     </div>
-                </template>
-                <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">Role</label>
-                    <select x-model="form.role"
-                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                        <option value="staff">Staff</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Admin</option>
-                    </select>
+                    <div>
+                        <label class="form-v2-label">Full Name *</label>
+                        <input type="text" x-model="form.full_name" required class="form-v2-input">
+                    </div>
+                    <div>
+                        <label class="form-v2-label">Job Title</label>
+                        <input type="text" x-model="form.title" placeholder="e.g., Legal Assistant, Paralegal, Attorney" class="form-v2-input">
+                    </div>
+                    <template x-if="!isEditing">
+                        <div>
+                            <label class="form-v2-label">Password *</label>
+                            <input type="password" x-model="form.password" :required="!isEditing" minlength="6"
+                                   class="form-v2-input" placeholder="Min 6 characters">
+                        </div>
+                    </template>
+                    <div>
+                        <label class="form-v2-label">Role</label>
+                        <select x-model="form.role" class="form-v2-select">
+                            <option value="staff">Staff</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <!-- Email / SMTP Settings (edit mode only) -->
+                    <template x-if="isEditing">
+                        <div class="border-t border-v2-card-border pt-4 space-y-3">
+                            <p class="text-xs font-semibold text-v2-text-mid uppercase tracking-wider">Email Settings</p>
+                            <div>
+                                <label class="form-v2-label">Gmail Address</label>
+                                <input type="email" x-model="form.smtp_email" placeholder="user@gmail.com" class="form-v2-input">
+                            </div>
+                            <div>
+                                <label class="form-v2-label">Gmail App Password</label>
+                                <input type="password" x-model="form.smtp_app_password" placeholder="Leave blank to keep current" class="form-v2-input">
+                                <p class="text-xs text-v2-text-light mt-1">Google Account &rarr; Security &rarr; App passwords</p>
+                            </div>
+                            <template x-if="form.smtp_email">
+                                <p class="text-xs text-green-600">Emails will be sent from this user's Gmail</p>
+                            </template>
+                            <template x-if="!form.smtp_email">
+                                <p class="text-xs text-v2-text-light">No personal email — uses firm default</p>
+                            </template>
+                        </div>
+                    </template>
                 </div>
-                <!-- Email / SMTP Settings (edit mode only) -->
-                <template x-if="isEditing">
-                    <div class="border-t border-v2-card-border pt-4 space-y-3">
-                        <p class="text-xs font-semibold text-v2-text-mid uppercase tracking-wider">Email Settings</p>
-                        <div>
-                            <label class="block text-sm font-medium text-v2-text mb-1">Gmail Address</label>
-                            <input type="email" x-model="form.smtp_email" placeholder="user@gmail.com"
-                                   class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-v2-text mb-1">Gmail App Password</label>
-                            <input type="password" x-model="form.smtp_app_password" placeholder="Leave blank to keep current"
-                                   class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                            <p class="text-xs text-v2-text-light mt-1">Google Account &rarr; Security &rarr; App passwords</p>
-                        </div>
-                        <template x-if="form.smtp_email">
-                            <p class="text-xs text-green-600">Emails will be sent from this user's Gmail</p>
-                        </template>
-                        <template x-if="!form.smtp_email">
-                            <p class="text-xs text-v2-text-light">No personal email — uses firm default</p>
-                        </template>
-                    </div>
-                </template>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" @click="showModal = false"
-                            class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
-                    <button type="submit" :disabled="saving"
-                            class="px-4 py-2 text-sm text-white bg-gold rounded-lg hover:bg-gold-hover disabled:opacity-50">
+                <div class="modal-v2-footer">
+                    <button type="button" @click="showModal = false" class="btn-v2-cancel">Cancel</button>
+                    <button type="submit" :disabled="saving" class="btn-v2-primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
                         <span x-text="saving ? 'Saving...' : (isEditing ? 'Update' : 'Create')"></span>
                     </button>
                 </div>
@@ -187,24 +184,31 @@ ob_start();
 
     <!-- Reset Password Modal -->
     <div x-show="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-overlay fixed inset-0" @click="showResetModal = false"></div>
-        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm z-10" @click.stop>
-            <div class="px-6 py-4 border-b border-v2-card-border">
-                <h3 class="text-lg font-semibold">Reset Password</h3>
-                <p class="text-sm text-v2-text-light" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></p>
-            </div>
-            <form @submit.prevent="resetPassword()" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">New Password *</label>
-                    <input type="password" x-model="newPassword" required minlength="6"
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"
-                           placeholder="Min 6 characters">
+        <div class="modal-v2-backdrop fixed inset-0" @click="showResetModal = false"></div>
+        <div class="modal-v2 relative w-full max-w-sm z-10" @click.stop>
+            <form @submit.prevent="resetPassword()">
+                <div class="modal-v2-header">
+                    <div>
+                        <div class="modal-v2-title">Reset Password</div>
+                        <p class="text-sm text-v2-text-light" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></p>
+                    </div>
+                    <button type="button" class="modal-v2-close" @click="showResetModal = false">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
-                <div class="flex justify-end gap-3 pt-2">
-                    <button type="button" @click="showResetModal = false"
-                            class="px-4 py-2 text-sm border rounded-lg hover:bg-v2-bg">Cancel</button>
-                    <button type="submit" :disabled="saving"
-                            class="px-4 py-2 text-sm text-white bg-yellow-600 rounded-lg hover:bg-yellow-700 disabled:opacity-50">
+                <div class="modal-v2-body">
+                    <div>
+                        <label class="form-v2-label">New Password *</label>
+                        <input type="password" x-model="newPassword" required minlength="6"
+                               class="form-v2-input" placeholder="Min 6 characters">
+                    </div>
+                </div>
+                <div class="modal-v2-footer">
+                    <button type="button" @click="showResetModal = false" class="btn-v2-cancel">Cancel</button>
+                    <button type="submit" :disabled="saving" class="btn-v2-primary" style="background:#ca8a04;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        </svg>
                         <span x-text="saving ? 'Resetting...' : 'Reset Password'"></span>
                     </button>
                 </div>
@@ -212,133 +216,6 @@ ob_start();
         </div>
     </div>
 </div>
-
-<script>
-function usersPage() {
-    return {
-        users: [],
-        pagination: null,
-        loading: true,
-        saving: false,
-        searchQuery: '',
-        roleFilter: '',
-        activeFilter: '',
-        sortBy: '',
-        sortDir: 'asc',
-
-        showModal: false,
-        isEditing: false,
-        editingId: null,
-        form: { username: '', full_name: '', title: '', password: '', role: 'staff' },
-
-        showResetModal: false,
-        resetUser: null,
-        newPassword: '',
-
-        async loadData(page = 1) {
-            this.loading = true;
-            const params = buildQueryString({
-                page,
-                search: this.searchQuery,
-                role: this.roleFilter,
-                is_active: this.activeFilter,
-                sort_by: this.sortBy,
-                sort_dir: this.sortDir
-            });
-            try {
-                const res = await api.get('users' + params);
-                this.users = res.data || [];
-                this.pagination = res.pagination || null;
-            } catch (e) {}
-            this.loading = false;
-        },
-
-        sort(column) {
-            if (this.sortBy === column) {
-                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortBy = column;
-                this.sortDir = 'asc';
-            }
-            this.loadData(1);
-        },
-
-        openCreateModal() {
-            this.isEditing = false;
-            this.editingId = null;
-            this.form = { username: '', full_name: '', title: '', password: '', role: 'staff' };
-            this.showModal = true;
-        },
-
-        openEditModal(u) {
-            this.isEditing = true;
-            this.editingId = u.id;
-            this.form = { username: u.username, full_name: u.full_name, title: u.title || '', role: u.role, smtp_email: u.smtp_email || '', smtp_app_password: '' };
-            this.showModal = true;
-        },
-
-        async saveUser() {
-            this.saving = true;
-            try {
-                if (this.isEditing) {
-                    const payload = {
-                        username: this.form.username,
-                        full_name: this.form.full_name,
-                        title: this.form.title || null,
-                        role: this.form.role,
-                        smtp_email: this.form.smtp_email || null
-                    };
-                    if (this.form.smtp_app_password) {
-                        payload.smtp_app_password = this.form.smtp_app_password;
-                    }
-                    await api.put('users/' + this.editingId, payload);
-                    showToast('User updated');
-                } else {
-                    await api.post('users', this.form);
-                    showToast('User created');
-                }
-                this.showModal = false;
-                this.loadData(1);
-            } catch (e) {
-                showToast(e.data?.message || 'Failed to save user', 'error');
-            }
-            this.saving = false;
-        },
-
-        openResetPasswordModal(u) {
-            this.resetUser = u;
-            this.newPassword = '';
-            this.showResetModal = true;
-        },
-
-        async resetPassword() {
-            this.saving = true;
-            try {
-                await api.put('users/' + this.resetUser.id + '/reset-password', {
-                    new_password: this.newPassword
-                });
-                showToast('Password reset successfully');
-                this.showResetModal = false;
-            } catch (e) {
-                showToast(e.data?.message || 'Failed to reset password', 'error');
-            }
-            this.saving = false;
-        },
-
-        async toggleActive(u) {
-            const action = u.is_active ? 'deactivate' : 'activate';
-            if (!await confirmAction(`Are you sure you want to ${action} ${u.full_name}?`)) return;
-            try {
-                await api.put('users/' + u.id + '/toggle-active');
-                showToast(`User ${action}d`);
-                this.loadData(1);
-            } catch (e) {
-                showToast(e.data?.message || 'Action failed', 'error');
-            }
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

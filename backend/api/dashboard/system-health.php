@@ -14,7 +14,7 @@ $commStats = dbFetchAll("
         SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as success_count,
         ROUND(SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) / COUNT(*) * 100, 1) as success_rate
     FROM send_log
-    WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAYS)
+    WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
     GROUP BY send_method
 ");
 

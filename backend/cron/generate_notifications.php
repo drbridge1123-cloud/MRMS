@@ -4,14 +4,18 @@
  * Usage: php generate_notifications.php
  *
  * Checks for:
- * 1. Follow-ups due (14+ days since last request)
+ * 1. Follow-ups due (next_followup_date <= today)
  * 2. Deadline warnings (7 days before deadline)
  * 3. Deadline overdue (past deadline)
+ * 4. Escalation: deadline reached → manager notification + action_needed status
+ * 5. Escalation: deadline + 14 days → admin notification
  */
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../helpers/db.php';
+require_once __DIR__ . '/../helpers/escalation.php';
+require_once __DIR__ . '/../helpers/email.php';
 
 echo "=== MRMS Notification Generator ===\n";
 echo "Running at: " . date('Y-m-d H:i:s') . "\n\n";
@@ -34,13 +38,12 @@ $followupDue = dbFetchAll("
         FROM record_requests
         GROUP BY case_provider_id
     ) rr ON rr.case_provider_id = cp.id
-    WHERE cp.overall_status IN ('requesting', 'follow_up')
+    WHERE cp.overall_status IN ('requesting', 'follow_up', 'action_needed')
       AND rr.next_followup_date <= ?
       AND cp.assigned_to IS NOT NULL
 ", [$today]);
 
 foreach ($followupDue as $item) {
-    // Check if notification already exists for today
     $exists = dbFetchOne("
         SELECT id FROM notifications
         WHERE case_provider_id = ? AND type = 'followup_due' AND DATE(created_at) = ?
@@ -136,5 +139,10 @@ foreach ($overdue as $item) {
         echo "  Created overdue notification for case_provider #{$item['id']}\n";
     }
 }
+
+// 4. Escalation notifications (deadline reached → managers + action_needed, deadline+14d → admins)
+echo "Checking escalation notifications...\n";
+$escCreated = generateEscalationNotifications();
+echo "  Created {$escCreated} escalation notification(s)\n";
 
 echo "\nDone.\n";

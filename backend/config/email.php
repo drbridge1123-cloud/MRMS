@@ -8,13 +8,19 @@ define('SMTP_ENCRYPTION', 'tls');               // STARTTLS
 define('SMTP_FROM_EMAIL', 'bridgelawpllc@gmail.com');
 define('SMTP_FROM_NAME', 'Bridge Law & Associates - Records Department');
 
-// eFax Configuration (Phaxio)
-define('FAX_SERVICE', 'phaxio');                // 'phaxio' or 'srfax'
-define('FAX_API_KEY', '');                      // Phaxio API key
-define('FAX_API_SECRET', '');                   // Phaxio API secret
+// eFax Configuration (Faxage)
+define('FAX_SERVICE', 'faxage');
+define('FAXAGE_USERNAME', 'Bridgelaw');
+define('FAXAGE_COMPANY', '123107');
+define('FAXAGE_PASSWORD', 'FDbtldk33#');
+define('FAXAGE_API_URL', 'https://www.faxage.com/httpsfax.php');
+define('FAX_CALLER_ID', '+14255820819');        // Firm's fax number (E.164 format)
+
+// Legacy Phaxio (kept for reference, not active)
+define('FAX_API_KEY', '');
+define('FAX_API_SECRET', '');
 define('FAX_API_URL', 'https://api.phaxio.com/v2.1/faxes');
-define('FAX_CALLER_ID', '');                    // Firm's fax number (E.164 format)
-define('FAX_CALLBACK_URL', '');                 // Optional webhook URL for delivery status
+define('FAX_CALLBACK_URL', '');
 
 // Firm letterhead info
 define('FIRM_NAME', 'Bridge Law & Associates, PLLC');

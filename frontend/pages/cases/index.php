@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
 $pageTitle = 'Cases';
 $currentPage = 'cases';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/cases.js'];
 ob_start();
 ?>
 
@@ -16,7 +17,7 @@ ob_start();
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                 </div>
-                <input type="text" x-model="searchQuery" @input.debounce.300ms="loadData(1)"
+                <input type="text" x-model="search" @input.debounce.300ms="loadData(1)"
                        placeholder="Search cases..."
                        class="w-64 pl-10 pr-4 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold focus:border-gold outline-none">
             </div>
@@ -63,8 +64,7 @@ ob_start();
 
     <!-- Cases table -->
     <div class="bg-white rounded-xl shadow-sm border border-v2-card-border"
-         x-init="$nextTick(() => { const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px'; $el.style.overflowY = 'auto'; })"
-         @resize.window.debounce.100ms="const t = $el.getBoundingClientRect().top; $el.style.maxHeight = (window.innerHeight - t - 16) + 'px';">
+         x-init="initScrollContainer($el)">
             <table class="data-table">
                 <thead>
                     <tr>
@@ -85,10 +85,10 @@ ob_start();
                     <template x-if="loading">
                         <tr><td colspan="11" class="text-center py-8"><div class="spinner mx-auto"></div></td></tr>
                     </template>
-                    <template x-if="!loading && cases.length === 0">
+                    <template x-if="!loading && items.length === 0">
                         <tr><td colspan="11" class="text-center text-v2-text-light py-8">No cases found</td></tr>
                     </template>
-                    <template x-for="c in cases" :key="c.id">
+                    <template x-for="c in items" :key="c.id">
                         <tr class="cursor-pointer" :class="{ 'row-dimmed': $store.auth.isStaff && !c.assigned_name }" @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id='+c.id">
                             <td class="font-medium text-gold" x-text="c.case_number"></td>
                             <td class="font-medium" x-text="c.client_name"></td>
@@ -150,66 +150,71 @@ ob_start();
 
     <!-- Create Case Modal -->
     <div x-show="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-overlay fixed inset-0" @click="showCreateModal = false"></div>
-        <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-lg z-10" @click.stop>
-            <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                <h3 class="text-lg font-semibold">New Case</h3>
-                <button @click="showCreateModal = false" class="text-v2-text-light hover:text-v2-text-mid">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <form @submit.prevent="createCase()" class="p-6 space-y-4">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Case Number <span class="text-red-500">*</span></label>
-                        <input type="text" x-model="newCase.case_number" required
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+        <div class="modal-v2-backdrop fixed inset-0" @click="showCreateModal = false"></div>
+        <div class="modal-v2 relative w-full max-w-lg z-10" @click.stop>
+            <form @submit.prevent="createCase()">
+                <div class="modal-v2-header">
+                    <h3 class="modal-v2-title">New Case</h3>
+                    <button type="button" class="modal-v2-close" @click="showCreateModal = false">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-v2-body space-y-4">
+                    <div class="form-v2-row">
+                        <div>
+                            <label class="form-v2-label">Case Number <span class="text-red-500">*</span></label>
+                            <input type="text" x-model="newCase.case_number" required
+                                   class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Client Name <span class="text-red-500">*</span></label>
+                            <input type="text" x-model="newCase.client_name" required
+                                   class="form-v2-input">
+                        </div>
+                    </div>
+                    <div class="form-v2-row">
+                        <div>
+                            <label class="form-v2-label">Date of Birth <span class="text-red-500">*</span></label>
+                            <input type="date" x-model="newCase.client_dob" required
+                                   class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Date of Injury <span class="text-red-500">*</span></label>
+                            <input type="date" x-model="newCase.doi" required
+                                   class="form-v2-input">
+                        </div>
+                    </div>
+                    <div class="form-v2-row">
+                        <div>
+                            <label class="form-v2-label">Attorney</label>
+                            <input type="text" x-model="newCase.attorney_name"
+                                   class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Assigned To <span class="text-red-500">*</span></label>
+                            <select x-model="newCase.assigned_to" required
+                                    class="form-v2-select">
+                                <option value="">Select...</option>
+                                <template x-for="u in users" :key="u.id">
+                                    <option :value="u.id" x-text="u.full_name"></option>
+                                </template>
+                            </select>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Client Name <span class="text-red-500">*</span></label>
-                        <input type="text" x-model="newCase.client_name" required
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                        <label class="form-v2-label">Notes</label>
+                        <textarea x-model="newCase.notes" rows="2"
+                                  class="form-v2-textarea"></textarea>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Birth <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="newCase.client_dob" required
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Date of Injury <span class="text-red-500">*</span></label>
-                        <input type="date" x-model="newCase.doi" required
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Attorney</label>
-                        <input type="text" x-model="newCase.attorney_name"
-                               class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-v2-text mb-1">Assigned To <span class="text-red-500">*</span></label>
-                        <select x-model="newCase.assigned_to" required
-                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
-                            <option value="">Select...</option>
-                            <template x-for="u in users" :key="u.id">
-                                <option :value="u.id" x-text="u.full_name"></option>
-                            </template>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-v2-text mb-1">Notes</label>
-                    <textarea x-model="newCase.notes" rows="2"
-                              class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none"></textarea>
-                </div>
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="modal-v2-footer">
                     <button type="button" @click="showCreateModal = false"
-                            class="px-4 py-2 text-sm text-v2-text border border-v2-card-border rounded-lg hover:bg-v2-bg">Cancel</button>
+                            class="btn-v2-cancel">Cancel</button>
                     <button type="submit" :disabled="saving"
-                            class="px-4 py-2 text-sm text-white bg-gold rounded-lg hover:bg-gold-hover disabled:opacity-50">
+                            class="btn-v2-primary">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         <span x-text="saving ? 'Creating...' : 'Create Case'"></span>
                     </button>
                 </div>
@@ -217,107 +222,6 @@ ob_start();
         </div>
     </div>
 </div>
-
-<script>
-function casesListPage() {
-    return {
-        cases: [],
-        pagination: null,
-        loading: true,
-        searchQuery: '',
-        statusFilter: '',
-        assignedFilter: '',
-        sortBy: '',
-        sortDir: 'desc',
-        showCreateModal: false,
-        saving: false,
-        users: [],
-        staffList: [],
-        newCase: { case_number: '', client_name: '', client_dob: '', doi: '', attorney_name: '', assigned_to: '', notes: '' },
-
-        async loadData(page = 1) {
-            this.loading = true;
-            const params = buildQueryString({
-                page: 1,
-                per_page: 9999,
-                search: this.searchQuery,
-                status: this.statusFilter,
-                assigned_to: this.assignedFilter,
-                sort_by: this.sortBy,
-                sort_dir: this.sortDir
-            });
-            try {
-                const res = await api.get('cases' + params);
-                this.cases = res.data || [];
-                this.pagination = res.pagination || null;
-            } catch (e) {}
-            this.loading = false;
-        },
-
-        sort(column) {
-            if (this.sortBy === column) {
-                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortBy = column;
-                this.sortDir = 'asc';
-            }
-            this.loadData(1);
-        },
-
-        async createCase() {
-            this.saving = true;
-            try {
-                const data = { ...this.newCase };
-                const res = await api.post('cases', data);
-                showToast('Case created successfully');
-                this.showCreateModal = false;
-                this.newCase = { case_number: '', client_name: '', client_dob: '', doi: '', attorney_name: '', assigned_to: '', notes: '' };
-                this.loadData(1);
-            } catch (e) {
-                showToast(e.data?.message || 'Failed to create case', 'error');
-            }
-            this.saving = false;
-        },
-
-        async deleteCase(id, caseNumber, clientName) {
-            if (!confirm(`Delete case ${caseNumber} (${clientName})? This will also delete all providers, requests, and notes for this case.`)) return;
-            try {
-                await api.delete('cases/' + id);
-                showToast('Case deleted');
-                this.loadData(this.pagination?.page || 1);
-            } catch (e) {
-                showToast(e.data?.message || 'Failed to delete case', 'error');
-            }
-        },
-
-        async init() {
-            // Load staff list
-            try {
-                const res = await api.get('users?active_only=1');
-                this.staffList = res.data || [];
-                this.users = this.staffList;
-            } catch (e) {}
-
-            // Wait for auth if still loading
-            const auth = Alpine.store('auth');
-            if (auth.loading) {
-                await new Promise(r => {
-                    const iv = setInterval(() => { if (!auth.loading) { clearInterval(iv); r(); } }, 50);
-                });
-            }
-
-            // Default status filter by user
-            const uid = auth.user?.id;
-            const defaults = { 2: 'collecting', 1: 'in_review', 4: 'completed' };
-            if (uid && defaults[uid]) {
-                this.statusFilter = defaults[uid];
-            }
-
-            await this.loadData();
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

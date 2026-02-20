@@ -35,18 +35,18 @@ $notes = $_POST['notes'] ?? null;
 
 // Provider template fields
 $isProviderTemplate = isset($_POST['is_provider_template']) && $_POST['is_provider_template'] == '1';
-$providerNameX = !empty($_POST['provider_name_x']) ? (int)$_POST['provider_name_x'] : null;
-$providerNameY = !empty($_POST['provider_name_y']) ? (int)$_POST['provider_name_y'] : null;
-$providerNameWidth = !empty($_POST['provider_name_width']) ? (int)$_POST['provider_name_width'] : null;
-$providerNameHeight = !empty($_POST['provider_name_height']) ? (int)$_POST['provider_name_height'] : null;
+$providerNameX = !empty($_POST['provider_name_x']) ? (float)$_POST['provider_name_x'] : null;
+$providerNameY = !empty($_POST['provider_name_y']) ? (float)$_POST['provider_name_y'] : null;
+$providerNameWidth = !empty($_POST['provider_name_width']) ? (float)$_POST['provider_name_width'] : null;
+$providerNameHeight = !empty($_POST['provider_name_height']) ? (float)$_POST['provider_name_height'] : null;
 $providerNameFontSize = !empty($_POST['provider_name_font_size']) ? (int)$_POST['provider_name_font_size'] : 12;
 
 // Date overlay fields
 $useDateOverlay = isset($_POST['use_date_overlay']) && $_POST['use_date_overlay'] == '1';
-$dateX = !empty($_POST['date_x']) ? (int)$_POST['date_x'] : null;
-$dateY = !empty($_POST['date_y']) ? (int)$_POST['date_y'] : null;
-$dateWidth = !empty($_POST['date_width']) ? (int)$_POST['date_width'] : null;
-$dateHeight = !empty($_POST['date_height']) ? (int)$_POST['date_height'] : null;
+$dateX = !empty($_POST['date_x']) ? (float)$_POST['date_x'] : null;
+$dateY = !empty($_POST['date_y']) ? (float)$_POST['date_y'] : null;
+$dateWidth = !empty($_POST['date_width']) ? (float)$_POST['date_width'] : null;
+$dateHeight = !empty($_POST['date_height']) ? (float)$_POST['date_height'] : null;
 $dateFontSize = !empty($_POST['date_font_size']) ? (int)$_POST['date_font_size'] : 12;
 
 // Validate document type

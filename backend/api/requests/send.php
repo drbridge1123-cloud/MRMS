@@ -71,25 +71,37 @@ if ($userEditedHtml) {
     }
 }
 
-// Load attachments if this is an email request
-$attachments = [];
-if ($letterData['request_method'] === 'email') {
-    $attachmentRecords = dbFetchAll(
-        "SELECT cd.file_path, cd.original_file_name
-         FROM request_attachments ra
-         JOIN case_documents cd ON ra.case_document_id = cd.id
-         WHERE ra.record_request_id = ?",
-        [$requestId]
-    );
+// Generate PDF version of the letter
+require_once __DIR__ . '/../../helpers/pdf-generator.php';
+$letterPdfPath = saveLetterPDF($html, $letterData['case_number'] ?? '', $letterData['provider_name'] ?? '');
 
-    foreach ($attachmentRecords as $att) {
-        $fullPath = __DIR__ . '/../../../storage/' . $att['file_path'];
-        if (file_exists($fullPath)) {
-            $attachments[] = [
-                'path' => $fullPath,
-                'name' => $att['original_file_name']
-            ];
-        }
+// Load attachments
+$attachments = [];
+
+// Attach the generated letter PDF first
+if ($letterPdfPath) {
+    $attachments[] = [
+        'path' => $letterPdfPath,
+        'name' => 'Medical_Records_Request.pdf'
+    ];
+}
+
+// Load additional document attachments (HIPAA, releases, etc.)
+$attachmentRecords = dbFetchAll(
+    "SELECT cd.file_path, cd.original_file_name
+     FROM request_attachments ra
+     JOIN case_documents cd ON ra.case_document_id = cd.id
+     WHERE ra.record_request_id = ?",
+    [$requestId]
+);
+
+foreach ($attachmentRecords as $att) {
+    $fullPath = __DIR__ . '/../../../storage/' . $att['file_path'];
+    if (file_exists($fullPath)) {
+        $attachments[] = [
+            'path' => $fullPath,
+            'name' => $att['original_file_name']
+        ];
     }
 }
 
@@ -125,7 +137,8 @@ if ($letterData['request_method'] === 'email') {
     }
     $result = sendEmail($recipient, $subject, $html, $emailOptions);
 } elseif ($letterData['request_method'] === 'fax') {
-    $result = sendFax($recipient, $html);
+    // Letter PDF is already in $attachments; no separate pdf_path needed
+    $result = sendFax($recipient, $html, ['attachments' => $attachments]);
 }
 
 // Log the attempt

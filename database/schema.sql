@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS case_providers (
     treatment_start_date DATE NULL,
     treatment_end_date DATE NULL,
     record_types_needed SET('medical_records','billing','chart','imaging','op_report') NULL,
-    overall_status ENUM('not_started','requesting','follow_up','received_partial','received_complete','verified') NOT NULL DEFAULT 'not_started',
+    overall_status ENUM('not_started','requesting','follow_up','received_partial','on_hold','received_complete','verified') NOT NULL DEFAULT 'not_started',
     received_date DATE NULL,
     assigned_to INT NULL,
     deadline DATE NULL,

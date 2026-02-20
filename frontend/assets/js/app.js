@@ -148,6 +148,7 @@ function formatDate(dateStr) {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
+        timeZone: 'UTC',
     });
 }
 
@@ -165,7 +166,9 @@ const STATUS_LABELS = {
     not_started: 'Not Started',
     requesting: 'Requesting',
     follow_up: 'Follow Up',
+    action_needed: 'Action Needed',
     received_partial: 'Partial',
+    on_hold: 'On Hold',
     received_complete: 'Complete',
     verified: 'Verified',
     collecting: 'Collecting',

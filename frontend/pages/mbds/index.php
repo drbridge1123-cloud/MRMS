@@ -3,6 +3,7 @@ require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
 $pageTitle = 'MBDS Reports';
 $currentPage = 'mbds';
+$pageScripts = ['/MRMS/frontend/assets/js/pages/mbds.js'];
 ob_start();
 ?>
 
@@ -153,86 +154,6 @@ ob_start();
         </div>
     </template>
 </div>
-
-<script>
-function mbdsListPage() {
-    return {
-        items: [],
-        loading: true,
-        summary: {},
-        search: '',
-        statusFilter: '',
-        sortBy: 'updated_at',
-        sortDir: 'desc',
-
-        async init() {
-            await this.loadData();
-        },
-
-        async loadData() {
-            this.loading = true;
-            try {
-                let p = '?';
-                if (this.search) p += `search=${encodeURIComponent(this.search)}&`;
-                if (this.statusFilter) p += `status=${this.statusFilter}&`;
-                p += `sort_by=${this.sortBy}&sort_dir=${this.sortDir}`;
-                const r = await api.get('mbds' + p);
-                this.items = r.data || [];
-                if (r.summary) this.summary = r.summary;
-            } catch (e) {
-                showToast('Failed to load MBDS reports', 'error');
-            }
-            this.loading = false;
-        },
-
-        sort(col) {
-            if (this.sortBy === col) {
-                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-            } else {
-                this.sortBy = col;
-                this.sortDir = 'asc';
-            }
-            this.loadData();
-        },
-
-        toggleFilter(s) {
-            this.statusFilter = this.statusFilter === s ? '' : s;
-            this.loadData();
-        },
-
-        resetFilters() {
-            this.search = '';
-            this.statusFilter = '';
-            this.sortBy = 'updated_at';
-            this.sortDir = 'desc';
-            this.loadData();
-        },
-
-        exportCSV() {
-            if (!this.items.length) return;
-            const headers = ['Case #','Client','DOI','PIP','Health','Charges','Balance','Lines','Status','Updated'];
-            const rows = this.items.map(i => [
-                i.case_number, i.client_name, this.formatDate(i.doi),
-                i.pip1_name || '', i.health1_name || '',
-                i.total_charges?.toFixed(2), i.total_balance?.toFixed(2),
-                i.line_count, i.status, this.formatDate(i.updated_at)
-            ]);
-            const csv = [headers, ...rows].map(r => r.map(c => '"' + String(c ?? '').replace(/"/g, '""') + '"').join(',')).join('\n');
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'mbds_reports_' + new Date().toISOString().split('T')[0] + '.csv';
-            a.click();
-        },
-
-        formatDate(d) {
-            if (!d) return '-';
-            const date = new Date(d);
-            return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-        }
-    };
-}
-</script>
 
 <?php
 $content = ob_get_clean();

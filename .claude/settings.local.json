@@ -51,7 +51,14 @@
       "Bash(/c/xampp/htdocs/MRMS/tmp_docx_extract.php:*)",
       "Bash(python3:*)",
       "Bash(python:*)",
-      "Bash(git status:*)"
+      "Bash(git status:*)",
+      "Bash(git push:*)",
+      "WebFetch(domain:www.faxage.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:silo.tips)",
+      "WebFetch(domain:www.scribd.com)",
+      "Bash(/c/xampp/apache/bin/httpd.exe:*)",
+      "Bash(C:/xampp/php/php.exe:*)"
     ]
   }
 }

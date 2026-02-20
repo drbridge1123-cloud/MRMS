@@ -75,7 +75,7 @@ $mostRequested = dbFetchAll("
     FROM providers p
     INNER JOIN case_providers cp ON cp.provider_id = p.id
     INNER JOIN record_requests rr ON rr.case_provider_id = cp.id
-    WHERE rr.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAYS)
+    WHERE rr.created_at >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
     GROUP BY p.id, p.name, p.type, p.difficulty_level
     ORDER BY request_count DESC
     LIMIT 10

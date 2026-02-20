@@ -10,10 +10,8 @@ define('DEFAULT_FOLLOWUP_DAYS', 7);
 define('DEADLINE_WARNING_DAYS', 7);
 define('DEFAULT_DEADLINE_DAYS', 30);
 
-// Escalation thresholds (days since first request)
-define('ESCALATION_ACTION_NEEDED_DAYS', 30);
-define('ESCALATION_MANAGER_DAYS', 42);
-define('ESCALATION_ADMIN_DAYS', 60);
+// Escalation thresholds (deadline-based)
+define('ADMIN_ESCALATION_DAYS_AFTER_DEADLINE', 14); // deadline + 14 days → notify admins
 
 define('ITEMS_PER_PAGE', 20);
 
