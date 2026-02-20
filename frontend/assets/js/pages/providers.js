@@ -23,12 +23,12 @@ function providersListPage() {
         editProvider: {
             id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
             phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
-            third_party_name: '', third_party_contact: '', notes: ''
+            third_party_name: '', third_party_contact: '', notes: '', contacts: []
         },
         newProvider: {
             name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
             phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
-            third_party_name: '', third_party_contact: '', notes: ''
+            third_party_name: '', third_party_contact: '', notes: '', contacts: []
         },
 
         _resetPageFilters() {
@@ -88,19 +88,49 @@ function providersListPage() {
             }
         },
 
+        addContact(target) {
+            target.contacts.push({ department: '', contact_type: 'fax', contact_value: '', is_primary: target.contacts.length === 0 ? 1 : 0 });
+        },
+
+        removeContact(target, index) {
+            const wasPrimary = target.contacts[index].is_primary;
+            target.contacts.splice(index, 1);
+            if (wasPrimary && target.contacts.length > 0) {
+                target.contacts[0].is_primary = 1;
+            }
+        },
+
+        setPrimary(target, index) {
+            target.contacts.forEach((c, i) => c.is_primary = i === index ? 1 : 0);
+        },
+
+        closeCreateModal() {
+            this.showCreateModal = false;
+            this.newProvider = {
+                name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
+                phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+                third_party_name: '', third_party_contact: '', notes: '', contacts: []
+            };
+        },
+
+        closeEditModal() {
+            this.showProviderModal = false;
+            this.editProvider = {
+                id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
+                phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+                third_party_name: '', third_party_contact: '', notes: '', contacts: []
+            };
+        },
+
         async createProvider() {
             this.saving = true;
             try {
                 const data = { ...this.newProvider };
                 data.uses_third_party = data.uses_third_party ? 1 : 0;
+                data.contacts = [...(this.newProvider.contacts || [])];
                 await api.post('providers', data);
                 showToast('Provider created successfully');
-                this.showCreateModal = false;
-                this.newProvider = {
-                    name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
-                    phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
-                    third_party_name: '', third_party_contact: '', notes: ''
-                };
+                this.closeCreateModal();
                 this.loadData();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to create provider', 'error');
@@ -114,14 +144,10 @@ function providersListPage() {
             try {
                 const data = { ...this.editProvider };
                 data.uses_third_party = data.uses_third_party ? 1 : 0;
+                data.contacts = [...(this.editProvider.contacts || [])].map(c => ({...c}));
                 await api.put('providers/' + data.id, data);
                 showToast('Provider updated successfully');
-                this.showProviderModal = false;
-                this.editProvider = {
-                    id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
-                    phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
-                    third_party_name: '', third_party_contact: '', notes: ''
-                };
+                this.closeEditModal();
                 this.loadData();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to update provider', 'error');

@@ -55,6 +55,13 @@ foreach ($rows as &$row) {
     $row['escalation_tier'] = $esc['tier'];
     $row['escalation_label'] = $esc['label'];
     $row['escalation_css'] = $esc['css'];
+
+    // Load provider contacts (departments)
+    $row['contacts'] = dbFetchAll(
+        "SELECT id, department, contact_type, contact_value, is_primary
+         FROM provider_contacts WHERE provider_id = ? ORDER BY is_primary DESC, department",
+        [$row['provider_id']]
+    );
 }
 unset($row);
 

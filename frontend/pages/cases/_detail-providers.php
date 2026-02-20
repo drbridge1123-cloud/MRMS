@@ -230,6 +230,11 @@
                                                                 x-text="getRequestMethodLabel(req.request_method)"></span>
                                                             <span class="text-v2-text-light"
                                                                 x-text="getRequestTypeLabel(req.request_type)"></span>
+                                                            <template x-if="req.department">
+                                                                <span class="px-1.5 py-0.5 rounded text-xs font-medium"
+                                                                    :class="req.department.toLowerCase().includes('billing') ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'"
+                                                                    x-text="req.department"></span>
+                                                            </template>
                                                             <template x-if="req.sent_to">
                                                                 <span
                                                                     class="text-v2-text-light flex items-center gap-1">

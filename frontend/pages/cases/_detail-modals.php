@@ -82,6 +82,19 @@
 
                 <!-- Body -->
                 <div class="modal-v2-body">
+                    <!-- Department Contact Selector (only if provider has contacts) -->
+                    <template x-if="currentProvider?.contacts?.length > 0">
+                        <div class="mb-4">
+                            <label class="form-v2-label">Department</label>
+                            <select x-model="newRequest.contact_id" @change="selectContact(newRequest.contact_id)" class="form-v2-select">
+                                <option value="">— Manual (use fields below) —</option>
+                                <template x-for="c in currentProvider.contacts" :key="c.id">
+                                    <option :value="c.id" x-text="c.department + ' (' + c.contact_type + ': ' + c.contact_value + ')'"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </template>
+
                     <!-- Row 1: Date + Method + Follow-up -->
                     <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px;">
                         <div>
@@ -90,7 +103,7 @@
                         </div>
                         <div>
                             <label class="form-v2-label">Method *</label>
-                            <select x-model="newRequest.request_method" required @change="updateSentToByMethod()" class="form-v2-select">
+                            <select x-model="newRequest.request_method" required @change="newRequest.contact_id = ''; updateSentToByMethod()" class="form-v2-select">
                                 <option value="email">Email</option>
                                 <option value="fax">Fax</option>
                                 <option value="portal">Portal</option>

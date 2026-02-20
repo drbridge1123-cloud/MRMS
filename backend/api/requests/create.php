@@ -31,6 +31,7 @@ $data = [
 ];
 
 if (isset($input['sent_to'])) $data['sent_to'] = sanitizeString($input['sent_to']);
+if (isset($input['department'])) $data['department'] = sanitizeString($input['department']);
 if (isset($input['authorization_sent'])) $data['authorization_sent'] = $input['authorization_sent'] ? 1 : 0;
 if (isset($input['notes'])) $data['notes'] = sanitizeString($input['notes']);
 if (isset($input['template_id'])) $data['template_id'] = (int)$input['template_id'];

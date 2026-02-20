@@ -229,7 +229,7 @@ ob_start();
                     <!-- Footer -->
                     <div class="modal-v2-footer">
                         <button
-                            @click="editProvider = selectedProvider; showProviderModal = true; selectedProvider = null"
+                            @click="editProvider = { ...selectedProvider, contacts: selectedProvider.contacts || [] }; showProviderModal = true; selectedProvider = null"
                             class="btn-v2-primary flex-1"
                         >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -249,298 +249,350 @@ ob_start();
     </div>
 
     <!-- Create Provider Modal -->
-    <div x-show="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-v2-backdrop fixed inset-0" @click="showCreateModal = false"></div>
-        <form @submit.prevent="createProvider()" class="modal-v2 relative w-full max-w-2xl z-10" @click.stop>
-            <div class="modal-v2-header">
-                <div>
-                    <h3 class="modal-v2-title">New Provider</h3>
-                </div>
-                <button type="button" class="modal-v2-close" @click="showCreateModal = false">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-v2-body">
-                <!-- Row 1: Name + Type + Method + Difficulty -->
-                <div class="grid grid-cols-4 gap-3">
-                    <div class="col-span-2">
-                        <label class="form-v2-label">Provider Name *</label>
-                        <input type="text" x-model="newProvider.name" required class="form-v2-input">
-                    </div>
+    <template x-if="showCreateModal">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="closeCreateModal()">
+            <div class="modal-v2-backdrop fixed inset-0" @click="closeCreateModal()"></div>
+            <form @submit.prevent="createProvider()" class="modal-v2 relative w-full max-w-2xl z-10" style="max-height: 90vh; display: flex; flex-direction: column;" @click.stop>
+                <div class="modal-v2-header flex-shrink-0">
                     <div>
-                        <label class="form-v2-label">Type *</label>
-                        <select x-model="newProvider.type" required class="form-v2-select">
-                            <option value="acupuncture">Acupuncture</option>
-                            <option value="chiro">Chiropractor</option>
-                            <option value="massage">Massage</option>
-                            <option value="pain_management">Pain Mgmt</option>
-                            <option value="pt">Physical Therapy</option>
-                            <option value="er">Emergency Room</option>
-                            <option value="hospital">Hospital</option>
-                            <option value="physician">Physician</option>
-                            <option value="imaging">Imaging Center</option>
-                            <option value="pharmacy">Pharmacy</option>
-                            <option value="surgery_center">Surgery Center</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <h3 class="modal-v2-title">New Provider</h3>
                     </div>
-                    <div>
-                        <label class="form-v2-label">Difficulty</label>
-                        <select x-model="newProvider.difficulty_level" class="form-v2-select">
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-v2-divider"></div>
-
-                <!-- Row 2: Address -->
-                <div>
-                    <label class="form-v2-label">Street Address</label>
-                    <input type="text" x-model="newProvider.address" class="form-v2-input">
-                </div>
-                <div class="grid grid-cols-6 gap-3">
-                    <div class="col-span-3">
-                        <label class="form-v2-label">City</label>
-                        <input type="text" x-model="newProvider.city" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">State</label>
-                        <input type="text" x-model="newProvider.state" maxlength="2" placeholder="WA" class="form-v2-input uppercase">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="form-v2-label">ZIP</label>
-                        <input type="text" x-model="newProvider.zip" maxlength="10" placeholder="98036" class="form-v2-input">
-                    </div>
-                </div>
-
-                <div class="form-v2-divider"></div>
-
-                <!-- Row 3: Phone + Fax + Email -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="form-v2-label">Phone</label>
-                        <input type="text" x-model="newProvider.phone" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Fax</label>
-                        <input type="text" x-model="newProvider.fax" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Email</label>
-                        <input type="email" x-model="newProvider.email" class="form-v2-input">
-                    </div>
-                </div>
-
-                <!-- Row 4: Method + Portal URL + Third Party -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="form-v2-label">Preferred Method</label>
-                        <select x-model="newProvider.preferred_method" class="form-v2-select">
-                            <option value="fax">Fax</option>
-                            <option value="email">Email</option>
-                            <option value="portal">Portal</option>
-                            <option value="phone">Phone</option>
-                            <option value="mail">Mail</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Portal URL</label>
-                        <input type="url" x-model="newProvider.portal_url" class="form-v2-input">
-                    </div>
-                    <div class="flex items-end pb-1">
-                        <label class="flex items-center gap-2 text-sm" style="accent-color: var(--gold);">
-                            <input type="checkbox" x-model="newProvider.uses_third_party" class="rounded"> Uses third party for records
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Third party fields (conditional) -->
-                <div x-show="newProvider.uses_third_party" class="grid grid-cols-2 gap-3" x-collapse>
-                    <div>
-                        <label class="form-v2-label">Third Party Name</label>
-                        <input type="text" x-model="newProvider.third_party_name" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Third Party Contact</label>
-                        <input type="text" x-model="newProvider.third_party_contact" class="form-v2-input">
-                    </div>
-                </div>
-
-                <!-- Notes accordion -->
-                <div class="accordion-v2" x-data="{ notesOpen: !!(newProvider.notes && newProvider.notes.trim()) }">
-                    <button type="button" class="accordion-v2-toggle" @click="notesOpen = !notesOpen">
-                        <span>Notes</span>
-                        <svg class="w-4 h-4 transition-transform" :class="notesOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <button type="button" class="modal-v2-close" @click="closeCreateModal()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
-                    <div x-show="notesOpen" x-collapse>
-                        <div class="accordion-v2-body">
-                            <textarea x-model="newProvider.notes" rows="2" class="form-v2-textarea" placeholder="Optional notes about this provider..."></textarea>
+                </div>
+                <div class="modal-v2-body" style="overflow-y: auto; flex: 1; min-height: 0;">
+                    <!-- Row 1: Name + Type + Method + Difficulty -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="col-span-2">
+                            <label class="form-v2-label">Provider Name *</label>
+                            <input type="text" x-model="newProvider.name" required class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Type *</label>
+                            <select x-model="newProvider.type" required class="form-v2-select">
+                                <option value="acupuncture">Acupuncture</option>
+                                <option value="chiro">Chiropractor</option>
+                                <option value="massage">Massage</option>
+                                <option value="pain_management">Pain Mgmt</option>
+                                <option value="pt">Physical Therapy</option>
+                                <option value="er">Emergency Room</option>
+                                <option value="hospital">Hospital</option>
+                                <option value="physician">Physician</option>
+                                <option value="imaging">Imaging Center</option>
+                                <option value="pharmacy">Pharmacy</option>
+                                <option value="surgery_center">Surgery Center</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Difficulty</label>
+                            <select x-model="newProvider.difficulty_level" class="form-v2-select">
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="modal-v2-footer">
-                <button type="button" @click="showCreateModal = false" class="btn-v2-cancel">Cancel</button>
-                <button type="submit" :disabled="saving" class="btn-v2-primary">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    <span x-text="saving ? 'Creating...' : 'Create Provider'"></span>
-                </button>
-            </div>
-        </form>
-    </div>
+                    <div class="form-v2-divider"></div>
+
+                    <!-- Row 2: Address -->
+                    <div>
+                        <label class="form-v2-label">Street Address</label>
+                        <input type="text" x-model="newProvider.address" class="form-v2-input">
+                    </div>
+                    <div class="grid grid-cols-6 gap-3">
+                        <div class="col-span-3">
+                            <label class="form-v2-label">City</label>
+                            <input type="text" x-model="newProvider.city" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">State</label>
+                            <input type="text" x-model="newProvider.state" maxlength="2" placeholder="WA" class="form-v2-input uppercase">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="form-v2-label">ZIP</label>
+                            <input type="text" x-model="newProvider.zip" maxlength="10" placeholder="98036" class="form-v2-input">
+                        </div>
+                    </div>
+
+                    <div class="form-v2-divider"></div>
+
+                    <!-- Row 3: Phone + Fax + Email -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="form-v2-label">Phone</label>
+                            <input type="text" x-model="newProvider.phone" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Fax</label>
+                            <input type="text" x-model="newProvider.fax" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Email</label>
+                            <input type="email" x-model="newProvider.email" class="form-v2-input">
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Method + Portal URL + Third Party -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="form-v2-label">Preferred Method</label>
+                            <select x-model="newProvider.preferred_method" class="form-v2-select">
+                                <option value="fax">Fax</option>
+                                <option value="email">Email</option>
+                                <option value="portal">Portal</option>
+                                <option value="phone">Phone</option>
+                                <option value="mail">Mail</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Portal URL</label>
+                            <input type="url" x-model="newProvider.portal_url" class="form-v2-input">
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <label class="flex items-center gap-2 text-sm" style="accent-color: var(--gold);">
+                                <input type="checkbox" x-model="newProvider.uses_third_party" class="rounded"> Uses third party for records
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Third party fields (conditional) -->
+                    <div x-show="newProvider.uses_third_party" class="grid grid-cols-2 gap-3" x-collapse>
+                        <div>
+                            <label class="form-v2-label">Third Party Name</label>
+                            <input type="text" x-model="newProvider.third_party_name" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Third Party Contact</label>
+                            <input type="text" x-model="newProvider.third_party_contact" class="form-v2-input">
+                        </div>
+                    </div>
+
+                    <!-- Department Contacts -->
+                    <div class="form-v2-divider"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="form-v2-label mb-0">Department Contacts</label>
+                            <button type="button" @click="addContact(newProvider)" class="text-xs text-gold hover:text-gold-hover font-semibold">+ Add Contact</button>
+                        </div>
+                        <template x-for="(contact, idx) in newProvider.contacts" :key="idx">
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="text" x-model="contact.department" placeholder="Department name" class="form-v2-input text-sm" style="flex:2;">
+                                <select x-model="contact.contact_type" class="form-v2-select text-sm" style="flex:1;">
+                                    <option value="email">Email</option>
+                                    <option value="fax">Fax</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="portal">Portal</option>
+                                </select>
+                                <input type="text" x-model="contact.contact_value" :placeholder="contact.contact_type === 'email' ? 'Email address' : contact.contact_type === 'fax' ? 'Fax number' : contact.contact_type === 'phone' ? 'Phone number' : 'Portal URL'" class="form-v2-input text-sm" style="flex:2;">
+                                <button type="button" @click="setPrimary(newProvider, idx)"
+                                        class="text-xs px-2 py-1 rounded font-bold flex-shrink-0"
+                                        :class="contact.is_primary == 1 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+                                        x-text="contact.is_primary == 1 ? 'PRIMARY' : 'Set'"></button>
+                                <button type="button" @click="removeContact(newProvider, idx)" class="text-red-400 hover:text-red-600 flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <template x-if="newProvider.contacts.length === 0">
+                            <p class="text-xs text-v2-text-light">No department contacts. Use the main phone/fax/email fields above, or add specific department contacts.</p>
+                        </template>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="form-v2-label">Notes</label>
+                        <textarea x-model="newProvider.notes" rows="2" class="form-v2-textarea" placeholder="Optional notes about this provider..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-v2-footer flex-shrink-0">
+                    <button type="button" @click="closeCreateModal()" class="btn-v2-cancel">Cancel</button>
+                    <button type="submit" :disabled="saving" class="btn-v2-primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        <span x-text="saving ? 'Creating...' : 'Create Provider'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </template>
 
     <!-- Edit Provider Modal -->
-    <div x-show="showProviderModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-v2-backdrop fixed inset-0" @click="showProviderModal = false"></div>
-        <form @submit.prevent="updateProvider()" x-show="editProvider" class="modal-v2 relative w-full max-w-2xl z-10" @click.stop>
-            <div class="modal-v2-header">
-                <div>
-                    <h3 class="modal-v2-title">Edit Provider</h3>
-                </div>
-                <button type="button" class="modal-v2-close" @click="showProviderModal = false">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <div class="modal-v2-body">
-                <!-- Row 1: Name + Type + Method + Difficulty -->
-                <div class="grid grid-cols-4 gap-3">
-                    <div class="col-span-2">
-                        <label class="form-v2-label">Provider Name *</label>
-                        <input type="text" x-model="editProvider.name" required class="form-v2-input">
-                    </div>
+    <template x-if="showProviderModal">
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="closeEditModal()">
+            <div class="modal-v2-backdrop fixed inset-0" @click="closeEditModal()"></div>
+            <form @submit.prevent="updateProvider()" class="modal-v2 relative w-full max-w-2xl z-10" style="max-height: 90vh; display: flex; flex-direction: column;" @click.stop>
+                <div class="modal-v2-header flex-shrink-0">
                     <div>
-                        <label class="form-v2-label">Type *</label>
-                        <select x-model="editProvider.type" required class="form-v2-select">
-                            <option value="acupuncture">Acupuncture</option>
-                            <option value="chiro">Chiropractor</option>
-                            <option value="massage">Massage</option>
-                            <option value="pain_management">Pain Mgmt</option>
-                            <option value="pt">Physical Therapy</option>
-                            <option value="er">Emergency Room</option>
-                            <option value="hospital">Hospital</option>
-                            <option value="physician">Physician</option>
-                            <option value="imaging">Imaging Center</option>
-                            <option value="pharmacy">Pharmacy</option>
-                            <option value="surgery_center">Surgery Center</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <h3 class="modal-v2-title">Edit Provider</h3>
                     </div>
-                    <div>
-                        <label class="form-v2-label">Difficulty</label>
-                        <select x-model="editProvider.difficulty_level" class="form-v2-select">
-                            <option value="easy">Easy</option>
-                            <option value="medium">Medium</option>
-                            <option value="hard">Hard</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-v2-divider"></div>
-
-                <!-- Row 2: Address -->
-                <div>
-                    <label class="form-v2-label">Street Address</label>
-                    <input type="text" x-model="editProvider.address" class="form-v2-input">
-                </div>
-                <div class="grid grid-cols-6 gap-3">
-                    <div class="col-span-3">
-                        <label class="form-v2-label">City</label>
-                        <input type="text" x-model="editProvider.city" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">State</label>
-                        <input type="text" x-model="editProvider.state" maxlength="2" placeholder="WA" class="form-v2-input uppercase">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="form-v2-label">ZIP</label>
-                        <input type="text" x-model="editProvider.zip" maxlength="10" placeholder="98036" class="form-v2-input">
-                    </div>
-                </div>
-
-                <div class="form-v2-divider"></div>
-
-                <!-- Row 3: Phone + Fax + Email -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="form-v2-label">Phone</label>
-                        <input type="text" x-model="editProvider.phone" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Fax</label>
-                        <input type="text" x-model="editProvider.fax" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Email</label>
-                        <input type="email" x-model="editProvider.email" class="form-v2-input">
-                    </div>
-                </div>
-
-                <!-- Row 4: Method + Portal URL + Third Party -->
-                <div class="grid grid-cols-3 gap-3">
-                    <div>
-                        <label class="form-v2-label">Preferred Method</label>
-                        <select x-model="editProvider.preferred_method" class="form-v2-select">
-                            <option value="fax">Fax</option>
-                            <option value="email">Email</option>
-                            <option value="portal">Portal</option>
-                            <option value="phone">Phone</option>
-                            <option value="mail">Mail</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Portal URL</label>
-                        <input type="url" x-model="editProvider.portal_url" class="form-v2-input">
-                    </div>
-                    <div class="flex items-end pb-1">
-                        <label class="flex items-center gap-2 text-sm" style="accent-color: var(--gold);">
-                            <input type="checkbox" x-model="editProvider.uses_third_party" class="rounded"> Uses third party for records
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Third party fields (conditional) -->
-                <div x-show="editProvider.uses_third_party" class="grid grid-cols-2 gap-3" x-collapse>
-                    <div>
-                        <label class="form-v2-label">Third Party Name</label>
-                        <input type="text" x-model="editProvider.third_party_name" class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Third Party Contact</label>
-                        <input type="text" x-model="editProvider.third_party_contact" class="form-v2-input">
-                    </div>
-                </div>
-
-                <!-- Notes accordion -->
-                <div class="accordion-v2" x-data="{ notesOpen: !!(editProvider.notes && editProvider.notes.trim()) }">
-                    <button type="button" class="accordion-v2-toggle" @click="notesOpen = !notesOpen">
-                        <span>Notes</span>
-                        <svg class="w-4 h-4 transition-transform" :class="notesOpen && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <button type="button" class="modal-v2-close" @click="closeEditModal()">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
-                    <div x-show="notesOpen" x-collapse>
-                        <div class="accordion-v2-body">
-                            <textarea x-model="editProvider.notes" rows="2" class="form-v2-textarea" placeholder="Optional notes about this provider..."></textarea>
+                </div>
+                <div class="modal-v2-body" style="overflow-y: auto; flex: 1; min-height: 0;">
+                    <!-- Row 1: Name + Type + Method + Difficulty -->
+                    <div class="grid grid-cols-4 gap-3">
+                        <div class="col-span-2">
+                            <label class="form-v2-label">Provider Name *</label>
+                            <input type="text" x-model="editProvider.name" required class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Type *</label>
+                            <select x-model="editProvider.type" required class="form-v2-select">
+                                <option value="acupuncture">Acupuncture</option>
+                                <option value="chiro">Chiropractor</option>
+                                <option value="massage">Massage</option>
+                                <option value="pain_management">Pain Mgmt</option>
+                                <option value="pt">Physical Therapy</option>
+                                <option value="er">Emergency Room</option>
+                                <option value="hospital">Hospital</option>
+                                <option value="physician">Physician</option>
+                                <option value="imaging">Imaging Center</option>
+                                <option value="pharmacy">Pharmacy</option>
+                                <option value="surgery_center">Surgery Center</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Difficulty</label>
+                            <select x-model="editProvider.difficulty_level" class="form-v2-select">
+                                <option value="easy">Easy</option>
+                                <option value="medium">Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="modal-v2-footer">
-                <button type="button" @click="showProviderModal = false" class="btn-v2-cancel">Cancel</button>
-                <button type="submit" :disabled="saving" class="btn-v2-primary">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                    <span x-text="saving ? 'Saving...' : 'Update Provider'"></span>
-                </button>
-            </div>
-        </form>
-    </div>
+                    <div class="form-v2-divider"></div>
+
+                    <!-- Row 2: Address -->
+                    <div>
+                        <label class="form-v2-label">Street Address</label>
+                        <input type="text" x-model="editProvider.address" class="form-v2-input">
+                    </div>
+                    <div class="grid grid-cols-6 gap-3">
+                        <div class="col-span-3">
+                            <label class="form-v2-label">City</label>
+                            <input type="text" x-model="editProvider.city" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">State</label>
+                            <input type="text" x-model="editProvider.state" maxlength="2" placeholder="WA" class="form-v2-input uppercase">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="form-v2-label">ZIP</label>
+                            <input type="text" x-model="editProvider.zip" maxlength="10" placeholder="98036" class="form-v2-input">
+                        </div>
+                    </div>
+
+                    <div class="form-v2-divider"></div>
+
+                    <!-- Row 3: Phone + Fax + Email -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="form-v2-label">Phone</label>
+                            <input type="text" x-model="editProvider.phone" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Fax</label>
+                            <input type="text" x-model="editProvider.fax" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Email</label>
+                            <input type="email" x-model="editProvider.email" class="form-v2-input">
+                        </div>
+                    </div>
+
+                    <!-- Row 4: Method + Portal URL + Third Party -->
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="form-v2-label">Preferred Method</label>
+                            <select x-model="editProvider.preferred_method" class="form-v2-select">
+                                <option value="fax">Fax</option>
+                                <option value="email">Email</option>
+                                <option value="portal">Portal</option>
+                                <option value="phone">Phone</option>
+                                <option value="mail">Mail</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Portal URL</label>
+                            <input type="url" x-model="editProvider.portal_url" class="form-v2-input">
+                        </div>
+                        <div class="flex items-end pb-1">
+                            <label class="flex items-center gap-2 text-sm" style="accent-color: var(--gold);">
+                                <input type="checkbox" x-model="editProvider.uses_third_party" class="rounded"> Uses third party for records
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Third party fields (conditional) -->
+                    <div x-show="editProvider.uses_third_party" class="grid grid-cols-2 gap-3" x-collapse>
+                        <div>
+                            <label class="form-v2-label">Third Party Name</label>
+                            <input type="text" x-model="editProvider.third_party_name" class="form-v2-input">
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Third Party Contact</label>
+                            <input type="text" x-model="editProvider.third_party_contact" class="form-v2-input">
+                        </div>
+                    </div>
+
+                    <!-- Department Contacts -->
+                    <div class="form-v2-divider"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="form-v2-label mb-0">Department Contacts</label>
+                            <button type="button" @click="addContact(editProvider)" class="text-xs text-gold hover:text-gold-hover font-semibold">+ Add Contact</button>
+                        </div>
+                        <template x-for="(contact, idx) in editProvider.contacts" :key="idx">
+                            <div class="flex items-center gap-2 mb-2">
+                                <input type="text" x-model="contact.department" placeholder="Department name" class="form-v2-input text-sm" style="flex:2;">
+                                <select x-model="contact.contact_type" class="form-v2-select text-sm" style="flex:1;">
+                                    <option value="email">Email</option>
+                                    <option value="fax">Fax</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="portal">Portal</option>
+                                </select>
+                                <input type="text" x-model="contact.contact_value" :placeholder="contact.contact_type === 'email' ? 'Email address' : contact.contact_type === 'fax' ? 'Fax number' : contact.contact_type === 'phone' ? 'Phone number' : 'Portal URL'" class="form-v2-input text-sm" style="flex:2;">
+                                <button type="button" @click="setPrimary(editProvider, idx)"
+                                        class="text-xs px-2 py-1 rounded font-bold flex-shrink-0"
+                                        :class="contact.is_primary == 1 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'"
+                                        x-text="contact.is_primary == 1 ? 'PRIMARY' : 'Set'"></button>
+                                <button type="button" @click="removeContact(editProvider, idx)" class="text-red-400 hover:text-red-600 flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <template x-if="editProvider.contacts.length === 0">
+                            <p class="text-xs text-v2-text-light">No department contacts added.</p>
+                        </template>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="form-v2-label">Notes</label>
+                        <textarea x-model="editProvider.notes" rows="2" class="form-v2-textarea" placeholder="Optional notes about this provider..."></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-v2-footer flex-shrink-0">
+                    <button type="button" @click="closeEditModal()" class="btn-v2-cancel">Cancel</button>
+                    <button type="submit" :disabled="saving" class="btn-v2-primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span x-text="saving ? 'Saving...' : 'Update Provider'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </template>
 
 </div>
 

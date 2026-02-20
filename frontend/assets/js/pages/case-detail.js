@@ -222,14 +222,41 @@ function caseDetailPage() {
                 request_method: 'email',
                 request_type: p.overall_status === 'not_started' ? 'initial' : 'follow_up',
                 sent_to: '',
+                department: '',
+                contact_id: '',
                 authorization_sent: true,
                 notes: '',
                 next_followup_date: nextFollowupStr,
                 template_id: null,
                 document_ids: []
             };
-            this.updateSentToByMethod();
+
+            // Auto-select primary contact if available
+            if (p.contacts && p.contacts.length > 0) {
+                const primary = p.contacts.find(c => c.is_primary == 1) || p.contacts[0];
+                this.newRequest.contact_id = primary.id;
+                this.selectContact(primary.id);
+            } else {
+                this.updateSentToByMethod();
+            }
             this.showRequestModal = true;
+        },
+
+        selectContact(contactId) {
+            const p = this.currentProvider;
+            if (!contactId || !p || !p.contacts) {
+                this.updateSentToByMethod();
+                return;
+            }
+            const contact = p.contacts.find(c => c.id == contactId);
+            if (contact) {
+                this.newRequest.request_method = contact.contact_type;
+                this.newRequest.sent_to = contact.contact_value;
+                this.newRequest.department = contact.department || '';
+            } else {
+                this.newRequest.department = '';
+                this.updateSentToByMethod();
+            }
         },
 
         updateSentToByMethod() {
