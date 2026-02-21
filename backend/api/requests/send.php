@@ -71,20 +71,8 @@ if ($userEditedHtml) {
     }
 }
 
-// Generate PDF version of the letter
-require_once __DIR__ . '/../../helpers/pdf-generator.php';
-$letterPdfPath = saveLetterPDF($html, $letterData['case_number'] ?? '', $letterData['provider_name'] ?? '');
-
 // Load attachments
 $attachments = [];
-
-// Attach the generated letter PDF first
-if ($letterPdfPath) {
-    $attachments[] = [
-        'path' => $letterPdfPath,
-        'name' => 'Medical_Records_Request.pdf'
-    ];
-}
 
 // Load additional document attachments (HIPAA, releases, etc.)
 $attachmentRecords = dbFetchAll(
@@ -102,6 +90,20 @@ foreach ($attachmentRecords as $att) {
             'path' => $fullPath,
             'name' => $att['original_file_name']
         ];
+    }
+}
+
+// Auto-attach Balance Verification Form for balance_verification templates
+if (!empty($letterData['template_id'])) {
+    $tplInfo = dbFetchOne("SELECT template_type FROM letter_templates WHERE id = ?", [$letterData['template_id']]);
+    if ($tplInfo && $tplInfo['template_type'] === 'balance_verification') {
+        $bvFormPath = __DIR__ . '/../../../storage/templates/balance_verification_form.pdf';
+        if (file_exists($bvFormPath)) {
+            $attachments[] = [
+                'path' => $bvFormPath,
+                'name' => 'Balance_Verification_Form.pdf'
+            ];
+        }
     }
 }
 
@@ -137,8 +139,15 @@ if ($letterData['request_method'] === 'email') {
     }
     $result = sendEmail($recipient, $subject, $html, $emailOptions);
 } elseif ($letterData['request_method'] === 'fax') {
-    // Letter PDF is already in $attachments; no separate pdf_path needed
-    $result = sendFax($recipient, $html, ['attachments' => $attachments]);
+    // Generate PDF version of the letter for fax (fax needs PDF, not HTML)
+    require_once __DIR__ . '/../../helpers/pdf-generator.php';
+    $letterPdfPath = saveLetterPDF($html, $letterData['case_number'] ?? '', $letterData['provider_name'] ?? '');
+    $faxAttachments = [];
+    if ($letterPdfPath) {
+        $faxAttachments[] = ['path' => $letterPdfPath, 'name' => 'Medical_Records_Request.pdf'];
+    }
+    $faxAttachments = array_merge($faxAttachments, $attachments);
+    $result = sendFax($recipient, $html, ['attachments' => $faxAttachments]);
 }
 
 // Log the attempt
@@ -170,6 +179,18 @@ if ($result['success']) {
         'recipient' => $recipient,
         'edited'    => $isEdited
     ]);
+
+    // Auto-update provider status based on request type
+    if (!empty($letterData['case_provider_id'])) {
+        $autoStatus = match($letterData['request_type'] ?? '') {
+            'initial' => 'requesting',
+            'follow_up', 're_request', 'rfd' => 'follow_up',
+            default => null,
+        };
+        if ($autoStatus) {
+            dbUpdate('case_providers', ['overall_status' => $autoStatus], 'id = ?', [$letterData['case_provider_id']]);
+        }
+    }
 
     successResponse([
         'send_status' => 'sent',

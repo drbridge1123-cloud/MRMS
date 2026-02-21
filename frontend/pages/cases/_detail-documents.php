@@ -62,22 +62,11 @@
                                         </button>
                                     </div>
 
-                                    <!-- Document Type Selection -->
-                                    <div class="grid grid-cols-2 gap-3">
-                                        <div>
-                                            <label class="block text-xs font-medium text-v2-text mb-1">Document Type</label>
-                                            <select x-model="uploadForm.document_type"
-                                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                                                <option value="hipaa_authorization">Wet-Signed HIPPA Release</option>
-                                                <option value="signed_release">E-Signed HIPPA Release</option>
-                                                <option value="other">Other</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-v2-text mb-1">Notes (Optional)</label>
-                                            <input type="text" x-model="uploadForm.notes" placeholder="Add notes..."
-                                                class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                                        </div>
+                                    <!-- Notes -->
+                                    <div>
+                                        <label class="block text-xs font-medium text-v2-text mb-1">Notes (Optional)</label>
+                                        <input type="text" x-model="uploadForm.notes" placeholder="Add notes..."
+                                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
                                     </div>
 
                                     <!-- Provider Template Mode -->
@@ -98,23 +87,30 @@
                                                 <!-- Selection Mode Tabs -->
                                                 <div class="flex items-center gap-1 bg-blue-100 rounded-lg p-0.5">
                                                     <button type="button" @click="selectionMode = 'provider_name'"
-                                                        class="flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                                                        class="flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
                                                         :class="selectionMode === 'provider_name' ? 'bg-white text-blue-800 shadow-sm' : 'text-blue-600 hover:text-blue-800'">
                                                         Provider Name
                                                         <span x-show="hasCoordinates()" class="text-green-600 ml-1">&#10003;</span>
                                                     </button>
                                                     <button type="button" @click="selectionMode = 'date'; uploadForm.use_date_overlay = true"
-                                                        class="flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                                                        class="flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
                                                         :class="selectionMode === 'date' ? 'bg-white text-emerald-800 shadow-sm' : 'text-blue-600 hover:text-blue-800'">
                                                         Date (Optional)
                                                         <span x-show="hasDateCoordinates()" class="text-green-600 ml-1">&#10003;</span>
+                                                    </button>
+                                                    <button type="button" @click="selectionMode = 'custom_text'; uploadForm.use_custom_text_overlay = true"
+                                                        class="flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
+                                                        :class="selectionMode === 'custom_text' ? 'bg-white text-amber-800 shadow-sm' : 'text-blue-600 hover:text-blue-800'">
+                                                        Custom Text
+                                                        <span x-show="hasCustomTextCoordinates()" class="text-green-600 ml-1">&#10003;</span>
                                                     </button>
                                                 </div>
 
                                                 <!-- Current mode info -->
                                                 <div class="flex items-center justify-between">
-                                                    <p class="text-xs font-medium" :class="selectionMode === 'date' ? 'text-emerald-700' : 'text-blue-800'"
-                                                        x-text="selectionMode === 'date' ? 'Select Date Location' : 'Select Provider Name Location'"></p>
+                                                    <p class="text-xs font-medium"
+                                                        :class="selectionMode === 'date' ? 'text-emerald-700' : selectionMode === 'custom_text' ? 'text-amber-700' : 'text-blue-800'"
+                                                        x-text="selectionMode === 'date' ? 'Select Date Location' : selectionMode === 'custom_text' ? 'Select Custom Text Location' : 'Select Provider Name Location'"></p>
                                                     <div class="flex gap-2">
                                                         <template x-if="selectionMode === 'provider_name' && hasCoordinates()">
                                                             <button type="button" @click="resetProviderSelection()"
@@ -124,8 +120,21 @@
                                                             <button type="button" @click="resetDateSelection()"
                                                                 class="text-xs text-emerald-600 hover:text-emerald-800 underline">Reset</button>
                                                         </template>
+                                                        <template x-if="selectionMode === 'custom_text' && hasCustomTextCoordinates()">
+                                                            <button type="button" @click="resetCustomTextSelection()"
+                                                                class="text-xs text-amber-600 hover:text-amber-800 underline">Reset</button>
+                                                        </template>
                                                     </div>
                                                 </div>
+
+                                                <!-- Custom Text Input (above PDF so it's always visible) -->
+                                                <template x-if="uploadForm.use_custom_text_overlay">
+                                                    <div>
+                                                        <label class="text-xs text-amber-700 font-medium">Custom Text:</label>
+                                                        <input type="text" x-model="uploadForm.custom_text_value" placeholder="Enter text to overlay on PDF..."
+                                                            class="w-full mt-1 px-2 py-1.5 border border-amber-300 rounded text-sm focus:ring-amber-500 focus:border-amber-500">
+                                                    </div>
+                                                </template>
 
                                                 <!-- PDF Preview Canvas (only for PDF files) -->
                                                 <template x-if="isPdfFile()">
@@ -138,7 +147,7 @@
 
                                                         <!-- Canvas container -->
                                                         <div class="relative rounded overflow-hidden border-2 transition-colors"
-                                                            :class="selectionMode === 'date' ? 'border-emerald-300' : 'border-blue-300'"
+                                                            :class="selectionMode === 'date' ? 'border-emerald-300' : selectionMode === 'custom_text' ? 'border-amber-300' : 'border-blue-300'"
                                                             style="cursor: crosshair;" x-ref="pdfCanvasContainer">
                                                             <canvas x-ref="pdfCanvas" class="block"></canvas>
                                                             <canvas x-ref="pdfOverlay" class="absolute top-0 left-0"
@@ -174,6 +183,16 @@
                                                                         Date area selected (green).
                                                                     </p>
                                                                 </template>
+                                                                <template x-if="selectionMode === 'custom_text' && !hasCustomTextCoordinates()">
+                                                                    <p class="text-xs text-amber-600">
+                                                                        Drag on the PDF to select the Custom Text area.
+                                                                    </p>
+                                                                </template>
+                                                                <template x-if="selectionMode === 'custom_text' && hasCustomTextCoordinates()">
+                                                                    <p class="text-xs text-green-600">
+                                                                        Custom Text area selected (orange).
+                                                                    </p>
+                                                                </template>
                                                             </div>
                                                         </template>
                                                     </div>
@@ -187,7 +206,7 @@
                                                 </template>
 
                                                 <!-- Font Size -->
-                                                <div class="flex items-center gap-3">
+                                                <div class="flex items-center gap-3 flex-wrap">
                                                     <div class="flex items-center gap-2">
                                                         <label class="text-xs text-blue-700 whitespace-nowrap">Provider Font:</label>
                                                         <input type="number" x-model.number="uploadForm.provider_name_font_size" min="6" max="36"
@@ -198,6 +217,13 @@
                                                             <label class="text-xs text-emerald-700 whitespace-nowrap">Date Font:</label>
                                                             <input type="number" x-model.number="uploadForm.date_font_size" min="6" max="36"
                                                                 class="w-16 px-2 py-1 border border-emerald-300 rounded text-sm">
+                                                        </div>
+                                                    </template>
+                                                    <template x-if="uploadForm.use_custom_text_overlay">
+                                                        <div class="flex items-center gap-2">
+                                                            <label class="text-xs text-amber-700 whitespace-nowrap">Text Font:</label>
+                                                            <input type="number" x-model.number="uploadForm.custom_text_font_size" min="6" max="36"
+                                                                class="w-16 px-2 py-1 border border-amber-300 rounded text-sm">
                                                         </div>
                                                     </template>
                                                 </div>
@@ -222,6 +248,17 @@
                                                             <label class="flex items-center gap-1 text-emerald-500">Y<input type="number" x-model.number="uploadForm.date_y" step="0.5" class="w-14 px-1 py-0.5 border border-emerald-200 rounded text-[10px] font-mono"></label>
                                                             <label class="flex items-center gap-1 text-emerald-500">W<input type="number" x-model.number="uploadForm.date_width" step="0.5" class="w-14 px-1 py-0.5 border border-emerald-200 rounded text-[10px] font-mono"></label>
                                                             <label class="flex items-center gap-1 text-emerald-500">H<input type="number" x-model.number="uploadForm.date_height" step="0.5" class="w-14 px-1 py-0.5 border border-emerald-200 rounded text-[10px] font-mono"></label>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                                <template x-if="hasCustomTextCoordinates()">
+                                                    <div class="space-y-1">
+                                                        <p class="text-[10px] font-medium text-amber-600">Custom Text (mm):</p>
+                                                        <div class="flex gap-2 text-[10px]">
+                                                            <label class="flex items-center gap-1 text-amber-500">X<input type="number" x-model.number="uploadForm.custom_text_x" step="0.5" class="w-14 px-1 py-0.5 border border-amber-200 rounded text-[10px] font-mono"></label>
+                                                            <label class="flex items-center gap-1 text-amber-500">Y<input type="number" x-model.number="uploadForm.custom_text_y" step="0.5" class="w-14 px-1 py-0.5 border border-amber-200 rounded text-[10px] font-mono"></label>
+                                                            <label class="flex items-center gap-1 text-amber-500">W<input type="number" x-model.number="uploadForm.custom_text_width" step="0.5" class="w-14 px-1 py-0.5 border border-amber-200 rounded text-[10px] font-mono"></label>
+                                                            <label class="flex items-center gap-1 text-amber-500">H<input type="number" x-model.number="uploadForm.custom_text_height" step="0.5" class="w-14 px-1 py-0.5 border border-amber-200 rounded text-[10px] font-mono"></label>
                                                         </div>
                                                     </div>
                                                 </template>
@@ -275,8 +312,6 @@
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm font-medium text-v2-text truncate" x-text="doc.original_file_name"></p>
                                             <div class="flex items-center gap-2 mt-1">
-                                                <span class="text-xs px-2 py-0.5 rounded-full" :class="getDocumentTypeBadgeClass(doc.document_type)"
-                                                    x-text="getDocumentTypeLabel(doc.document_type)"></span>
                                                 <template x-if="doc.is_provider_template == 1">
                                                     <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800" title="Provider name can be changed">
                                                         📋 Template

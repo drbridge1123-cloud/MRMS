@@ -61,6 +61,33 @@ function requireAdminOrManager() {
     }
 }
 
+function getDefaultPermissions($role) {
+    $defaults = [
+        'admin' => ['dashboard','cases','providers','tracker','expense_report','reconciliation','users','templates','activity_log','data_management'],
+        'manager' => ['dashboard','cases','providers','tracker','templates'],
+        'accounting' => ['dashboard','cases','providers','tracker','expense_report','reconciliation'],
+        'staff' => ['dashboard','cases','providers','tracker']
+    ];
+    return $defaults[$role] ?? $defaults['staff'];
+}
+
+function requirePermission($page) {
+    requireAuth();
+    // admin always has full access
+    if ($_SESSION['user_role'] === 'admin') return;
+    $perms = $_SESSION['user_permissions'] ?? [];
+    if (!in_array($page, $perms)) {
+        if (isApiRequest()) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Access denied']);
+            exit;
+        }
+        header('Location: /MRMS/frontend/pages/dashboard/index.php');
+        exit;
+    }
+}
+
 function getCurrentUser() {
     startSecureSession();
     if (empty($_SESSION['user_id'])) {

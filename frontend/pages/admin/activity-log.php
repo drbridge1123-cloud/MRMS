@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
-requireAdmin();
+requirePermission('activity_log');
 $pageTitle = 'Activity Log';
 $currentPage = 'admin-activity';
 $pageScripts = ['/MRMS/frontend/assets/js/pages/admin/activity-log.js'];

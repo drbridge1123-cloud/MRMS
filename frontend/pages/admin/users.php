@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
-requireAdmin();
+requirePermission('users');
 $pageTitle = 'User Management';
 $currentPage = 'admin-users';
 $pageScripts = ['/MRMS/frontend/assets/js/pages/admin/users.js'];
@@ -25,6 +25,7 @@ ob_start();
                 <option value="">All Roles</option>
                 <option value="admin">Admin</option>
                 <option value="manager">Manager</option>
+                <option value="accounting">Accounting</option>
                 <option value="staff">Staff</option>
             </select>
             <select x-model="activeFilter" @change="loadData(1)"
@@ -70,8 +71,8 @@ ob_start();
                             <td class="font-medium" x-text="u.username"></td>
                             <td x-text="u.full_name"></td>
                             <td>
-                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
-                                      :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : u.role === 'manager' ? 'bg-orange-100 text-orange-700' : 'bg-v2-bg text-v2-text'"
+                                <span class="px-2 py-0.5 rounded-full text-xs font-semibold capitalize"
+                                      :class="u.role === 'admin' ? 'bg-purple-100 text-purple-700' : u.role === 'manager' ? 'bg-orange-100 text-orange-700' : u.role === 'accounting' ? 'bg-teal-100 text-teal-700' : 'bg-v2-bg text-v2-text'"
                                       x-text="u.role"></span>
                             </td>
                             <td>
@@ -111,46 +112,75 @@ ob_start();
     <!-- Create/Edit User Modal -->
     <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="modal-v2-backdrop fixed inset-0" @click="showModal = false"></div>
-        <div class="modal-v2 relative w-full max-w-md z-10" @click.stop>
-            <form @submit.prevent="saveUser()">
-                <div class="modal-v2-header">
-                    <div class="modal-v2-title" x-text="isEditing ? 'Edit User' : 'New User'"></div>
+        <div class="modal-v2 modal-v2-dark relative w-full max-w-md z-10 max-h-[90vh] flex flex-col" @click.stop>
+            <form @submit.prevent="saveUser()" class="flex flex-col max-h-[90vh]">
+                <div class="modal-v2-header flex-shrink-0">
+                    <div>
+                        <div class="modal-v2-title" x-text="isEditing ? 'Edit User' : 'New User'"></div>
+                        <div class="modal-v2-subtitle" x-show="isEditing" x-text="form.username"></div>
+                    </div>
                     <button type="button" class="modal-v2-close" @click="showModal = false">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <div class="modal-v2-body">
-                    <div>
-                        <label class="form-v2-label">Username *</label>
-                        <input type="text" x-model="form.username" required class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Full Name *</label>
-                        <input type="text" x-model="form.full_name" required class="form-v2-input">
-                    </div>
-                    <div>
-                        <label class="form-v2-label">Job Title</label>
-                        <input type="text" x-model="form.title" placeholder="e.g., Legal Assistant, Paralegal, Attorney" class="form-v2-input">
-                    </div>
-                    <template x-if="!isEditing">
+                <div class="modal-v2-body overflow-y-auto flex-1">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="form-v2-label">Password *</label>
-                            <input type="password" x-model="form.password" :required="!isEditing" minlength="6"
-                                   class="form-v2-input" placeholder="Min 6 characters">
+                            <label class="form-v2-label">Username *</label>
+                            <input type="text" x-model="form.username" required class="form-v2-input">
                         </div>
-                    </template>
-                    <div>
-                        <label class="form-v2-label">Role</label>
-                        <select x-model="form.role" class="form-v2-select">
-                            <option value="staff">Staff</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                        </select>
+                        <div>
+                            <label class="form-v2-label">Full Name *</label>
+                            <input type="text" x-model="form.full_name" required class="form-v2-input">
+                        </div>
                     </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-v2-label">Job Title</label>
+                            <input type="text" x-model="form.title" placeholder="e.g., Paralegal" class="form-v2-input">
+                        </div>
+                        <template x-if="!isEditing">
+                            <div>
+                                <label class="form-v2-label">Password *</label>
+                                <input type="password" x-model="form.password" :required="!isEditing" minlength="6"
+                                       class="form-v2-input" placeholder="Min 6 characters">
+                            </div>
+                        </template>
+                        <div>
+                            <label class="form-v2-label">Role</label>
+                            <select x-model="form.role" @change="onRoleChange()" class="form-v2-select">
+                                <option value="staff">Staff</option>
+                                <option value="accounting">Accounting</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Page Access Permissions -->
+                    <div class="dark-divider border-t pt-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <p class="dark-section-title text-xs font-semibold uppercase tracking-wider">Page Access</p>
+                            <button type="button" @click="onRoleChange()" class="dark-link text-xs hover:underline">Reset to defaults</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <template x-for="page in allPages" :key="page.key">
+                                <label class="perm-item flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm"
+                                       :class="form.permissions.includes(page.key) ? 'perm-active' : ''">
+                                    <input type="checkbox"
+                                           :checked="form.permissions.includes(page.key)"
+                                           @change="togglePermission(page.key)"
+                                           class="rounded">
+                                    <span x-text="page.label"></span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
                     <!-- Email / SMTP Settings (edit mode only) -->
                     <template x-if="isEditing">
-                        <div class="border-t border-v2-card-border pt-4 space-y-3">
-                            <p class="text-xs font-semibold text-v2-text-mid uppercase tracking-wider">Email Settings</p>
+                        <div class="dark-divider border-t pt-4 space-y-3">
+                            <p class="dark-section-title text-xs font-semibold uppercase tracking-wider">Email Settings</p>
                             <div>
                                 <label class="form-v2-label">Gmail Address</label>
                                 <input type="email" x-model="form.smtp_email" placeholder="user@gmail.com" class="form-v2-input">
@@ -158,18 +188,18 @@ ob_start();
                             <div>
                                 <label class="form-v2-label">Gmail App Password</label>
                                 <input type="password" x-model="form.smtp_app_password" placeholder="Leave blank to keep current" class="form-v2-input">
-                                <p class="text-xs text-v2-text-light mt-1">Google Account &rarr; Security &rarr; App passwords</p>
+                                <p class="dark-text-hint text-xs mt-1">Google Account &rarr; Security &rarr; App passwords</p>
                             </div>
                             <template x-if="form.smtp_email">
-                                <p class="text-xs text-green-600">Emails will be sent from this user's Gmail</p>
+                                <p class="dark-text-success text-xs">Emails will be sent from this user's Gmail</p>
                             </template>
                             <template x-if="!form.smtp_email">
-                                <p class="text-xs text-v2-text-light">No personal email — uses firm default</p>
+                                <p class="dark-text-hint text-xs">No personal email — uses firm default</p>
                             </template>
                         </div>
                     </template>
                 </div>
-                <div class="modal-v2-footer">
+                <div class="modal-v2-footer flex-shrink-0">
                     <button type="button" @click="showModal = false" class="btn-v2-cancel">Cancel</button>
                     <button type="submit" :disabled="saving" class="btn-v2-primary">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,12 +215,12 @@ ob_start();
     <!-- Reset Password Modal -->
     <div x-show="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
         <div class="modal-v2-backdrop fixed inset-0" @click="showResetModal = false"></div>
-        <div class="modal-v2 relative w-full max-w-sm z-10" @click.stop>
+        <div class="modal-v2 modal-v2-dark relative w-full max-w-sm z-10" @click.stop>
             <form @submit.prevent="resetPassword()">
                 <div class="modal-v2-header">
                     <div>
                         <div class="modal-v2-title">Reset Password</div>
-                        <p class="text-sm text-v2-text-light" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></p>
+                        <div class="modal-v2-subtitle" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></div>
                     </div>
                     <button type="button" class="modal-v2-close" @click="showResetModal = false">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -205,7 +235,7 @@ ob_start();
                 </div>
                 <div class="modal-v2-footer">
                     <button type="button" @click="showResetModal = false" class="btn-v2-cancel">Cancel</button>
-                    <button type="submit" :disabled="saving" class="btn-v2-primary" style="background:#ca8a04;">
+                    <button type="submit" :disabled="saving" class="btn-v2-primary">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>

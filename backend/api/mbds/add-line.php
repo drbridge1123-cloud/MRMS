@@ -18,7 +18,7 @@ if (!empty($errors)) {
     errorResponse(implode(', ', $errors));
 }
 
-$allowedTypes = ['provider', 'wage_loss', 'essential_service', 'health_subrogation', 'rx'];
+$allowedTypes = ['provider', 'wage_loss', 'essential_service', 'health_subrogation', 'health_subrogation2', 'rx'];
 if (!in_array($input['line_type'], $allowedTypes)) {
     errorResponse('Invalid line type');
 }

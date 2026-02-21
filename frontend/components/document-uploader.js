@@ -29,7 +29,6 @@ function documentUploader(caseId, caseProviderId = null) {
         dragOver: false,
         selectedFile: null,
         uploadForm: {
-            document_type: 'other',
             notes: '',
             is_provider_template: false,
             provider_name_x: null,
@@ -42,7 +41,14 @@ function documentUploader(caseId, caseProviderId = null) {
             date_y: null,
             date_width: null,
             date_height: null,
-            date_font_size: 12
+            date_font_size: 12,
+            use_custom_text_overlay: false,
+            custom_text_value: '',
+            custom_text_x: null,
+            custom_text_y: null,
+            custom_text_width: null,
+            custom_text_height: null,
+            custom_text_font_size: 12
         },
 
         // PDF Preview state
@@ -56,9 +62,10 @@ function documentUploader(caseId, caseProviderId = null) {
         isDragging: false,
         dragStartX: 0,
         dragStartY: 0,
-        selectionMode: 'provider_name', // 'provider_name' or 'date'
+        selectionMode: 'provider_name', // 'provider_name', 'date', or 'custom_text'
         providerSelectionRect: null,
         dateSelectionRect: null,
+        customTextSelectionRect: null,
         _currentRenderTask: null,
         _renderDebounce: null,
         _renderId: 0,
@@ -69,11 +76,6 @@ function documentUploader(caseId, caseProviderId = null) {
         async init() {
             await this.loadDocuments();
 
-            // Watch for document type changes
-            this.$watch('uploadForm.document_type', (value) => {
-                this.onDocumentTypeChange(value);
-            });
-
             // Watch for template mode toggle - render PDF preview when enabled
             this.$watch('uploadForm.is_provider_template', (value) => {
                 if (value && this.selectedFile && this.selectedFile.type === 'application/pdf') {
@@ -82,40 +84,9 @@ function documentUploader(caseId, caseProviderId = null) {
                     this.pdfRendered = false;
                     this.providerSelectionRect = null;
                     this.dateSelectionRect = null;
+                    this.customTextSelectionRect = null;
                 }
             });
-        },
-
-        /**
-         * Handle document type change - auto-enable template mode for HIPAA types
-         * @param {string} documentType
-         */
-        onDocumentTypeChange(documentType) {
-            if (documentType === 'hipaa_authorization' || documentType === 'signed_release') {
-                // Reset coordinates so user must drag-select on preview
-                this.uploadForm.provider_name_x = null;
-                this.uploadForm.provider_name_y = null;
-                this.uploadForm.provider_name_width = null;
-                this.uploadForm.provider_name_height = null;
-                this.uploadForm.provider_name_font_size = 12;
-                this.providerSelectionRect = null;
-                this.dateSelectionRect = null;
-                this.selectionMode = 'provider_name';
-                // Setting is_provider_template triggers $watch which calls renderPdfPreview
-                this.uploadForm.is_provider_template = true;
-            } else {
-                // Other - reset template settings
-                this.uploadForm.is_provider_template = false;
-                this.uploadForm.provider_name_x = null;
-                this.uploadForm.provider_name_y = null;
-                this.uploadForm.provider_name_width = null;
-                this.uploadForm.provider_name_height = null;
-                this.uploadForm.provider_name_font_size = 12;
-                this.providerSelectionRect = null;
-                this.dateSelectionRect = null;
-                this.selectionMode = 'provider_name';
-                this.pdfRendered = false;
-            }
         },
 
         /**
@@ -347,6 +318,16 @@ function documentUploader(caseId, caseProviderId = null) {
                 };
             }
 
+            // Custom text
+            if (this.uploadForm.use_custom_text_overlay && this.uploadForm.custom_text_x && this.uploadForm.custom_text_y) {
+                this.customTextSelectionRect = {
+                    x: (this.uploadForm.custom_text_x / pageWidthMm) * cw,
+                    y: (this.uploadForm.custom_text_y / pageHeightMm) * ch,
+                    width: (this.uploadForm.custom_text_width / pageWidthMm) * cw,
+                    height: (this.uploadForm.custom_text_height / pageHeightMm) * ch
+                };
+            }
+
             this.drawAllOverlays();
         },
 
@@ -407,6 +388,8 @@ function documentUploader(caseId, caseProviderId = null) {
             // Update the active selection
             if (this.selectionMode === 'date') {
                 this.dateSelectionRect = currentRect;
+            } else if (this.selectionMode === 'custom_text') {
+                this.customTextSelectionRect = currentRect;
             } else {
                 this.providerSelectionRect = currentRect;
             }
@@ -422,7 +405,9 @@ function documentUploader(caseId, caseProviderId = null) {
 
             const activeRect = this.selectionMode === 'date'
                 ? this.dateSelectionRect
-                : this.providerSelectionRect;
+                : this.selectionMode === 'custom_text'
+                    ? this.customTextSelectionRect
+                    : this.providerSelectionRect;
 
             // Require minimum selection size
             if (activeRect && activeRect.width > 5 && activeRect.height > 3) {
@@ -431,6 +416,8 @@ function documentUploader(caseId, caseProviderId = null) {
                 // Too small, remove it
                 if (this.selectionMode === 'date') {
                     this.dateSelectionRect = null;
+                } else if (this.selectionMode === 'custom_text') {
+                    this.customTextSelectionRect = null;
                 } else {
                     this.providerSelectionRect = null;
                 }
@@ -465,6 +452,13 @@ function documentUploader(caseId, caseProviderId = null) {
                 this.uploadForm.date_y = toMmY(r.y);
                 this.uploadForm.date_width = toMmX(r.width);
                 this.uploadForm.date_height = toMmY(r.height);
+            } else if (this.selectionMode === 'custom_text' && this.customTextSelectionRect) {
+                const r = this.customTextSelectionRect;
+                this.uploadForm.use_custom_text_overlay = true;
+                this.uploadForm.custom_text_x = toMmX(r.x);
+                this.uploadForm.custom_text_y = toMmY(r.y);
+                this.uploadForm.custom_text_width = toMmX(r.width);
+                this.uploadForm.custom_text_height = toMmY(r.height);
             } else if (this.providerSelectionRect) {
                 const r = this.providerSelectionRect;
                 this.uploadForm.provider_name_x = toMmX(r.x);
@@ -477,7 +471,7 @@ function documentUploader(caseId, caseProviderId = null) {
             this.drawVerificationOverlay();
 
             // Debug logging for coordinate tracing
-            const rect = this.selectionMode === 'date' ? this.dateSelectionRect : this.providerSelectionRect;
+            const rect = this.selectionMode === 'date' ? this.dateSelectionRect : this.selectionMode === 'custom_text' ? this.customTextSelectionRect : this.providerSelectionRect;
             const el = this.$refs.pdfOverlay || canvas;
             const displayRect = el.getBoundingClientRect();
             console.log('[PDF Coord Debug]', {
@@ -532,6 +526,15 @@ function documentUploader(caseId, caseProviderId = null) {
                 ctx.strokeRect(vx, vy, vw, vh);
             }
 
+            if (this.uploadForm.custom_text_x && this.uploadForm.custom_text_y) {
+                const vx = (this.uploadForm.custom_text_x / pageWidthMm) * cw;
+                const vy = (this.uploadForm.custom_text_y / pageHeightMm) * ch;
+                const vw = (this.uploadForm.custom_text_width / pageWidthMm) * cw;
+                const vh = (this.uploadForm.custom_text_height / pageHeightMm) * ch;
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)';
+                ctx.strokeRect(vx, vy, vw, vh);
+            }
+
             ctx.setLineDash([]);
         },
 
@@ -570,6 +573,19 @@ function documentUploader(caseId, caseProviderId = null) {
                 ctx.font = '11px Arial';
                 ctx.fillText('Date', r.x + 4, r.y > 14 ? r.y - 4 : r.y + r.height + 13);
             }
+
+            // Draw custom text selection (orange)
+            if (this.customTextSelectionRect) {
+                const r = this.customTextSelectionRect;
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.2)';
+                ctx.fillRect(r.x, r.y, r.width, r.height);
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.8)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(r.x, r.y, r.width, r.height);
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.9)';
+                ctx.font = '11px Arial';
+                ctx.fillText('Custom Text', r.x + 4, r.y > 14 ? r.y - 4 : r.y + r.height + 13);
+            }
         },
 
         /**
@@ -588,6 +604,7 @@ function documentUploader(caseId, caseProviderId = null) {
         resetCoordinateSelection() {
             this.providerSelectionRect = null;
             this.dateSelectionRect = null;
+            this.customTextSelectionRect = null;
             this.selectionMode = 'provider_name';
             this.uploadForm.provider_name_x = null;
             this.uploadForm.provider_name_y = null;
@@ -598,6 +615,12 @@ function documentUploader(caseId, caseProviderId = null) {
             this.uploadForm.date_y = null;
             this.uploadForm.date_width = null;
             this.uploadForm.date_height = null;
+            this.uploadForm.use_custom_text_overlay = false;
+            this.uploadForm.custom_text_value = '';
+            this.uploadForm.custom_text_x = null;
+            this.uploadForm.custom_text_y = null;
+            this.uploadForm.custom_text_width = null;
+            this.uploadForm.custom_text_height = null;
             this.clearSelectionOverlay();
         },
 
@@ -628,6 +651,19 @@ function documentUploader(caseId, caseProviderId = null) {
         },
 
         /**
+         * Reset only custom text selection
+         */
+        resetCustomTextSelection() {
+            this.customTextSelectionRect = null;
+            this.uploadForm.custom_text_x = null;
+            this.uploadForm.custom_text_y = null;
+            this.uploadForm.custom_text_width = null;
+            this.uploadForm.custom_text_height = null;
+            this.selectionMode = 'custom_text';
+            this.drawAllOverlays();
+        },
+
+        /**
          * Check if selected file is a PDF
          */
         isPdfFile() {
@@ -648,6 +684,14 @@ function documentUploader(caseId, caseProviderId = null) {
         hasDateCoordinates() {
             return this.uploadForm.date_x && this.uploadForm.date_y &&
                    this.uploadForm.date_width && this.uploadForm.date_height;
+        },
+
+        /**
+         * Check if custom text coordinates have been set
+         */
+        hasCustomTextCoordinates() {
+            return this.uploadForm.custom_text_x && this.uploadForm.custom_text_y &&
+                   this.uploadForm.custom_text_width && this.uploadForm.custom_text_height;
         },
 
         // ==========================================
@@ -702,7 +746,7 @@ function documentUploader(caseId, caseProviderId = null) {
                 const formData = new FormData();
                 formData.append('file', this.selectedFile);
                 formData.append('case_id', this.caseId);
-                formData.append('document_type', this.uploadForm.document_type);
+                formData.append('document_type', 'other');
                 if (this.caseProviderId) {
                     formData.append('case_provider_id', this.caseProviderId);
                 }
@@ -730,6 +774,17 @@ function documentUploader(caseId, caseProviderId = null) {
                     formData.append('date_font_size', this.uploadForm.date_font_size);
                 }
 
+                // Add custom text overlay fields if enabled
+                if (this.uploadForm.use_custom_text_overlay && this.uploadForm.custom_text_x) {
+                    formData.append('use_custom_text_overlay', '1');
+                    formData.append('custom_text_value', this.uploadForm.custom_text_value);
+                    if (this.uploadForm.custom_text_x) formData.append('custom_text_x', this.uploadForm.custom_text_x);
+                    if (this.uploadForm.custom_text_y) formData.append('custom_text_y', this.uploadForm.custom_text_y);
+                    if (this.uploadForm.custom_text_width) formData.append('custom_text_width', this.uploadForm.custom_text_width);
+                    if (this.uploadForm.custom_text_height) formData.append('custom_text_height', this.uploadForm.custom_text_height);
+                    formData.append('custom_text_font_size', this.uploadForm.custom_text_font_size);
+                }
+
                 // Upload with progress tracking
                 const response = await api.upload('documents/upload', formData, (progress) => {
                     this.uploadProgress = progress;
@@ -740,7 +795,6 @@ function documentUploader(caseId, caseProviderId = null) {
 
                     // Reset form
                     this.selectedFile = null;
-                    this.uploadForm.document_type = 'other';
                     this.uploadForm.notes = '';
                     this.uploadProgress = 0;
                     this.pdfRendered = false;
@@ -751,10 +805,10 @@ function documentUploader(caseId, caseProviderId = null) {
                     // Reload documents
                     await this.loadDocuments();
 
-                    // Dispatch event for parent components
-                    this.$dispatch('document-uploaded', {
-                        document: response.data
-                    });
+                    // Dispatch event on window so all listeners (including other Alpine scopes) receive it
+                    window.dispatchEvent(new CustomEvent('document-uploaded', {
+                        detail: { document: response.data }
+                    }));
                 }
             } catch (error) {
                 console.error('Upload failed:', error);
@@ -795,43 +849,15 @@ function documentUploader(caseId, caseProviderId = null) {
                     showToast('Document deleted', 'success');
                     await this.loadDocuments();
 
-                    // Dispatch event for parent components
-                    this.$dispatch('document-deleted', {
-                        documentId: documentId
-                    });
+                    // Dispatch event on window so all listeners (including other Alpine scopes) receive it
+                    window.dispatchEvent(new CustomEvent('document-deleted', {
+                        detail: { documentId: documentId }
+                    }));
                 }
             } catch (error) {
                 console.error('Delete failed:', error);
                 showToast(error.data?.message || 'Delete failed', 'error');
             }
-        },
-
-        /**
-         * Get document type label
-         * @param {string} type
-         * @returns {string}
-         */
-        getDocumentTypeLabel(type) {
-            const labels = {
-                'hipaa_authorization': 'Wet-Signed HIPPA Release',
-                'signed_release': 'E-Signed HIPPA Release',
-                'other': 'Other'
-            };
-            return labels[type] || type;
-        },
-
-        /**
-         * Get document type badge class
-         * @param {string} type
-         * @returns {string}
-         */
-        getDocumentTypeBadgeClass(type) {
-            const classes = {
-                'hipaa_authorization': 'bg-blue-100 text-blue-800',
-                'signed_release': 'bg-green-100 text-green-800',
-                'other': 'bg-gray-100 text-gray-800'
-            };
-            return classes[type] || classes['other'];
         },
 
         /**
@@ -866,27 +892,31 @@ function documentUploader(caseId, caseProviderId = null) {
          * @param {number} documentId - Template document ID
          * @param {string} providerName - Provider name to insert
          */
-        async generateProviderVersion(documentId, providerName) {
+        async generateProviderVersion(documentId, providerName, customText = null) {
             if (!providerName || providerName.trim() === '') {
                 showToast('Please enter provider name', 'warning');
                 return;
             }
 
             try {
-                const response = await api.post('documents/generate-provider-version', {
+                const payload = {
                     document_id: documentId,
                     provider_name: providerName,
                     case_id: this.caseId
-                });
+                };
+                if (customText !== null) {
+                    payload.custom_text_value = customText;
+                }
+                const response = await api.post('documents/generate-provider-version', payload);
 
                 if (response.success) {
                     showToast('Provider-specific document generated', 'success');
                     await this.loadDocuments();
 
-                    // Dispatch event for parent components
-                    this.$dispatch('document-generated', {
-                        document: response.data
-                    });
+                    // Dispatch event on window so all listeners (including other Alpine scopes) receive it
+                    window.dispatchEvent(new CustomEvent('document-generated', {
+                        detail: { document: response.data }
+                    }));
                 }
             } catch (error) {
                 console.error('Generation failed:', error);
@@ -906,9 +936,16 @@ function documentUploader(caseId, caseProviderId = null) {
             }
 
             const providerName = prompt(`Enter provider name for ${doc.original_file_name}:`);
-            if (providerName) {
-                this.generateProviderVersion(doc.id, providerName.trim());
+            if (!providerName) return;
+
+            // If custom text overlay is configured, ask for custom text
+            let customText = null;
+            if (doc.use_custom_text_overlay == 1 && doc.custom_text_x && doc.custom_text_y) {
+                customText = prompt('Enter custom text to overlay on PDF:', doc.custom_text_value || '');
+                if (customText === null) return; // User cancelled
             }
+
+            this.generateProviderVersion(doc.id, providerName.trim(), customText);
         }
     };
 }

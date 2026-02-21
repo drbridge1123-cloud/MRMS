@@ -37,8 +37,12 @@ if (isset($input['username']) && trim($input['username']) !== '') {
     }
 }
 
-if (isset($input['role']) && validateEnum($input['role'], ['admin', 'manager', 'staff'])) {
+if (isset($input['role']) && validateEnum($input['role'], ['admin', 'manager', 'accounting', 'staff'])) {
     $data['role'] = $input['role'];
+}
+
+if (isset($input['permissions']) && is_array($input['permissions'])) {
+    $data['permissions'] = json_encode(array_values($input['permissions']));
 }
 
 if (array_key_exists('email', $input)) {

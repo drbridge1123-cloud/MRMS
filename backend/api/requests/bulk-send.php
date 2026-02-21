@@ -68,22 +68,9 @@ foreach ($sendableRequests as $request) {
     // Render letter
     $html = renderRequestLetter($letterData);
 
-    // Generate PDF version of the letter
-    require_once __DIR__ . '/../../helpers/pdf-generator.php';
-    $letterPdfPath = saveLetterPDF($html, $letterData['case_number'] ?? '', $letterData['provider_name'] ?? '');
-
-    // Load attachments
+    // Load attachments (HIPAA, releases, etc.)
     $attachments = [];
 
-    // Attach the generated letter PDF first
-    if ($letterPdfPath) {
-        $attachments[] = [
-            'path' => $letterPdfPath,
-            'name' => 'Medical_Records_Request.pdf'
-        ];
-    }
-
-    // Load additional document attachments (HIPAA, releases, etc.)
     $attachmentRecords = dbFetchAll(
         "SELECT cd.file_path, cd.original_file_name
          FROM request_attachments ra
@@ -129,8 +116,15 @@ foreach ($sendableRequests as $request) {
         }
         $result = sendEmail($recipient, $subject, $html, $emailOptions);
     } elseif ($request['request_method'] === 'fax') {
-        // Letter PDF is already in $attachments; no separate pdf_path needed
-        $result = sendFax($recipient, $html, ['attachments' => $attachments]);
+        // Generate PDF version of the letter for fax (fax needs PDF, not HTML)
+        require_once __DIR__ . '/../../helpers/pdf-generator.php';
+        $letterPdfPath = saveLetterPDF($html, $letterData['case_number'] ?? '', $letterData['provider_name'] ?? '');
+        $faxAttachments = [];
+        if ($letterPdfPath) {
+            $faxAttachments[] = ['path' => $letterPdfPath, 'name' => 'Medical_Records_Request.pdf'];
+        }
+        $faxAttachments = array_merge($faxAttachments, $attachments);
+        $result = sendFax($recipient, $html, ['attachments' => $faxAttachments]);
     }
 
     // Log the attempt
@@ -162,6 +156,18 @@ foreach ($sendableRequests as $request) {
             'recipient' => $recipient,
             'bulk' => true
         ]);
+
+        // Auto-update provider status based on request type
+        if (!empty($letterData['case_provider_id'])) {
+            $autoStatus = match($letterData['request_type'] ?? '') {
+                'initial' => 'requesting',
+                'follow_up', 're_request', 'rfd' => 'follow_up',
+                default => null,
+            };
+            if ($autoStatus) {
+                dbUpdate('case_providers', ['overall_status' => $autoStatus], 'id = ?', [$letterData['case_provider_id']]);
+            }
+        }
 
         $results[] = [
             'request_id' => $requestId,

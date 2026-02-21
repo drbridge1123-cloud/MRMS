@@ -16,7 +16,7 @@ use setasign\Fpdi\Fpdi;
  * @param array $dateOverlay Optional date overlay config: ['x', 'y', 'width', 'height', 'fontSize']
  * @return string Generated PDF content as binary string
  */
-function generateProviderPDF($templatePath, $providerName, $x, $y, $width, $height, $fontSize = 12, $dateOverlay = null) {
+function generateProviderPDF($templatePath, $providerName, $x, $y, $width, $height, $fontSize = 12, $dateOverlay = null, $customTextOverlay = null) {
     try {
         // Debug: log coordinates being used
         error_log("[PDF Overlay Debug] Provider: x=$x, y=$y, w=$width, h=$height, fontSize=$fontSize");
@@ -83,6 +83,20 @@ function generateProviderPDF($templatePath, $providerName, $x, $y, $width, $heig
                     $pdf->SetXY($dateOverlay['x'], $dateOverlay['y']);
                     $pdf->Cell($dateOverlay['width'], $dateOverlay['height'], $currentDate, 0, 0, 'L');
                 }
+
+                // Add custom text overlay if configured
+                if ($customTextOverlay && isset($customTextOverlay['x'], $customTextOverlay['y'], $customTextOverlay['width'], $customTextOverlay['height']) && !empty($customTextOverlay['text'])) {
+                    $pdf->SetFillColor(255, 255, 255);
+                    $pdf->Rect($customTextOverlay['x'], $customTextOverlay['y'], $customTextOverlay['width'], $customTextOverlay['height'], 'F');
+
+                    $ctFontSize = $customTextOverlay['fontSize'] ?? 12;
+                    $pdf->SetFont('Arial', '', $ctFontSize);
+                    $pdf->SetTextColor(0, 0, 0);
+
+                    $lineHeight = $ctFontSize * 0.6;
+                    $pdf->SetXY($customTextOverlay['x'], $customTextOverlay['y']);
+                    $pdf->MultiCell($customTextOverlay['width'], $lineHeight, $customTextOverlay['text'], 0, 'L');
+                }
             }
         }
 
@@ -134,7 +148,7 @@ function savePDFToFile($pdfContent, $outputPath) {
  * @param string $outputDir Directory where to save the generated PDF
  * @return array ['success' => bool, 'file_path' => string, 'error' => string]
  */
-function generateProviderDocument($documentId, $providerName, $outputDir) {
+function generateProviderDocument($documentId, $providerName, $outputDir, $overrides = []) {
     require_once __DIR__ . '/db.php';
 
     try {
@@ -143,6 +157,11 @@ function generateProviderDocument($documentId, $providerName, $outputDir) {
             "SELECT * FROM case_documents WHERE id = ? AND is_provider_template = 1",
             [$documentId]
         );
+
+        // Apply any runtime overrides (e.g. custom_text_value entered at generation time)
+        if ($doc && !empty($overrides)) {
+            $doc = array_merge($doc, $overrides);
+        }
 
         if (!$doc) {
             return ['success' => false, 'error' => 'Template document not found'];
@@ -174,6 +193,20 @@ function generateProviderDocument($documentId, $providerName, $outputDir) {
             ];
         }
 
+        // Prepare custom text overlay if configured
+        $customTextOverlay = null;
+        if (!empty($doc['use_custom_text_overlay']) && $doc['custom_text_x'] && $doc['custom_text_y'] &&
+            $doc['custom_text_width'] && $doc['custom_text_height'] && !empty($doc['custom_text_value'])) {
+            $customTextOverlay = [
+                'x' => (float)$doc['custom_text_x'],
+                'y' => (float)$doc['custom_text_y'],
+                'width' => (float)$doc['custom_text_width'],
+                'height' => (float)$doc['custom_text_height'],
+                'fontSize' => (int)$doc['custom_text_font_size'] ?: 12,
+                'text' => $doc['custom_text_value']
+            ];
+        }
+
         // Generate the PDF
         $pdfContent = generateProviderPDF(
             $templatePath,
@@ -183,7 +216,8 @@ function generateProviderDocument($documentId, $providerName, $outputDir) {
             (float)$doc['provider_name_width'],
             (float)$doc['provider_name_height'],
             (int)$doc['provider_name_font_size'] ?: 12,
-            $dateOverlay
+            $dateOverlay,
+            $customTextOverlay
         );
 
         // Generate output filename

@@ -25,12 +25,25 @@ document.addEventListener('alpine:init', () => {
             return this.user?.role === 'manager';
         },
 
+        get isAccounting() {
+            return this.user?.role === 'accounting';
+        },
+
         get isStaff() {
             return this.user?.role === 'staff';
         },
 
         get isAdminOrManager() {
             return this.user?.role === 'admin' || this.user?.role === 'manager';
+        },
+
+        get permissions() {
+            return this.user?.permissions || [];
+        },
+
+        hasPermission(page) {
+            if (this.user?.role === 'admin') return true;
+            return this.permissions.includes(page);
         },
 
         async logout() {

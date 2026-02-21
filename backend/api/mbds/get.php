@@ -27,7 +27,12 @@ if (!$report) {
 }
 
 $lines = dbFetchAll(
-    "SELECT * FROM mbds_lines WHERE report_id = ? ORDER BY sort_order, id",
+    "SELECT ml.*, p.type AS provider_type
+     FROM mbds_lines ml
+     LEFT JOIN case_providers cp ON ml.case_provider_id = cp.id
+     LEFT JOIN providers p ON cp.provider_id = p.id
+     WHERE ml.report_id = ?
+     ORDER BY ml.sort_order, ml.id",
     [$report['id']]
 );
 
@@ -38,6 +43,7 @@ foreach ($lines as &$line) {
     $line['pip2_amount'] = (float)$line['pip2_amount'];
     $line['health1_amount'] = (float)$line['health1_amount'];
     $line['health2_amount'] = (float)$line['health2_amount'];
+    $line['health3_amount'] = (float)$line['health3_amount'];
     $line['discount'] = (float)$line['discount'];
     $line['office_paid'] = (float)$line['office_paid'];
     $line['client_paid'] = (float)$line['client_paid'];
@@ -49,6 +55,7 @@ unset($line);
 $report['has_wage_loss'] = (int)$report['has_wage_loss'];
 $report['has_essential_service'] = (int)$report['has_essential_service'];
 $report['has_health_subrogation'] = (int)$report['has_health_subrogation'];
+$report['has_health_subrogation2'] = (int)$report['has_health_subrogation2'];
 $report['lines'] = $lines;
 
 successResponse($report);

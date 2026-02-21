@@ -21,6 +21,7 @@ if (empty($input['provider_name'])) {
 $documentId = (int)$input['document_id'];
 $providerName = sanitizeString($input['provider_name']);
 $caseId = !empty($input['case_id']) ? (int)$input['case_id'] : null;
+$customTextOverride = isset($input['custom_text_value']) ? sanitizeString($input['custom_text_value']) : null;
 
 // Get the template document
 $template = dbFetchOne(
@@ -45,7 +46,11 @@ if (!$case) {
 
 // Generate the provider-specific PDF
 $outputDir = __DIR__ . '/../../../storage/documents/generated';
-$result = generateProviderDocument($documentId, $providerName, $outputDir);
+$overrides = [];
+if ($customTextOverride !== null) {
+    $overrides['custom_text_value'] = $customTextOverride;
+}
+$result = generateProviderDocument($documentId, $providerName, $outputDir, $overrides);
 
 if (!$result['success']) {
     errorResponse($result['error'], 422);

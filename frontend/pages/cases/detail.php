@@ -20,8 +20,10 @@ ob_start();
         <div>
             <?php include __DIR__ . '/_detail-header.php'; ?>
             <?php include __DIR__ . '/_detail-providers.php'; ?>
-            <?php include __DIR__ . '/_detail-documents.php'; ?>
+            <?php include __DIR__ . '/_detail-costs.php'; ?>
             <?php include __DIR__ . '/_detail-activity.php'; ?>
+            <?php include __DIR__ . '/_detail-documents.php'; ?>
+            <?php include __DIR__ . '/_detail-mbds.php'; ?>
         </div>
     </template>
 
@@ -65,6 +67,7 @@ ob_start();
     }
 </style>
 
+<script src="/MRMS/frontend/assets/js/pages/mbds-panel.js"></script>
 <script src="/MRMS/frontend/components/template-selector.js"></script>
 <script src="/MRMS/frontend/components/document-uploader.js"></script>
 <script src="/MRMS/frontend/components/document-selector.js"></script>

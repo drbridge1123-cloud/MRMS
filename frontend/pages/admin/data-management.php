@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
-requireAdmin();
+requirePermission('data_management');
 $pageTitle = 'Data Management';
 $currentPage = 'admin-data';
 $pageScripts = ['/MRMS/frontend/assets/js/pages/admin/data-management.js'];

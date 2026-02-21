@@ -50,7 +50,7 @@ if (!empty($input['status']) && $input['status'] === 'draft') {
 }
 
 // Insurance carrier names
-foreach (['pip1_name', 'pip2_name', 'health1_name', 'health2_name'] as $field) {
+foreach (['pip1_name', 'pip2_name', 'health1_name', 'health2_name', 'health3_name'] as $field) {
     if (array_key_exists($field, $input)) {
         $updateData[$field] = $input[$field] ? sanitizeString($input[$field]) : null;
     }
@@ -61,12 +61,14 @@ $toggleMap = [
     'has_wage_loss' => 'wage_loss',
     'has_essential_service' => 'essential_service',
     'has_health_subrogation' => 'health_subrogation',
+    'has_health_subrogation2' => 'health_subrogation2',
 ];
 
 $labelMap = [
     'wage_loss' => 'WAGE LOSS',
     'essential_service' => 'ESSENTIAL SERVICE',
     'health_subrogation' => 'HEALTH SUBROGATION',
+    'health_subrogation2' => 'HEALTH SUBROGATION #2',
 ];
 
 foreach ($toggleMap as $field => $lineType) {
@@ -77,7 +79,7 @@ foreach ($toggleMap as $field => $lineType) {
         if ($newVal && !(int)$report[$field]) {
             // Toggled ON: create the line
             $maxSort = dbFetchOne(
-                "SELECT MAX(sort_order) AS ms FROM mbds_lines WHERE report_id = ? AND line_type IN ('wage_loss','essential_service','health_subrogation')",
+                "SELECT MAX(sort_order) AS ms FROM mbds_lines WHERE report_id = ? AND line_type IN ('wage_loss','essential_service','health_subrogation','health_subrogation2')",
                 [$reportId]
             );
             dbInsert('mbds_lines', [
@@ -107,5 +109,6 @@ $updated = dbFetchOne("SELECT * FROM mbds_reports WHERE id = ?", [$reportId]);
 $updated['has_wage_loss'] = (int)$updated['has_wage_loss'];
 $updated['has_essential_service'] = (int)$updated['has_essential_service'];
 $updated['has_health_subrogation'] = (int)$updated['has_health_subrogation'];
+$updated['has_health_subrogation2'] = (int)$updated['has_health_subrogation2'];
 
 successResponse($updated, 'Report updated');

@@ -58,7 +58,15 @@
       "WebFetch(domain:silo.tips)",
       "WebFetch(domain:www.scribd.com)",
       "Bash(/c/xampp/apache/bin/httpd.exe:*)",
-      "Bash(C:/xampp/php/php.exe:*)"
+      "Bash(C:/xampp/php/php.exe:*)",
+      "Bash(xargs:*)",
+      "Bash(for f in backend/api/bank-reconciliation/import.php backend/api/bank-reconciliation/list.php backend/api/bank-reconciliation/match.php backend/api/bank-reconciliation/unmatch.php backend/api/bank-reconciliation/ignore.php backend/api/bank-reconciliation/search-payments.php backend/api/bank-reconciliation/delete-batch.php frontend/pages/admin/bank-reconciliation.php frontend/components/sidebar.php backend/api/index.php)",
+      "Bash(do /c/xampp/php/php.exe -l \"$f\")",
+      "Bash(/c/xampp/php/php:*)",
+      "Bash(antiword:*)",
+      "Bash(# Check if all templates reference the same image \\(logo\\) unzip -l \"\"/c/Users/Server/Downloads/Template/Medical Records Request.docx\"\")",
+      "Bash(# Check if the medical records templates have headers/footers unzip -l \"\"/c/Users/Server/Downloads/Template/Medical Records Request.docx\"\")",
+      "Bash(c:/xampp/php/php.exe:*)"
     ]
   }
 }

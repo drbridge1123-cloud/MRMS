@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS users (
     password_hash VARCHAR(255) NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) NULL,
-    role ENUM('admin','manager','staff') NOT NULL DEFAULT 'staff',
+    role ENUM('admin','manager','accounting','staff') NOT NULL DEFAULT 'staff',
+    permissions TEXT NULL,
     is_active TINYINT(1) NOT NULL DEFAULT 1,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -249,9 +250,11 @@ CREATE TABLE IF NOT EXISTS mbds_reports (
     pip2_name VARCHAR(255) NULL,
     health1_name VARCHAR(255) NULL,
     health2_name VARCHAR(255) NULL,
+    health3_name VARCHAR(255) NULL,
     has_wage_loss TINYINT(1) DEFAULT 0,
     has_essential_service TINYINT(1) DEFAULT 0,
     has_health_subrogation TINYINT(1) DEFAULT 0,
+    has_health_subrogation2 TINYINT(1) DEFAULT 0,
     status ENUM('draft','completed','approved') DEFAULT 'draft',
     completed_by INT NULL,
     completed_at DATETIME NULL,
@@ -272,7 +275,7 @@ CREATE INDEX idx_mbds_reports_status ON mbds_reports(status);
 CREATE TABLE IF NOT EXISTS mbds_lines (
     id INT AUTO_INCREMENT PRIMARY KEY,
     report_id INT NOT NULL,
-    line_type ENUM('provider','bridge_law','wage_loss','essential_service','health_subrogation','rx') NOT NULL,
+    line_type ENUM('provider','bridge_law','wage_loss','essential_service','health_subrogation','health_subrogation2','rx') NOT NULL,
     provider_name VARCHAR(255) NULL,
     case_provider_id INT NULL,
     charges DECIMAL(12,2) DEFAULT 0,
@@ -280,6 +283,7 @@ CREATE TABLE IF NOT EXISTS mbds_lines (
     pip2_amount DECIMAL(12,2) DEFAULT 0,
     health1_amount DECIMAL(12,2) DEFAULT 0,
     health2_amount DECIMAL(12,2) DEFAULT 0,
+    health3_amount DECIMAL(12,2) DEFAULT 0,
     discount DECIMAL(12,2) DEFAULT 0,
     office_paid DECIMAL(12,2) DEFAULT 0,
     client_paid DECIMAL(12,2) DEFAULT 0,
@@ -295,3 +299,34 @@ CREATE TABLE IF NOT EXISTS mbds_lines (
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_mbds_lines_report ON mbds_lines(report_id);
+
+-- MR Fee Payments (Expense Tracking)
+CREATE TABLE IF NOT EXISTS mr_fee_payments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id INT NOT NULL,
+    case_provider_id INT NULL COMMENT 'Links to specific provider (nullable for non-provider costs)',
+    expense_category ENUM('mr_cost','litigation','other') NOT NULL DEFAULT 'mr_cost',
+    provider_name VARCHAR(200) NULL COMMENT 'Denormalized for display or manual entry',
+    description VARCHAR(255) NULL COMMENT 'Record Fee, Police Report, etc.',
+    billed_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    paid_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    payment_type ENUM('check','card','cash','wire','other') NULL,
+    check_number VARCHAR(50) NULL,
+    payment_date DATE NULL,
+    paid_by INT NULL COMMENT 'Staff who made the payment',
+    receipt_document_id INT NULL COMMENT 'Links to case_documents for uploaded receipt',
+    notes TEXT NULL,
+    created_by INT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+    FOREIGN KEY (case_provider_id) REFERENCES case_providers(id) ON DELETE SET NULL,
+    FOREIGN KEY (paid_by) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_mr_fee_payments_case ON mr_fee_payments(case_id);
+CREATE INDEX idx_mr_fee_payments_cp ON mr_fee_payments(case_provider_id);
+CREATE INDEX idx_mr_fee_payments_paid_by ON mr_fee_payments(paid_by);
+CREATE INDEX idx_mr_fee_payments_date ON mr_fee_payments(payment_date);
+CREATE INDEX idx_mr_fee_payments_category ON mr_fee_payments(expense_category);

@@ -26,9 +26,17 @@ $data = [
     'password_hash' => password_hash($input['password'], PASSWORD_DEFAULT),
     'full_name' => sanitizeString($input['full_name']),
     'title' => isset($input['title']) && $input['title'] ? sanitizeString($input['title']) : null,
-    'role' => isset($input['role']) && validateEnum($input['role'], ['admin', 'manager', 'staff']) ? $input['role'] : 'staff',
+    'role' => isset($input['role']) && validateEnum($input['role'], ['admin', 'manager', 'accounting', 'staff']) ? $input['role'] : 'staff',
     'is_active' => 1
 ];
+
+// Set permissions: use provided or defaults for role
+$role = $data['role'];
+if (isset($input['permissions']) && is_array($input['permissions'])) {
+    $data['permissions'] = json_encode(array_values($input['permissions']));
+} else {
+    $data['permissions'] = json_encode(getDefaultPermissions($role));
+}
 
 $newId = dbInsert('users', $data);
 

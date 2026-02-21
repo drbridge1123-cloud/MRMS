@@ -121,44 +121,6 @@ function documentSelector(caseId, caseProviderId = null) {
         },
 
         /**
-         * Auto-select HIPAA authorization if available
-         */
-        autoSelectHIPAA() {
-            const hipaaDoc = this.documents.find(d => d.document_type === 'hipaa_authorization');
-            if (hipaaDoc && !this.isSelected(hipaaDoc.id)) {
-                this.toggleDocument(hipaaDoc.id);
-            }
-        },
-
-        /**
-         * Get document type label
-         * @param {string} type
-         * @returns {string}
-         */
-        getDocumentTypeLabel(type) {
-            const labels = {
-                'hipaa_authorization': 'Wet-Signed',
-                'signed_release': 'E-Signed',
-                'other': 'Other'
-            };
-            return labels[type] || type;
-        },
-
-        /**
-         * Get document type badge class
-         * @param {string} type
-         * @returns {string}
-         */
-        getDocumentTypeBadgeClass(type) {
-            const classes = {
-                'hipaa_authorization': 'bg-blue-100 text-blue-800',
-                'signed_release': 'bg-green-100 text-green-800',
-                'other': 'bg-gray-100 text-gray-800'
-            };
-            return classes[type] || classes['other'];
-        },
-
-        /**
          * Get file extension from filename
          * @param {string} filename
          * @returns {string}

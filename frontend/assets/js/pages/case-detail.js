@@ -37,9 +37,21 @@ function caseDetailPage() {
         selectedProvider: null,
         newProvider: { record_types: [], deadline: '' },
         newRequest: { request_date: new Date().toISOString().split('T')[0], request_method: 'email', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '', template_id: null, document_ids: [] },
-        newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, has_op_report: false, is_complete: false, incomplete_reason: '', file_location: '' },
+        newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '' },
         newNote: { note_type: 'general', content: '', case_provider_id: '', contact_method: '', contact_date: '' },
         noteFilterProvider: '',
+
+        // Payment state
+        showPaymentModal: false,
+        payments: [],
+        paymentTotal: 0,
+        staffList: [],
+        paymentForm: { id: null, description: 'Record Fee', expense_category: 'mr_cost', billed_amount: 0, paid_amount: 0, payment_type: 'check', check_number: '', payment_date: new Date().toISOString().split('T')[0], paid_by: '', receipt_document_id: null, receipt_file_name: '', notes: '' },
+
+        // Cost Ledger state
+        allCosts: [],
+        allCostsTotal: { billed: 0, paid: 0 },
+        showCostLedger: false,
 
         async init() {
             if (!this.caseId) {
@@ -48,13 +60,14 @@ function caseDetailPage() {
             }
             // Set default deadline (2 weeks from today)
             this.newProvider.deadline = this.getDefaultDeadline();
-            await Promise.all([this.loadCase(), this.loadProviders(), this.loadNotes()]);
+            await Promise.all([this.loadCase(), this.loadProviders(), this.loadNotes(), this.loadStaffList(), this.loadAllCosts()]);
 
             // Auto-expand provider if cp param is present (from tracker)
             const cpId = getQueryParam('cp');
             if (cpId) {
                 this.expandedProvider = parseInt(cpId);
                 this.loadRequestHistory(parseInt(cpId));
+                this.loadPayments(parseInt(cpId));
             }
 
             this.loading = false;
@@ -312,7 +325,7 @@ function caseDetailPage() {
 
         openReceiptModal(p) {
             this.currentProvider = p;
-            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, has_op_report: false, is_complete: false, incomplete_reason: '', file_location: '' };
+            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '' };
             this.showReceiptModal = true;
         },
 
@@ -326,7 +339,6 @@ function caseDetailPage() {
                     has_billing: this.newReceipt.has_billing ? 1 : 0,
                     has_chart: this.newReceipt.has_chart ? 1 : 0,
                     has_imaging: this.newReceipt.has_imaging ? 1 : 0,
-                    has_op_report: this.newReceipt.has_op_report ? 1 : 0,
                     is_complete: this.newReceipt.is_complete ? 1 : 0,
                 });
                 showToast('Receipt logged');
@@ -334,6 +346,20 @@ function caseDetailPage() {
                 await this.loadProviders();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to log receipt', 'error');
+            }
+            this.saving = false;
+        },
+
+        async setProviderOnHold() {
+            if (!this.currentProvider) return;
+            this.saving = true;
+            try {
+                await api.put('case-providers/' + this.currentProvider.id + '/status', { overall_status: 'on_hold' });
+                showToast('Provider set to On Hold');
+                this.showReceiptModal = false;
+                await this.loadProviders();
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to update status', 'error');
             }
             this.saving = false;
         },
@@ -437,6 +463,7 @@ function caseDetailPage() {
             }
             this.expandedProvider = cpId;
             this.loadRequestHistory(cpId);
+            this.loadPayments(cpId);
         },
 
         async loadRequestHistory(cpId) {
@@ -620,6 +647,253 @@ function caseDetailPage() {
             if (!dateStr) return '';
             const d = new Date(dateStr);
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        },
+
+        // ---- Cost Ledger Methods ----
+
+        async loadAllCosts() {
+            try {
+                const res = await api.get('mr-fee-payments?case_id=' + this.caseId);
+                this.allCosts = res.data.payments || [];
+                this.allCostsTotal = {
+                    billed: res.data.total_billed || 0,
+                    paid: res.data.total_paid || 0
+                };
+            } catch (e) {
+                this.allCosts = [];
+                this.allCostsTotal = { billed: 0, paid: 0 };
+            }
+        },
+
+        openCostModal() {
+            this.currentProvider = null;
+            this.paymentForm = {
+                id: null,
+                description: '',
+                expense_category: 'other',
+                billed_amount: 0,
+                paid_amount: 0,
+                payment_type: 'check',
+                check_number: '',
+                payment_date: new Date().toISOString().split('T')[0],
+                paid_by: '',
+                receipt_document_id: null,
+                receipt_file_name: '',
+                notes: ''
+            };
+            this.showPaymentModal = true;
+        },
+
+        editCostEntry(pmt) {
+            this.currentProvider = pmt.case_provider_id ? { id: pmt.case_provider_id } : null;
+            this.editPayment(pmt);
+        },
+
+        async deleteCostEntry(pmt) {
+            if (!await confirmAction('Delete this cost entry of $' + parseFloat(pmt.paid_amount).toFixed(2) + '?')) return;
+            try {
+                await api.delete('mr-fee-payments/' + pmt.id);
+                showToast('Cost entry deleted');
+                await this.loadAllCosts();
+                if (this.expandedProvider) {
+                    await this.loadPayments(this.expandedProvider);
+                }
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to delete cost entry', 'error');
+            }
+        },
+
+        getCategoryLabel(cat) {
+            const labels = { mr_cost: 'MR Cost', litigation: 'Litigation', other: 'Other' };
+            return labels[cat] || cat;
+        },
+
+        printCostLedger() {
+            const caseName = this.caseData?.client_name || '';
+            const caseNum = this.caseData?.case_number || '';
+            let rows = this.allCosts.map(c =>
+                `<tr>
+                    <td>${formatDate(c.payment_date)}</td>
+                    <td>${c.description || '-'}</td>
+                    <td>${c.linked_provider_name || '-'}</td>
+                    <td>${this.getCategoryLabel(c.expense_category)}</td>
+                    <td>$${parseFloat(c.billed_amount || 0).toFixed(2)}</td>
+                    <td>$${parseFloat(c.paid_amount || 0).toFixed(2)}</td>
+                </tr>`
+            ).join('');
+            rows += `<tr style="border-top:2px solid #333;font-weight:bold;">
+                <td colspan="4" style="text-align:right;">TOTAL</td>
+                <td>$${this.allCostsTotal.billed.toFixed(2)}</td>
+                <td>$${this.allCostsTotal.paid.toFixed(2)}</td>
+            </tr>`;
+            const html = `<!DOCTYPE html><html><head><title>Cost Ledger - ${caseNum}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; }
+                    h2 { margin-bottom: 4px; }
+                    .sub { color: #666; margin-bottom: 20px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; font-size: 13px; }
+                    th { background: #f5f5f5; font-weight: 600; text-transform: uppercase; font-size: 11px; }
+                </style>
+            </head><body>
+                <h2>Cost Ledger</h2>
+                <div class="sub">${caseName} &mdash; ${caseNum}</div>
+                <table>
+                    <thead><tr><th>Date</th><th>Description</th><th>Provider</th><th>Category</th><th>Billed</th><th>Paid</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </body></html>`;
+            const w = window.open('', '_blank');
+            w.document.write(html);
+            w.document.close();
+            w.onload = () => { w.print(); };
+        },
+
+        getCategoryClass(cat) {
+            const classes = {
+                mr_cost: 'bg-blue-100 text-blue-700',
+                litigation: 'bg-purple-100 text-purple-700',
+                other: 'bg-gray-100 text-gray-700'
+            };
+            return classes[cat] || 'bg-gray-100 text-gray-700';
+        },
+
+        // ---- Payment Methods ----
+
+        async loadStaffList() {
+            try {
+                const res = await api.get('users');
+                this.staffList = (res.data || []).filter(u => u.is_active == 1);
+            } catch (e) {
+                this.staffList = [];
+            }
+        },
+
+        async loadPayments(cpId) {
+            try {
+                const res = await api.get('mr-fee-payments?case_id=' + this.caseId + '&case_provider_id=' + cpId);
+                this.payments = res.data.payments || [];
+                this.paymentTotal = res.data.total_paid || 0;
+            } catch (e) {
+                this.payments = [];
+                this.paymentTotal = 0;
+            }
+        },
+
+        openPaymentModal(provider) {
+            this.currentProvider = provider;
+            this.paymentForm = {
+                id: null,
+                description: 'Record Fee',
+                expense_category: 'mr_cost',
+                billed_amount: 0,
+                paid_amount: 0,
+                payment_type: 'check',
+                check_number: '',
+                payment_date: new Date().toISOString().split('T')[0],
+                paid_by: '',
+                receipt_document_id: null,
+                receipt_file_name: '',
+                notes: ''
+            };
+            this.showPaymentModal = true;
+        },
+
+        editPayment(pmt) {
+            this.paymentForm = {
+                id: pmt.id,
+                description: pmt.description || '',
+                expense_category: pmt.expense_category || 'mr_cost',
+                billed_amount: parseFloat(pmt.billed_amount) || 0,
+                paid_amount: parseFloat(pmt.paid_amount) || 0,
+                payment_type: pmt.payment_type || '',
+                check_number: pmt.check_number || '',
+                payment_date: pmt.payment_date || '',
+                paid_by: pmt.paid_by || '',
+                receipt_document_id: pmt.receipt_document_id || null,
+                receipt_file_name: pmt.receipt_file_name || '',
+                notes: pmt.notes || ''
+            };
+            this.showPaymentModal = true;
+        },
+
+        async submitPayment() {
+            this.saving = true;
+            try {
+                const payload = {
+                    case_id: parseInt(this.caseId),
+                    case_provider_id: this.currentProvider?.id || null,
+                    description: this.paymentForm.description,
+                    expense_category: this.paymentForm.expense_category,
+                    billed_amount: this.paymentForm.billed_amount || 0,
+                    paid_amount: this.paymentForm.paid_amount || 0,
+                    payment_type: this.paymentForm.payment_type || null,
+                    check_number: this.paymentForm.check_number || null,
+                    payment_date: this.paymentForm.payment_date || null,
+                    paid_by: this.paymentForm.paid_by || null,
+                    receipt_document_id: this.paymentForm.receipt_document_id || null,
+                    notes: this.paymentForm.notes || null
+                };
+
+                if (this.paymentForm.id) {
+                    await api.put('mr-fee-payments/' + this.paymentForm.id, payload);
+                    showToast('Payment updated');
+                } else {
+                    await api.post('mr-fee-payments', payload);
+                    showToast('Payment logged');
+                }
+
+                this.showPaymentModal = false;
+                await this.loadAllCosts();
+                if (this.expandedProvider) {
+                    await this.loadPayments(this.expandedProvider);
+                }
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to save payment', 'error');
+            }
+            this.saving = false;
+        },
+
+        async deletePayment(pmt) {
+            if (!await confirmAction('Delete this payment of $' + parseFloat(pmt.paid_amount).toFixed(2) + '?')) return;
+            try {
+                await api.delete('mr-fee-payments/' + pmt.id);
+                showToast('Payment deleted');
+                await this.loadAllCosts();
+                if (this.expandedProvider) {
+                    await this.loadPayments(this.expandedProvider);
+                }
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to delete payment', 'error');
+            }
+        },
+
+        async uploadReceipt(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const uploading = true;
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('case_id', this.caseId);
+                formData.append('case_provider_id', this.currentProvider?.id || '');
+                formData.append('document_type', 'other');
+                formData.append('notes', 'MR Fee Receipt');
+
+                const res = await api.upload('documents/upload', formData);
+                this.paymentForm.receipt_document_id = res.data.id;
+                this.paymentForm.receipt_file_name = res.data.original_file_name;
+                showToast('Receipt uploaded');
+            } catch (e) {
+                showToast(e.data?.message || 'Upload failed', 'error');
+            }
+            event.target.value = '';
+        },
+
+        getPaymentTypeLabel(type) {
+            const labels = { check: 'Check', card: 'Card', cash: 'Cash', wire: 'Wire', other: 'Other' };
+            return labels[type] || type;
         }
     };
 }

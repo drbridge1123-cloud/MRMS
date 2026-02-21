@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
-requireAuth();
+requirePermission('templates');
 $pageTitle = 'Letter Templates';
 $currentPage = 'admin-templates';
 $pageScripts = ['/MRMS/frontend/assets/js/pages/admin/templates.js'];
@@ -32,6 +32,7 @@ ob_start();
                     <option value="medical_records">Medical Records</option>
                     <option value="health_ledger">Health Ledger</option>
                     <option value="bulk_request">Bulk Request</option>
+                    <option value="balance_verification">Balance Verification</option>
                     <option value="custom">Custom</option>
                 </select>
             </div>
@@ -156,6 +157,7 @@ ob_start();
                                     <option value="medical_records">Medical Records</option>
                                     <option value="health_ledger">Health Ledger</option>
                                     <option value="bulk_request">Bulk Request</option>
+                                    <option value="balance_verification">Balance Verification</option>
                                     <option value="custom">Custom</option>
                                 </select>
                             </div>

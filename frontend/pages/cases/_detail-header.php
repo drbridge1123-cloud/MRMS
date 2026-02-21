@@ -20,11 +20,6 @@
                         class="px-3 py-1.5 text-sm text-v2-text-mid hover:text-v2-text border border-v2-card-border rounded-lg hover:bg-v2-bg">
                         Edit
                     </button>
-                    <a x-show="caseData && ['in_review','verification','completed','closed'].includes(caseData.status)"
-                       :href="'/MRMS/frontend/pages/mbds/edit.php?case_id=' + caseId"
-                       class="px-3 py-1.5 text-sm text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50">
-                        MBDS
-                    </a>
                     <div class="w-px h-6 bg-v2-card-border mx-1"
                          x-show="caseData && ((FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0) || (BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0))"></div>
                     <select x-model="nextStatus" @change="changeStatus()"

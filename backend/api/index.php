@@ -364,6 +364,58 @@ switch ($resource) {
         }
         break;
 
+    case 'bank-reconciliation':
+        if ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/bank-reconciliation/import.php';
+        } elseif ($method === 'GET' && $id === 'search-payments') {
+            require __DIR__ . '/bank-reconciliation/search-payments.php';
+        } elseif ($method === 'GET' && !$id) {
+            require __DIR__ . '/bank-reconciliation/list.php';
+        } elseif ($method === 'PUT' && $id && $action === 'match') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/bank-reconciliation/match.php';
+        } elseif ($method === 'PUT' && $id && $action === 'unmatch') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/bank-reconciliation/unmatch.php';
+        } elseif ($method === 'PUT' && $id && $action === 'ignore') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/bank-reconciliation/ignore.php';
+        } elseif ($method === 'DELETE' && $id === 'batch' && $action) {
+            $_GET['batch_id'] = $action;
+            require __DIR__ . '/bank-reconciliation/delete-batch.php';
+        } else {
+            errorResponse('Bank reconciliation endpoint not found', 404);
+        }
+        break;
+
+    case 'expense-report':
+        if ($method === 'GET' && $id === 'export') {
+            require __DIR__ . '/expense-report/export.php';
+        } elseif ($method === 'GET' && !$id) {
+            require __DIR__ . '/expense-report/list.php';
+        } else {
+            errorResponse('Expense report endpoint not found', 404);
+        }
+        break;
+
+    case 'mr-fee-payments':
+        if ($method === 'GET' && $id === 'summary') {
+            require __DIR__ . '/mr-fee-payments/summary.php';
+        } elseif ($method === 'GET' && !$id) {
+            require __DIR__ . '/mr-fee-payments/list.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/mr-fee-payments/create.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mr-fee-payments/update.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mr-fee-payments/delete.php';
+        } else {
+            errorResponse('MR fee payment endpoint not found', 404);
+        }
+        break;
+
     case 'health-ledger':
         if ($method === 'GET' && $id === 'list') {
             require __DIR__ . '/health-ledger/list.php';

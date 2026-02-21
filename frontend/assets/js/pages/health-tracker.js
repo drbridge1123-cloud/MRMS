@@ -61,17 +61,28 @@ function healthLedgerPage() {
         async init() {
             this.form = this.getEmptyForm();
             this.loadStaff();
+            this.loadHlTemplates();
             await this.loadData(1);
         },
 
+        // Health ledger templates
+        hlTemplates: [],
+
         getEmptyForm() {
-            return { client_name: '', case_number: '', insurance_carrier: '', carrier_contact_email: '', carrier_contact_fax: '', assigned_to: '', note: '' };
+            return { client_name: '', case_number: '', insurance_carrier: '', carrier_contact_email: '', carrier_contact_fax: '', claim_number: '', member_id: '', assigned_to: '', note: '' };
         },
 
         async loadStaff() {
             try {
                 const r = await api.get('users?active_only=1');
                 this.staffList = r.data || [];
+            } catch(e) {}
+        },
+
+        async loadHlTemplates() {
+            try {
+                const r = await api.get('templates?type=health_ledger&active_only=1');
+                this.hlTemplates = r.data || [];
             } catch(e) {}
         },
 
@@ -118,6 +129,8 @@ function healthLedgerPage() {
                 insurance_carrier: item.insurance_carrier,
                 carrier_contact_email: item.carrier_contact_email || '',
                 carrier_contact_fax: item.carrier_contact_fax || '',
+                claim_number: item.claim_number || '',
+                member_id: item.member_id || '',
                 assigned_to: item.assigned_to || '',
                 note: item.note || ''
             };
@@ -195,6 +208,8 @@ function healthLedgerPage() {
         // --- Request modal ---
 
         openRequestModal(item) {
+            // Auto-select default template
+            const defaultTpl = this.hlTemplates.find(t => t.is_default == 1);
             this.reqForm = {
                 item_id: item.id,
                 request_date: new Date().toISOString().split('T')[0],
@@ -202,11 +217,23 @@ function healthLedgerPage() {
                 request_type: item.request_count > 0 ? 'follow_up' : 'initial',
                 sent_to: '',
                 notes: '',
+                template_id: defaultTpl ? defaultTpl.id : '',
+                template_data: {},
+                _showSettlement: false,
                 _carrierLabel: item.client_name + ' - ' + item.insurance_carrier,
                 _email: item.carrier_contact_email || '',
                 _fax: item.carrier_contact_fax || ''
             };
             this.showRequestModal = true;
+        },
+
+        onTemplateChange() {
+            const tpl = this.hlTemplates.find(t => t.id == this.reqForm.template_id);
+            // Show settlement fields for "Final Health Lien" template
+            this.reqForm._showSettlement = tpl && tpl.name.toLowerCase().includes('final health lien');
+            if (!this.reqForm._showSettlement) {
+                this.reqForm.template_data = {};
+            }
         },
 
         updateRecipient() {
@@ -219,7 +246,18 @@ function healthLedgerPage() {
             if (!this.reqForm.request_date || !this.reqForm.request_method) { showToast('Date and method required', 'error'); return; }
             this.saving = true;
             try {
-                await api.post('health-ledger/request', this.reqForm);
+                const payload = { ...this.reqForm };
+                // Clean internal fields
+                delete payload._carrierLabel;
+                delete payload._email;
+                delete payload._fax;
+                delete payload._showSettlement;
+                // Remove empty template_data
+                if (!payload.template_data || Object.keys(payload.template_data).length === 0) {
+                    delete payload.template_data;
+                }
+                if (!payload.template_id) delete payload.template_id;
+                await api.post('health-ledger/request', payload);
                 showToast('Request created');
                 this.showRequestModal = false;
                 if (this.expandedId === this.reqForm.item_id) {

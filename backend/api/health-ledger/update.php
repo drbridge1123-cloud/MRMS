@@ -23,6 +23,8 @@ $data = [
     'insurance_carrier' => sanitizeString($input['insurance_carrier'] ?? $existing['insurance_carrier']),
     'carrier_contact_email' => isset($input['carrier_contact_email']) ? sanitizeString($input['carrier_contact_email']) : $existing['carrier_contact_email'],
     'carrier_contact_fax' => isset($input['carrier_contact_fax']) ? sanitizeString($input['carrier_contact_fax']) : $existing['carrier_contact_fax'],
+    'claim_number' => isset($input['claim_number']) ? (sanitizeString($input['claim_number']) ?: null) : $existing['claim_number'],
+    'member_id' => isset($input['member_id']) ? (sanitizeString($input['member_id']) ?: null) : $existing['member_id'],
     'assigned_to' => isset($input['assigned_to']) ? ((int)$input['assigned_to'] ?: null) : $existing['assigned_to'],
     'note' => isset($input['note']) ? sanitizeString($input['note']) : $existing['note'],
 ];

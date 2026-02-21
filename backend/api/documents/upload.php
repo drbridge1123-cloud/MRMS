@@ -49,6 +49,15 @@ $dateWidth = !empty($_POST['date_width']) ? (float)$_POST['date_width'] : null;
 $dateHeight = !empty($_POST['date_height']) ? (float)$_POST['date_height'] : null;
 $dateFontSize = !empty($_POST['date_font_size']) ? (int)$_POST['date_font_size'] : 12;
 
+// Custom text overlay fields
+$useCustomTextOverlay = isset($_POST['use_custom_text_overlay']) && $_POST['use_custom_text_overlay'] == '1';
+$customTextValue = !empty($_POST['custom_text_value']) ? sanitizeString($_POST['custom_text_value']) : null;
+$customTextX = !empty($_POST['custom_text_x']) ? (float)$_POST['custom_text_x'] : null;
+$customTextY = !empty($_POST['custom_text_y']) ? (float)$_POST['custom_text_y'] : null;
+$customTextWidth = !empty($_POST['custom_text_width']) ? (float)$_POST['custom_text_width'] : null;
+$customTextHeight = !empty($_POST['custom_text_height']) ? (float)$_POST['custom_text_height'] : null;
+$customTextFontSize = !empty($_POST['custom_text_font_size']) ? (int)$_POST['custom_text_font_size'] : 12;
+
 // Validate document type
 $allowedTypes = ['hipaa_authorization', 'signed_release', 'other'];
 if (!in_array($documentType, $allowedTypes)) {
@@ -98,7 +107,14 @@ $documentData = [
     'date_y' => $dateY,
     'date_width' => $dateWidth,
     'date_height' => $dateHeight,
-    'date_font_size' => $dateFontSize
+    'date_font_size' => $dateFontSize,
+    'use_custom_text_overlay' => $useCustomTextOverlay ? 1 : 0,
+    'custom_text_value' => $customTextValue,
+    'custom_text_x' => $customTextX,
+    'custom_text_y' => $customTextY,
+    'custom_text_width' => $customTextWidth,
+    'custom_text_height' => $customTextHeight,
+    'custom_text_font_size' => $customTextFontSize
 ];
 
 $documentId = dbInsert('case_documents', $documentData);

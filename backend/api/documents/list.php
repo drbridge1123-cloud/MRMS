@@ -49,6 +49,13 @@ $sql = "SELECT
     cd.date_width,
     cd.date_height,
     cd.date_font_size,
+    cd.use_custom_text_overlay,
+    cd.custom_text_value,
+    cd.custom_text_x,
+    cd.custom_text_y,
+    cd.custom_text_width,
+    cd.custom_text_height,
+    cd.custom_text_font_size,
     (SELECT full_name FROM users WHERE id = cd.uploaded_by) AS uploaded_by_name
 FROM case_documents cd
 WHERE cd.case_id = ?";

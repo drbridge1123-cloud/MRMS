@@ -104,20 +104,10 @@
                                     </td>
                                     <td><span class="text-xs text-v2-text-light"
                                             x-text="getProviderTypeLabel(p.provider_type)"></span></td>
-                                    <td @click.stop>
-                                        <select :value="p.overall_status"
-                                            @change="updateProviderStatus(p, $event.target.value)"
-                                            class="text-xs font-semibold border-0 bg-transparent cursor-pointer rounded px-1 py-0.5 focus:ring-1 focus:ring-gold outline-none"
-                                            :class="'status-' + p.overall_status">
-                                            <option value="not_started">Not Started</option>
-                                            <option value="requesting">Requesting</option>
-                                            <option value="follow_up">Follow Up</option>
-                                            <option value="action_needed">Action Needed</option>
-                                            <option value="received_partial">Partial</option>
-                                            <option value="on_hold">On Hold</option>
-                                            <option value="received_complete">Complete</option>
-                                            <option value="verified">Verified</option>
-                                        </select>
+                                    <td>
+                                        <span class="text-xs font-semibold rounded px-2 py-0.5 inline-block"
+                                            :class="'status-' + p.overall_status"
+                                            x-text="getStatusLabel(p.overall_status)"></span>
                                     </td>
                                     <td x-text="formatDate(p.first_request_date) || '-'"></td>
                                     <td x-text="formatDate(p.last_request_date) || '-'"></td>
@@ -166,15 +156,6 @@
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
                                                         d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                            </button>
-                                            <button @click="markComplete(p)" title="Mark Complete"
-                                                x-show="p.overall_status !== 'received_complete' && p.overall_status !== 'verified'"
-                                                class="p-1 rounded hover:bg-emerald-100 text-emerald-500">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M5 13l4 4L19 7" />
                                                 </svg>
                                             </button>
                                             <button @click="deleteProvider(p.id)" title="Remove"

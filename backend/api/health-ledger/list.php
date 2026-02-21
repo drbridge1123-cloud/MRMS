@@ -82,7 +82,8 @@ $total = (int)dbFetchOne($countSql, $params)['cnt'];
 // Main query
 $sql = "SELECT
     hli.id, hli.case_id, hli.case_number, hli.client_name,
-    hli.insurance_carrier, hli.carrier_contact_email, hli.carrier_contact_fax,
+    hli.insurance_carrier, hli.claim_number, hli.member_id,
+    hli.carrier_contact_email, hli.carrier_contact_fax,
     hli.overall_status, hli.assigned_to, hli.note, hli.created_at,
     u.full_name AS assigned_name,
     lr.request_date AS last_request_date,

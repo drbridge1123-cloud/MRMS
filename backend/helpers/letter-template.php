@@ -198,9 +198,10 @@ HTML;
  * @return array|null
  */
 function getRequestLetterData($requestId) {
-    return dbFetchOne(
+    $data = dbFetchOne(
         "SELECT
             rr.id AS request_id,
+            rr.case_provider_id,
             rr.request_date,
             rr.request_method,
             rr.request_type,
@@ -209,6 +210,7 @@ function getRequestLetterData($requestId) {
             rr.notes,
             rr.send_status,
             rr.template_id,
+            rr.template_data,
             cp.treatment_start_date,
             cp.treatment_end_date,
             cp.record_types_needed AS record_types,
@@ -230,7 +232,12 @@ function getRequestLetterData($requestId) {
              WHERE rr3.case_provider_id = rr.case_provider_id
              AND rr3.request_type = 'follow_up'
              AND rr3.id != rr.id
-             AND rr3.send_status = 'sent') AS followup_dates
+             AND rr3.send_status = 'sent') AS followup_dates,
+            (SELECT GROUP_CONCAT(DATE_FORMAT(rr4.sent_at, '%m/%d/%Y') ORDER BY rr4.sent_at SEPARATOR ', ')
+             FROM record_requests rr4
+             WHERE rr4.case_provider_id = rr.case_provider_id
+             AND rr4.id != rr.id
+             AND rr4.send_status = 'sent') AS previous_request_dates
         FROM record_requests rr
         JOIN case_providers cp ON rr.case_provider_id = cp.id
         JOIN cases c ON cp.case_id = c.id
@@ -238,6 +245,16 @@ function getRequestLetterData($requestId) {
         WHERE rr.id = ?",
         [$requestId]
     );
+
+    // Merge template_data JSON fields into data array
+    if ($data && !empty($data['template_data'])) {
+        $extra = json_decode($data['template_data'], true);
+        if ($extra) {
+            $data = array_merge($data, $extra);
+        }
+    }
+
+    return $data;
 }
 
 /**
@@ -380,7 +397,7 @@ HTML;
  * Gather data needed to render a health ledger request letter.
  */
 function getHealthLedgerLetterData($requestId) {
-    return dbFetchOne(
+    $data = dbFetchOne(
         "SELECT
             hlr.id AS request_id,
             hlr.request_date,
@@ -389,20 +406,35 @@ function getHealthLedgerLetterData($requestId) {
             hlr.sent_to,
             hlr.send_status,
             hlr.notes,
+            hlr.template_id,
+            hlr.template_data,
             hli.case_number,
             hli.client_name,
             hli.insurance_carrier,
+            hli.claim_number,
+            hli.member_id,
             hli.carrier_contact_email,
             hli.carrier_contact_fax,
             c.client_dob,
             c.doi,
-            c.attorney_name
+            c.attorney_name,
+            c.treatment_end_date
         FROM hl_requests hlr
         JOIN health_ledger_items hli ON hlr.item_id = hli.id
         LEFT JOIN cases c ON hli.case_id = c.id
         WHERE hlr.id = ?",
         [$requestId]
     );
+
+    // Merge template_data JSON fields into data array
+    if ($data && !empty($data['template_data'])) {
+        $extra = json_decode($data['template_data'], true);
+        if ($extra) {
+            $data = array_merge($data, $extra);
+        }
+    }
+
+    return $data;
 }
 
 /**
@@ -636,14 +668,29 @@ function processTemplatePlaceholders($template, $data) {
         // Follow-up dates (comma-separated, pre-formatted from SQL)
         'followup_dates' => $data['followup_dates'] ?? '',
 
+        // All previous request dates (initial + follow-ups, pre-formatted from SQL)
+        'previous_request_dates' => $data['previous_request_dates'] ?? '',
+
         // Request method info
         'request_method' => ucfirst($data['request_method'] ?? 'Email'),
         'recipient_contact' => ($data['request_method'] ?? 'email') === 'fax'
-            ? ($data['provider_fax'] ?? '')
-            : ($data['provider_email'] ?? ''),
+            ? ($data['provider_fax'] ?? $data['carrier_contact_fax'] ?? '')
+            : ($data['provider_email'] ?? $data['carrier_contact_email'] ?? ''),
 
         // Boolean flags
         'authorization_sent' => !empty($data['authorization_sent']),
+
+        // Health ledger / insurance fields
+        'insurance_carrier' => $data['insurance_carrier'] ?? '',
+        'claim_number' => $data['claim_number'] ?? '',
+        'member_id' => $data['member_id'] ?? '',
+
+        // Settlement fields (from template_data JSON)
+        'settlement_amount' => $data['settlement_amount'] ?? '',
+        'settlement_date' => $data['settlement_date'] ?? '',
+        'attorney_fees' => $data['attorney_fees'] ?? '',
+        'costs' => $data['costs'] ?? '',
+        'proposed_lien_amount' => $data['proposed_lien_amount'] ?? '',
 
         // Computed fields
         'record_types_list' => '', // Will be generated below
@@ -755,6 +802,10 @@ function processTemplatePlaceholders($template, $data) {
                 } catch (Exception $e) {
                     $value = ''; // Invalid date
                 }
+            } elseif ($filter === 'currency') {
+                if (is_numeric($value) && $value !== '') {
+                    $value = '$' . number_format((float)$value, 2);
+                }
             } elseif ($filter === 'default' && empty($value)) {
                 $value = $param ?? '';
             }
@@ -810,6 +861,7 @@ function getAvailablePlaceholders($templateType) {
         'initial_request_date' => 'Date of initial request (auto-detected)',
         'initial_request_date|date:m/d/Y' => 'Initial request date (formatted)',
         'followup_dates' => 'Comma-separated list of previous follow-up dates (pre-formatted mm/dd/yyyy)',
+        'previous_request_dates' => 'All previous sent request dates (initial + follow-ups, pre-formatted mm/dd/yyyy)',
         'treatment_start_date' => 'Treatment start date (raw)',
         'treatment_start_date|date:m/d/Y' => 'Treatment start date (formatted)',
         'treatment_end_date' => 'Treatment end date (raw)',
@@ -827,8 +879,40 @@ function getAvailablePlaceholders($templateType) {
     $healthLedgerPlaceholders = [
         'insurance_carrier' => 'Insurance carrier name',
         'claim_number' => 'Insurance claim number',
-        'policy_number' => 'Insurance policy number',
-        // Add more as needed
+        'member_id' => 'Member ID (health subrogation)',
+        'client_name' => 'Client/patient full name',
+        'client_dob' => 'Client date of birth (raw date)',
+        'client_dob|date:m/d/Y' => 'Client date of birth (formatted)',
+        'doi' => 'Date of injury (raw date)',
+        'doi|date:m/d/Y' => 'Date of injury (formatted)',
+        'case_number' => 'Case number',
+        'attorney_name' => 'Attorney name',
+        'request_date|date:F j, Y' => 'Request date (formatted)',
+        'request_method' => 'Send method: Email or Fax',
+        'recipient_contact' => 'Carrier email or fax based on send method',
+        'settlement_amount|currency' => 'Settlement amount (formatted)',
+        'settlement_date|date:m/d/Y' => 'Settlement date (formatted)',
+        'attorney_fees|currency' => 'Attorney fees (formatted)',
+        'costs|currency' => 'Costs (formatted)',
+        'proposed_lien_amount|currency' => 'Proposed lien amount (formatted)',
+        'treatment_end_date|date:m/d/Y' => 'Last treatment date (formatted)',
+        'notes' => 'Additional notes',
+    ];
+
+    $balanceVerificationPlaceholders = [
+        'provider_name' => 'Medical provider name',
+        'provider_address' => 'Medical provider full address',
+        'provider_fax' => 'Medical provider fax',
+        'provider_email' => 'Medical provider email',
+        'client_name' => 'Client/patient full name',
+        'client_dob|date:m/d/Y' => 'Client date of birth (formatted)',
+        'doi|date:m/d/Y' => 'Date of injury (formatted)',
+        'case_number' => 'Case number',
+        'attorney_name' => 'Attorney name',
+        'request_date|date:F j, Y' => 'Request date (formatted)',
+        'request_method' => 'Send method: Email or Fax',
+        'recipient_contact' => 'Provider email or fax based on send method',
+        'treatment_end_date|date:m/d/Y' => 'Last treatment date (formatted)',
     ];
 
     switch ($templateType) {
@@ -837,6 +921,8 @@ function getAvailablePlaceholders($templateType) {
             return array_merge($commonPlaceholders, $medicalRecordsPlaceholders);
         case 'health_ledger':
             return array_merge($commonPlaceholders, $healthLedgerPlaceholders);
+        case 'balance_verification':
+            return array_merge($commonPlaceholders, $balanceVerificationPlaceholders);
         default:
             return $commonPlaceholders;
     }
