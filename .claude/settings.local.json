@@ -66,7 +66,9 @@
       "Bash(antiword:*)",
       "Bash(# Check if all templates reference the same image \\(logo\\) unzip -l \"\"/c/Users/Server/Downloads/Template/Medical Records Request.docx\"\")",
       "Bash(# Check if the medical records templates have headers/footers unzip -l \"\"/c/Users/Server/Downloads/Template/Medical Records Request.docx\"\")",
-      "Bash(c:/xampp/php/php.exe:*)"
+      "Bash(c:/xampp/php/php.exe:*)",
+      "Bash(git branch:*)",
+      "Bash(/c/xampp/mysql/bin/mysqldump:*)"
     ]
   }
 }

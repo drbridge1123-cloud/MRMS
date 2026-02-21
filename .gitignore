@@ -26,6 +26,9 @@ composer.phar
 # Storage documents
 storage/documents/
 
+# Database backups
+database/backup_*.sql
+
 # Session & cache
 *.log
 cookies.txt
