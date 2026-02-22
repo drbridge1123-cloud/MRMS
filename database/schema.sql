@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS cases (
     client_dob DATE NULL,
     doi DATE NULL,
     assigned_to INT NULL,
-    status ENUM('collecting','in_review','verification','completed','closed') NOT NULL DEFAULT 'collecting',
+    status ENUM('collecting','verification','completed','rfd','final_verification','disbursement','accounting','closed') NOT NULL DEFAULT 'collecting',
     treatment_status ENUM('in_treatment','treatment_done','neg','rfd') NULL,
     treatment_end_date DATE NULL,
     attorney_name VARCHAR(100) NULL,

@@ -15,7 +15,7 @@ $where = ['1=1'];
 $params = [];
 
 if (!empty($_GET['status'])) {
-    $allowedStatuses = ['collecting', 'in_review', 'verification', 'completed', 'closed'];
+    $allowedStatuses = ['collecting','verification','completed','rfd','final_verification','disbursement','accounting','closed'];
     if (validateEnum($_GET['status'], $allowedStatuses)) {
         $where[] = 'c.status = ?';
         $params[] = $_GET['status'];

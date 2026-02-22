@@ -12,119 +12,97 @@ ob_start();
 
 <div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') === 'health' ? 'health' : 'mr' }">
 
-    <!-- Page Header -->
-    <div class="flex items-center justify-between mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-v2-text">Tracker</h1>
-            <p class="text-sm text-v2-text-light mt-1">All request tracking across open cases</p>
+    <!-- Page Header + Tabs -->
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-6">
+            <h1 class="text-xl font-bold text-v2-text">Tracker</h1>
+            <div class="flex gap-0 border-b border-v2-card-border">
+                <button @click="activeTab = 'mr'"
+                        class="px-4 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                        :class="activeTab === 'mr'
+                            ? 'text-gold border-gold'
+                            : 'text-v2-text-light border-transparent hover:text-v2-text-mid'">
+                    MR Tracker
+                </button>
+                <button @click="activeTab = 'health'"
+                        class="px-4 py-2 text-sm font-semibold transition-colors border-b-2 -mb-px"
+                        :class="activeTab === 'health'
+                            ? 'text-gold border-gold'
+                            : 'text-v2-text-light border-transparent hover:text-v2-text-mid'">
+                    Health Tracker
+                </button>
+            </div>
         </div>
         <!-- Health Tracker action buttons (only visible on health tab) -->
         <div class="flex gap-2" x-show="activeTab === 'health'" x-cloak>
             <button @click="$dispatch('hl-import')"
-                    class="px-4 py-2 text-sm border border-v2-card-border rounded-lg hover:bg-v2-bg text-v2-text-mid">
+                    class="px-3 py-1.5 text-sm border border-v2-card-border rounded-lg hover:bg-v2-bg text-v2-text-mid">
                 Import CSV
             </button>
             <button @click="$dispatch('hl-add')"
-                    class="px-4 py-2 text-sm bg-gold text-navy font-semibold rounded-lg hover:bg-gold/90">
+                    class="px-3 py-1.5 text-sm bg-gold text-navy font-semibold rounded-lg hover:bg-gold/90">
                 + Add Item
             </button>
         </div>
-    </div>
-
-    <!-- Tab Bar -->
-    <div class="flex gap-0 mb-6 border-b border-v2-card-border">
-        <button @click="activeTab = 'mr'"
-                class="px-5 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px"
-                :class="activeTab === 'mr'
-                    ? 'text-gold border-gold'
-                    : 'text-v2-text-light border-transparent hover:text-v2-text-mid'">
-            MR Tracker
-        </button>
-        <button @click="activeTab = 'health'"
-                class="px-5 py-3 text-sm font-semibold transition-colors border-b-2 -mb-px"
-                :class="activeTab === 'health'
-                    ? 'text-gold border-gold'
-                    : 'text-v2-text-light border-transparent hover:text-v2-text-mid'">
-            Health Tracker
-        </button>
     </div>
 
     <!-- ===================== MR TRACKER TAB ===================== -->
     <div x-show="activeTab === 'mr'" x-data="trackerPage()" x-init="init()">
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div @click="toggleFilter('')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
+        <div class="grid grid-cols-4 gap-3 mb-3">
+            <div @click="toggleFilter('')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-4 py-2.5 cursor-pointer card-hover flex items-center justify-between"
                  :class="activeFilter === '' ? 'ring-2 ring-gold' : ''">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-v2-text-light uppercase tracking-wide">Total</p>
-                        <p class="text-2xl font-bold text-v2-text mt-1" x-text="summary.total ?? '-'"></p>
-                    </div>
-                    <div class="w-10 h-10 bg-v2-bg rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                    </div>
+                <div>
+                    <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Total</p>
+                    <p class="text-lg font-bold text-v2-text" x-text="summary.total ?? '-'"></p>
                 </div>
+                <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
             </div>
-
-            <div @click="toggleFilter('overdue')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
+            <div @click="toggleFilter('overdue')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-4 py-2.5 cursor-pointer card-hover flex items-center justify-between"
                  :class="activeFilter === 'overdue' ? 'ring-2 ring-red-400' : ''">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-v2-text-light uppercase tracking-wide">Overdue</p>
-                        <p class="text-2xl font-bold text-red-600 mt-1" x-text="summary.overdue ?? '-'"></p>
-                    </div>
-                    <div class="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-                        </svg>
-                    </div>
+                <div>
+                    <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Overdue</p>
+                    <p class="text-lg font-bold text-red-600" x-text="summary.overdue ?? '-'"></p>
                 </div>
+                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
             </div>
-
-            <div @click="toggleFilter('followup_due')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
+            <div @click="toggleFilter('followup_due')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-4 py-2.5 cursor-pointer card-hover flex items-center justify-between"
                  :class="activeFilter === 'followup_due' ? 'ring-2 ring-amber-400' : ''">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-v2-text-light uppercase tracking-wide">Follow-up Due</p>
-                        <p class="text-2xl font-bold text-amber-600 mt-1" x-text="summary.followup_due ?? '-'"></p>
-                    </div>
-                    <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                    </div>
+                <div>
+                    <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Follow-up Due</p>
+                    <p class="text-lg font-bold text-amber-600" x-text="summary.followup_due ?? '-'"></p>
                 </div>
+                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
             </div>
-
-            <div @click="toggleFilter('no_request')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
+            <div @click="toggleFilter('no_request')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-4 py-2.5 cursor-pointer card-hover flex items-center justify-between"
                  :class="activeFilter === 'no_request' ? 'ring-2 ring-gray-400' : ''">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-xs text-v2-text-light uppercase tracking-wide">Not Started</p>
-                        <p class="text-2xl font-bold text-v2-text-light mt-1" x-text="summary.not_started ?? '-'"></p>
-                    </div>
-                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <svg class="w-5 h-5 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-                        </svg>
-                    </div>
+                <div>
+                    <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Not Started</p>
+                    <p class="text-lg font-bold text-v2-text-light" x-text="summary.not_started ?? '-'"></p>
                 </div>
+                <svg class="w-4 h-4 text-v2-text-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 mb-4">
-            <div class="flex flex-wrap items-center gap-3">
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 mb-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <div class="flex-1 min-w-[200px]">
                     <input type="text" x-model="search" @input.debounce.300ms="loadData(1)"
                            placeholder="Search case #, client, or provider..."
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                           class="w-full px-3 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 </div>
                 <select x-model="statusFilter" @change="loadData(1)"
-                        class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                        class="px-2 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     <option value="">All Statuses</option>
                     <option value="not_started">Not Started</option>
                     <option value="requesting">Requesting</option>
@@ -136,20 +114,20 @@ ob_start();
                     <option value="verified">Verified</option>
                 </select>
                 <select x-model="tierFilter" @change="loadData(1)"
-                        class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold focus:border-gold outline-none">
+                        class="px-2 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     <option value="">All Tiers</option>
                     <option value="admin">Admin Escalation (deadline+14d)</option>
                     <option value="action">Action Needed (past deadline)</option>
                 </select>
                 <select x-model="assignedFilter" @change="loadData(1)"
-                        class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold focus:border-gold outline-none">
+                        class="px-2 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     <option value="">All Staff</option>
                     <template x-for="staff in staffList" :key="staff.id">
                         <option :value="staff.id" x-text="staff.full_name"></option>
                     </template>
                 </select>
                 <button @click="resetFilters()"
-                        class="px-3 py-2 text-sm text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-v2-bg"
+                        class="px-2 py-1.5 text-sm text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-v2-bg"
                         x-show="search || statusFilter || activeFilter || tierFilter || assignedFilter">
                     Reset
                 </button>
@@ -529,49 +507,49 @@ ob_start();
          @hl-import.window="showImportModal = true" @hl-add.window="openAddModal()">
 
         <!-- Summary Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-            <div @click="toggleStatusFilter('')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 cursor-pointer card-hover"
+        <div class="grid grid-cols-6 gap-3 mb-3">
+            <div @click="toggleStatusFilter('')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
                  :class="statusFilter === '' ? 'ring-2 ring-gold' : ''">
-                <p class="text-xs text-v2-text-light uppercase tracking-wide">Total</p>
-                <p class="text-2xl font-bold text-v2-text mt-1" x-text="summary.total ?? '-'"></p>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Total</p>
+                <p class="text-lg font-bold text-v2-text" x-text="summary.total ?? '-'"></p>
             </div>
-            <div @click="toggleStatusFilter('not_started')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 cursor-pointer card-hover"
+            <div @click="toggleStatusFilter('not_started')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
                  :class="statusFilter === 'not_started' ? 'ring-2 ring-gray-400' : ''">
-                <p class="text-xs text-v2-text-light uppercase tracking-wide">Not Started</p>
-                <p class="text-2xl font-bold text-gray-500 mt-1" x-text="summary.not_started ?? '-'"></p>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Not Started</p>
+                <p class="text-lg font-bold text-gray-500" x-text="summary.not_started ?? '-'"></p>
             </div>
-            <div @click="toggleStatusFilter('requesting')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 cursor-pointer card-hover"
+            <div @click="toggleStatusFilter('requesting')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
                  :class="statusFilter === 'requesting' ? 'ring-2 ring-blue-400' : ''">
-                <p class="text-xs text-v2-text-light uppercase tracking-wide">Requesting</p>
-                <p class="text-2xl font-bold text-blue-600 mt-1" x-text="summary.requesting ?? '-'"></p>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Requesting</p>
+                <p class="text-lg font-bold text-blue-600" x-text="summary.requesting ?? '-'"></p>
             </div>
-            <div @click="toggleStatusFilter('follow_up')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 cursor-pointer card-hover"
+            <div @click="toggleStatusFilter('follow_up')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
                  :class="statusFilter === 'follow_up' ? 'ring-2 ring-amber-400' : ''">
-                <p class="text-xs text-v2-text-light uppercase tracking-wide">Follow Up</p>
-                <p class="text-2xl font-bold text-amber-600 mt-1" x-text="summary.follow_up ?? '-'"></p>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Follow Up</p>
+                <p class="text-lg font-bold text-amber-600" x-text="summary.follow_up ?? '-'"></p>
             </div>
-            <div @click="toggleStatusFilter('received')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 cursor-pointer card-hover"
+            <div @click="toggleStatusFilter('received')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
                  :class="statusFilter === 'received' ? 'ring-2 ring-green-400' : ''">
-                <p class="text-xs text-v2-text-light uppercase tracking-wide">Received</p>
-                <p class="text-2xl font-bold text-green-600 mt-1" x-text="summary.received ?? '-'"></p>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Received</p>
+                <p class="text-lg font-bold text-green-600" x-text="summary.received ?? '-'"></p>
             </div>
-            <div @click="toggleStatusFilter('done')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 cursor-pointer card-hover"
+            <div @click="toggleStatusFilter('done')" class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
                  :class="statusFilter === 'done' ? 'ring-2 ring-emerald-400' : ''">
-                <p class="text-xs text-v2-text-light uppercase tracking-wide">Done</p>
-                <p class="text-2xl font-bold text-emerald-600 mt-1" x-text="summary.done ?? '-'"></p>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Done</p>
+                <p class="text-lg font-bold text-emerald-600" x-text="summary.done ?? '-'"></p>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-4 mb-4">
-            <div class="flex flex-wrap items-center gap-3">
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 mb-3">
+            <div class="flex flex-wrap items-center gap-2">
                 <div class="flex-1 min-w-[200px]">
                     <input type="text" x-model="search" @input.debounce.300ms="loadData(1)"
                            placeholder="Search client, case #, or carrier..."
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                           class="w-full px-3 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 </div>
                 <select x-model="statusFilter" @change="loadData(1)"
-                        class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                        class="px-2 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     <option value="">All Statuses</option>
                     <option value="not_started">Not Started</option>
                     <option value="requesting">Requesting</option>
@@ -580,14 +558,14 @@ ob_start();
                     <option value="done">Done</option>
                 </select>
                 <select x-model="assignedFilter" @change="loadData(1)"
-                        class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                        class="px-2 py-1.5 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                     <option value="">All Staff</option>
                     <template x-for="s in staffList" :key="s.id">
                         <option :value="s.id" x-text="s.full_name"></option>
                     </template>
                 </select>
                 <button @click="resetFilters()"
-                        class="px-3 py-2 text-sm text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-v2-bg"
+                        class="px-2 py-1.5 text-sm text-v2-text-mid border border-v2-card-border rounded-lg hover:bg-v2-bg"
                         x-show="search || statusFilter || tierFilter || assignedFilter">
                     Reset
                 </button>

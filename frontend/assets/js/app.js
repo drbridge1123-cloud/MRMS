@@ -171,33 +171,53 @@ const STATUS_LABELS = {
     on_hold: 'On Hold',
     received_complete: 'Complete',
     verified: 'Verified',
-    collecting: 'Collecting',
-    in_review: 'In Review',
+    collecting: 'Collection',
     verification: 'Verification',
     completed: 'Completed',
+    rfd: 'Attorney',
+    final_verification: 'Final Verification',
+    disbursement: 'Disbursement',
+    accounting: 'Accounting',
     closed: 'Closed',
 };
 
 // Valid forward transitions (used by the status dropdown)
 const FORWARD_TRANSITIONS = {
-    collecting:   ['in_review'],
-    in_review:    ['verification', 'completed'],
-    verification: ['completed'],
-    completed:    ['closed'],
-    closed:       [],
+    collecting:          ['verification'],
+    verification:        ['completed'],
+    completed:           ['rfd'],
+    rfd:                 ['final_verification'],
+    final_verification:  ['disbursement'],
+    disbursement:        ['accounting'],
+    accounting:          ['closed'],
+    closed:              [],
 };
 
 // Valid backward transitions (used by send-back modal)
 const BACKWARD_TRANSITIONS = {
-    collecting:   [],
-    in_review:    ['collecting'],
-    verification: ['collecting', 'in_review'],
-    completed:    ['collecting', 'in_review', 'verification'],
-    closed:       ['collecting', 'in_review', 'verification', 'completed'],
+    collecting:          [],
+    verification:        ['collecting'],
+    completed:           ['collecting', 'verification'],
+    rfd:                 ['collecting', 'verification', 'completed'],
+    final_verification:  ['collecting', 'verification', 'completed', 'rfd'],
+    disbursement:        ['collecting', 'verification', 'completed', 'rfd', 'final_verification'],
+    accounting:          ['collecting', 'verification', 'completed', 'rfd', 'final_verification', 'disbursement'],
+    closed:              ['collecting', 'verification', 'completed', 'rfd', 'final_verification', 'disbursement', 'accounting'],
 };
 
 function getStatusLabel(status) {
     return STATUS_LABELS[status] || status;
+}
+
+function getRecordTypeShort(type) {
+    const shorts = {
+        medical_records: 'MR',
+        billing: 'Bill',
+        chart: 'Chart',
+        imaging: 'Img',
+        op_report: 'Op'
+    };
+    return shorts[type] || type;
 }
 
 // Debounce function for search inputs

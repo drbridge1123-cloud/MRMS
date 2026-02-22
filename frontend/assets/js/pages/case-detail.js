@@ -19,6 +19,7 @@ function caseDetailPage() {
 
         editData: {},
         currentProvider: null,
+        showProviders: true,
         provSortBy: '',
         provSortDir: 'asc',
         expandedProvider: null,
@@ -52,6 +53,10 @@ function caseDetailPage() {
         allCosts: [],
         allCostsTotal: { billed: 0, paid: 0 },
         showCostLedger: false,
+        showCostImportModal: false,
+        costImportPreview: [],
+        costImportSummary: {},
+        costImporting: false,
 
         async init() {
             if (!this.caseId) {
@@ -747,6 +752,79 @@ function caseDetailPage() {
             w.document.write(html);
             w.document.close();
             w.onload = () => { w.print(); };
+        },
+
+        async previewCostImport(fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('case_id', this.caseId);
+            formData.append('preview', '1');
+
+            try {
+                const res = await fetch('/MRMS/backend/api/index.php/mr-fee-payments/import', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') },
+                    body: formData
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.error || 'Failed to parse CSV', 'error');
+                    fileInput.value = '';
+                    return;
+                }
+                this.costImportPreview = data.preview || [];
+                this.costImportSummary = { count: data.count, total_billed: data.total_billed, total_paid: data.total_paid };
+                this.showCostImportModal = true;
+            } catch (e) {
+                showToast('Failed to parse CSV file', 'error');
+            }
+            fileInput.value = '';
+        },
+
+        async confirmCostImport(fileInput) {
+            // Re-upload without preview flag to actually import
+            const file = this._costImportFile;
+            if (!file) {
+                showToast('No file selected', 'error');
+                return;
+            }
+
+            this.costImporting = true;
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('case_id', this.caseId);
+
+            try {
+                const res = await fetch('/MRMS/backend/api/index.php/mr-fee-payments/import', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') },
+                    body: formData
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.error || 'Import failed', 'error');
+                    this.costImporting = false;
+                    return;
+                }
+                showToast(`Imported ${data.imported} cost entries`, 'success');
+                this.showCostImportModal = false;
+                this.costImportPreview = [];
+                this._costImportFile = null;
+                await this.loadAllCosts();
+            } catch (e) {
+                showToast('Import failed', 'error');
+            }
+            this.costImporting = false;
+        },
+
+        handleCostImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            this._costImportFile = file;
+            this.previewCostImport(event.target);
         },
 
         getCategoryClass(cat) {

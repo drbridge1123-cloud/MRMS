@@ -71,6 +71,19 @@ ob_start();
                        class="px-2 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
             </div>
 
+            <select x-model="staffFilter" @change="loadData(1)"
+                    class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                <option value="">All Staff</option>
+                <option value="Sunny">Sunny</option>
+                <option value="Soyong">Soyong</option>
+                <option value="Jimi">Jimi</option>
+                <option value="Karl">Karl</option>
+                <option value="Miki">Miki</option>
+                <option value="Ella">Ella</option>
+                <option value="Dave">Dave</option>
+                <option value="Chloe">Chloe</option>
+            </select>
+
             <select x-model="batchFilter" @change="loadData(1)"
                     class="px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
                 <option value="">All Imports</option>
@@ -99,45 +112,55 @@ ob_start();
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="cursor-pointer select-none" @click="sort('transaction_date')">
-                            <div class="flex items-center gap-1">Date
-                                <template x-if="sortBy === 'transaction_date'"><svg class="w-3 h-3" :class="sortDir === 'asc' ? '' : 'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template>
-                            </div>
+                        <th class="w-10">
+                            <input type="checkbox" @change="toggleSelectAll($event.target.checked)"
+                                   :checked="isAllSelected()" :indeterminate.prop="isIndeterminate()"
+                                   class="rounded border-gray-300 text-gold focus:ring-gold">
                         </th>
-                        <th>Description</th>
+                        <th class="cursor-pointer select-none" @click="sort('transaction_date')">
+                            <div class="flex items-center gap-1">Date <span x-html="sortIcon('transaction_date')"></span></div>
+                        </th>
+                        <th class="cursor-pointer select-none" @click="sort('description')">
+                            <div class="flex items-center gap-1">Description <span x-html="sortIcon('description')"></span></div>
+                        </th>
                         <th class="cursor-pointer select-none text-right" @click="sort('amount')">
-                            <div class="flex items-center justify-end gap-1">Amount
-                                <template x-if="sortBy === 'amount'"><svg class="w-3 h-3" :class="sortDir === 'asc' ? '' : 'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template>
-                            </div>
+                            <div class="flex items-center justify-end gap-1">Amount <span x-html="sortIcon('amount')"></span></div>
                         </th>
                         <th class="cursor-pointer select-none" @click="sort('check_number')">
-                            <div class="flex items-center gap-1">Check #
-                                <template x-if="sortBy === 'check_number'"><svg class="w-3 h-3" :class="sortDir === 'asc' ? '' : 'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template>
-                            </div>
+                            <div class="flex items-center gap-1">Check # <span x-html="sortIcon('check_number')"></span></div>
+                        </th>
+                        <th class="cursor-pointer select-none" @click="sort('card_holder')">
+                            <div class="flex items-center gap-1">Card Holder <span x-html="sortIcon('card_holder')"></span></div>
                         </th>
                         <th class="cursor-pointer select-none" @click="sort('reconciliation_status')">
-                            <div class="flex items-center gap-1">Status
-                                <template x-if="sortBy === 'reconciliation_status'"><svg class="w-3 h-3" :class="sortDir === 'asc' ? '' : 'rotate-180'" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg></template>
-                            </div>
+                            <div class="flex items-center gap-1">Status <span x-html="sortIcon('reconciliation_status')"></span></div>
                         </th>
                         <th>Matched Payment</th>
-                        <th class="text-center">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     <template x-if="items.length === 0">
-                        <tr><td colspan="7" class="text-center text-v2-text-light py-12">No entries found. Import a bank statement CSV to get started.</td></tr>
+                        <tr><td colspan="8" class="text-center text-v2-text-light py-12">No entries found. Import a bank statement CSV to get started.</td></tr>
                     </template>
                     <template x-for="item in items" :key="item.id">
-                        <tr class="hover:bg-v2-bg/50 transition-colors"
+                        <tr class="transition-colors cursor-pointer"
                             :class="{
-                                'bg-green-50/50': item.reconciliation_status === 'matched',
-                                'bg-gray-50/50': item.reconciliation_status === 'ignored'
-                            }">
+                                'bg-green-50/50 hover:bg-green-50': item.reconciliation_status === 'matched',
+                                'bg-gray-50/50 hover:bg-gray-100/50': item.reconciliation_status === 'ignored',
+                                'hover:bg-v2-bg/50': item.reconciliation_status === 'unmatched',
+                                'bg-gold/5': selectedIds.includes(item.id)
+                            }"
+                            @click="onRowClick(item)">
+                            <td class="w-10" @click.stop>
+                                <input type="checkbox" :value="item.id" :checked="selectedIds.includes(item.id)"
+                                       @change="toggleSelect(item.id)"
+                                       class="rounded border-gray-300 text-gold focus:ring-gold">
+                            </td>
                             <td class="whitespace-nowrap text-sm" x-text="formatDate(item.transaction_date)"></td>
                             <td class="max-w-[250px] truncate text-sm" x-text="item.description || '-'"></td>
                             <td class="text-right font-mono text-sm font-medium" x-text="formatMoney(item.amount)"></td>
                             <td class="text-sm" x-text="item.check_number || '-'"></td>
+                            <td class="text-sm" x-text="item.card_holder || '-'"></td>
                             <td>
                                 <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
                                       :class="{
@@ -160,41 +183,6 @@ ob_start();
                                 </template>
                                 <template x-if="item.reconciliation_status !== 'matched'">
                                     <span class="text-gray-300">-</span>
-                                </template>
-                            </td>
-                            <td class="text-center whitespace-nowrap">
-                                <template x-if="item.reconciliation_status === 'unmatched'">
-                                    <div class="flex items-center justify-center gap-1">
-                                        <button @click.stop="openMatchModal(item)" title="Match to payment"
-                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.172 13.828a4 4 0 015.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101"/>
-                                            </svg>
-                                        </button>
-                                        <button @click.stop="ignoreEntry(item)" title="Ignore"
-                                                class="p-1.5 text-gray-400 hover:bg-gray-100 rounded transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </template>
-                                <template x-if="item.reconciliation_status === 'matched'">
-                                    <button @click.stop="unmatchEntry(item)" title="Unmatch"
-                                            class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                </template>
-                                <template x-if="item.reconciliation_status === 'ignored'">
-                                    <button @click.stop="restoreEntry(item)" title="Restore to unmatched"
-                                            class="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                                        </svg>
-                                    </button>
                                 </template>
                             </td>
                         </tr>
@@ -228,6 +216,34 @@ ob_start();
             </div>
         </div>
     </template>
+
+    <!-- Floating Bulk Action Bar -->
+    <div x-show="selectedIds.length > 0" x-transition
+         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-navy text-white rounded-xl shadow-2xl px-6 py-3 flex items-center gap-4">
+        <span class="text-sm font-medium"><span x-text="selectedIds.length"></span> selected</span>
+        <span class="w-px h-5 bg-white/30"></span>
+        <button @click="bulkIgnore()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>
+            </svg>
+            Ignore
+        </button>
+        <button @click="bulkRestore()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-white/10 hover:bg-white/20 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Restore
+        </button>
+        <button @click="bulkAutoMatch()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-green-500/80 hover:bg-green-500 rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.172 13.828a4 4 0 015.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101"/>
+            </svg>
+            Auto-Match
+        </button>
+        <span class="w-px h-5 bg-white/30"></span>
+        <button @click="clearSelection()" class="text-sm text-white/70 hover:text-white transition-colors">Clear</button>
+    </div>
 
     <!-- Import Modal -->
     <div x-show="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">

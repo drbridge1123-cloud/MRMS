@@ -32,9 +32,9 @@ if (!empty($input['status']) && $input['status'] === 'draft') {
         'approved_at' => null,
     ], 'id = ?', [$reportId]);
 
-    // Revert case status to in_review (pre-completion stage)
-    $newOwner = STATUS_OWNER_MAP['in_review'] ?? null;
-    $caseUpdate = ['status' => 'in_review'];
+    // Revert case status to verification (pre-completion stage)
+    $newOwner = STATUS_OWNER_MAP['verification'] ?? null;
+    $caseUpdate = ['status' => 'verification'];
     if ($newOwner) {
         $caseUpdate['assigned_to'] = $newOwner;
     }

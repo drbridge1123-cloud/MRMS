@@ -189,6 +189,9 @@ switch ($resource) {
         } elseif ($method === 'GET' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/templates/get.php';
+        } elseif ($method === 'POST' && $id && $action === 'restore') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/templates/restore.php';
         } elseif ($method === 'POST' && $id === 'preview') {
             require __DIR__ . '/templates/preview.php';
         } elseif ($method === 'POST' && !$id) {
@@ -332,6 +335,9 @@ switch ($resource) {
         } elseif ($method === 'GET' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/mbds/get.php';
+        } elseif ($method === 'POST' && $id && $action === 'import') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/import.php';
         } elseif ($method === 'POST' && $id && $action === 'lines') {
             $_GET['id'] = $id;
             require __DIR__ . '/mbds/add-line.php';
@@ -367,6 +373,8 @@ switch ($resource) {
     case 'bank-reconciliation':
         if ($method === 'POST' && $id === 'import') {
             require __DIR__ . '/bank-reconciliation/import.php';
+        } elseif ($method === 'POST' && $id === 'bulk-action') {
+            require __DIR__ . '/bank-reconciliation/bulk-action.php';
         } elseif ($method === 'GET' && $id === 'search-payments') {
             require __DIR__ . '/bank-reconciliation/search-payments.php';
         } elseif ($method === 'GET' && !$id) {
@@ -403,6 +411,8 @@ switch ($resource) {
             require __DIR__ . '/mr-fee-payments/summary.php';
         } elseif ($method === 'GET' && !$id) {
             require __DIR__ . '/mr-fee-payments/list.php';
+        } elseif ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/mr-fee-payments/import.php';
         } elseif ($method === 'POST' && !$id) {
             require __DIR__ . '/mr-fee-payments/create.php';
         } elseif ($method === 'PUT' && $id) {

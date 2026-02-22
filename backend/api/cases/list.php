@@ -9,12 +9,17 @@ $userId = requireAuth();
 $where = ['1=1'];
 $params = [];
 
-// Filter: status
+// Filter: status (supports comma-separated for multi-status)
 if (!empty($_GET['status'])) {
-    $allowedStatuses = ['collecting', 'in_review', 'verification', 'completed', 'closed'];
-    if (validateEnum($_GET['status'], $allowedStatuses)) {
+    $allowedStatuses = ['collecting','verification','completed','rfd','final_verification','disbursement','accounting','closed'];
+    $statuses = array_filter(explode(',', $_GET['status']), fn($s) => in_array($s, $allowedStatuses));
+    if (count($statuses) === 1) {
         $where[] = 'c.status = ?';
-        $params[] = $_GET['status'];
+        $params[] = $statuses[0];
+    } elseif (count($statuses) > 1) {
+        $placeholders = implode(',', array_fill(0, count($statuses), '?'));
+        $where[] = "c.status IN ({$placeholders})";
+        $params = array_merge($params, $statuses);
     }
 }
 
@@ -90,4 +95,40 @@ foreach ($cases as &$case) {
 }
 unset($case);
 
-paginatedResponse($cases, $total, $page, $perPage);
+// Summary counts (always unfiltered)
+$summary = dbFetchOne("
+    SELECT
+        COUNT(*) as total,
+        COUNT(CASE WHEN status != 'closed' THEN 1 END) as active,
+        COUNT(CASE WHEN status = 'collecting' THEN 1 END) as collecting,
+        COUNT(CASE WHEN status = 'verification' THEN 1 END) as verification,
+        COUNT(CASE WHEN status IN ('completed','rfd') THEN 1 END) as attorney,
+        COUNT(CASE WHEN status IN ('final_verification','accounting') THEN 1 END) as closing,
+        COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed
+    FROM cases
+");
+
+$providerStats = dbFetchOne("
+    SELECT
+        COUNT(CASE WHEN cp.deadline < CURDATE() AND cp.overall_status NOT IN ('received_complete','verified') THEN 1 END) as overdue_providers,
+        COUNT(CASE WHEN cp.overall_status IN ('not_started') THEN 1 END) as not_started_providers
+    FROM case_providers cp
+    JOIN cases c ON cp.case_id = c.id
+    WHERE c.status NOT IN ('closed')
+");
+
+$extra = [
+    'summary' => [
+        'total' => (int)$summary['total'],
+        'active' => (int)$summary['active'],
+        'collecting' => (int)$summary['collecting'],
+        'verification' => (int)$summary['verification'],
+        'attorney' => (int)$summary['attorney'],
+        'closing' => (int)$summary['closing'],
+        'closed' => (int)$summary['closed'],
+        'overdue_providers' => (int)($providerStats['overdue_providers'] ?? 0),
+        'not_started_providers' => (int)($providerStats['not_started_providers'] ?? 0),
+    ]
+];
+
+paginatedResponse($cases, $total, $page, $perPage, $extra);

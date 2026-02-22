@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../helpers/csv.php';
 
 $csv = parseCSV('file');
 
-$allowedStatuses = ['collecting', 'in_review', 'verification', 'completed', 'closed'];
+$allowedStatuses = ['collecting','verification','completed','rfd','final_verification','disbursement','accounting','closed'];
 $imported = 0;
 $skipped = 0;
 $errors = [];

@@ -1,16 +1,22 @@
             <!-- Provider List -->
             <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mb-6">
-                <div class="px-6 py-4 border-b border-v2-card-border flex items-center justify-between">
-                    <h3 class="font-semibold text-v2-text">Providers</h3>
-                    <button @click="showAddProviderModal = true"
-                        class="bg-gold text-white px-3 py-1.5 rounded-lg text-sm hover:bg-gold-hover flex items-center gap-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="px-6 py-3 flex items-center justify-between cursor-pointer" @click="showProviders = !showProviders">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="showProviders ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                        <h3 class="font-semibold text-v2-text text-sm">Providers</h3>
+                        <span class="text-xs text-v2-text-light" x-text="'(' + providers.length + ')'"></span>
+                    </div>
+                    <button @click.stop="showAddProviderModal = true"
+                        class="bg-gold text-white px-2.5 py-1 rounded-lg text-xs hover:bg-gold-hover flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
                         Add Provider
                     </button>
                 </div>
-                <div class="overflow-x-auto">
+                <div x-show="showProviders" x-collapse class="overflow-x-auto">
                     <table class="data-table" style="min-width: 1100px;">
                         <thead>
                             <tr>
@@ -108,6 +114,28 @@
                                         <span class="text-xs font-semibold rounded px-2 py-0.5 inline-block"
                                             :class="'status-' + p.overall_status"
                                             x-text="getStatusLabel(p.overall_status)"></span>
+                                        <!-- Record type breakdown for partial status -->
+                                        <template x-if="p.overall_status === 'received_partial' && p.record_types_needed">
+                                            <div class="flex flex-wrap gap-1 mt-1.5">
+                                                <template x-for="rt in p.record_types_needed.split(',')" :key="rt">
+                                                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                                                        :class="p.received_types && p.received_types[rt]
+                                                            ? 'bg-green-100 text-green-700'
+                                                            : 'bg-red-50 text-red-500'"
+                                                        :title="(p.received_types && p.received_types[rt] ? 'Received: ' : 'Pending: ') + rt.replace('_',' ')">
+                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                            x-show="p.received_types && p.received_types[rt]">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                                        </svg>
+                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                            x-show="!p.received_types || !p.received_types[rt]">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4m0 4h.01"/>
+                                                        </svg>
+                                                        <span x-text="getRecordTypeShort(rt)"></span>
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </template>
                                     </td>
                                     <td x-text="formatDate(p.first_request_date) || '-'"></td>
                                     <td x-text="formatDate(p.last_request_date) || '-'"></td>

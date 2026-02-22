@@ -29,6 +29,11 @@ if (!empty($_GET['date_to'])) {
     $params[] = $_GET['date_to'];
 }
 
+if (!empty($_GET['staff'])) {
+    $conditions[] = 'b.card_holder = ?';
+    $params[] = sanitizeString($_GET['staff']);
+}
+
 if (!empty($_GET['search'])) {
     $search = '%' . sanitizeString($_GET['search']) . '%';
     $conditions[] = '(b.description LIKE ? OR b.check_number LIKE ? OR b.reference_number LIKE ?)';
@@ -37,7 +42,7 @@ if (!empty($_GET['search'])) {
 
 $whereClause = !empty($conditions) ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
-$allowedSorts = ['transaction_date', 'amount', 'check_number', 'reconciliation_status', 'imported_at'];
+$allowedSorts = ['transaction_date', 'description', 'amount', 'check_number', 'card_holder', 'reconciliation_status', 'imported_at'];
 $sortBy = in_array($_GET['sort_by'] ?? '', $allowedSorts) ? $_GET['sort_by'] : 'transaction_date';
 $sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 

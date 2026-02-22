@@ -48,14 +48,23 @@
                     <span class="sidebar-text">Tracker</span>
                 </a>
             </li>
+            <li>
+                <a href="/MRMS/frontend/pages/admin/templates.php"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-light transition-colors <?= ($currentPage ?? '') === 'admin-templates' ? 'bg-navy-light text-gold' : 'text-slate-300' ?>">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span class="sidebar-text">Templates</span>
+                </a>
+            </li>
         </ul>
 
-        <!-- Admin Section (permission-based) -->
-        <template x-if="$store.auth.hasPermission('expense_report') || $store.auth.hasPermission('reconciliation') || $store.auth.hasPermission('users') || $store.auth.hasPermission('templates') || $store.auth.hasPermission('activity_log') || $store.auth.hasPermission('data_management')">
+        <!-- Finance Section -->
+        <template x-if="$store.auth.hasPermission('expense_report') || $store.auth.hasPermission('reconciliation')">
             <div>
                 <div class="border-t border-navy-border my-4 mx-3"></div>
                 <div class="px-5 mb-2">
-                    <span class="sidebar-text text-xs font-semibold text-slate-500 uppercase tracking-wider">Admin</span>
+                    <span class="sidebar-text text-xs font-semibold text-slate-500 uppercase tracking-wider">Finance</span>
                 </div>
                 <ul class="space-y-1 px-3">
                     <template x-if="$store.auth.hasPermission('expense_report')">
@@ -80,6 +89,18 @@
                             </a>
                         </li>
                     </template>
+                </ul>
+            </div>
+        </template>
+
+        <!-- Settings Section -->
+        <template x-if="$store.auth.hasPermission('users') || $store.auth.hasPermission('activity_log') || $store.auth.hasPermission('data_management')">
+            <div>
+                <div class="border-t border-navy-border my-4 mx-3"></div>
+                <div class="px-5 mb-2">
+                    <span class="sidebar-text text-xs font-semibold text-slate-500 uppercase tracking-wider">Settings</span>
+                </div>
+                <ul class="space-y-1 px-3">
                     <template x-if="$store.auth.hasPermission('users')">
                         <li>
                             <a href="/MRMS/frontend/pages/admin/users.php"
@@ -88,17 +109,6 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                                 </svg>
                                 <span class="sidebar-text">Users</span>
-                            </a>
-                        </li>
-                    </template>
-                    <template x-if="$store.auth.hasPermission('templates')">
-                        <li>
-                            <a href="/MRMS/frontend/pages/admin/templates.php"
-                               class="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-navy-light transition-colors <?= ($currentPage ?? '') === 'admin-templates' ? 'bg-navy-light text-gold' : 'text-slate-300' ?>">
-                                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                <span class="sidebar-text">Templates</span>
                             </a>
                         </li>
                     </template>

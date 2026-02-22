@@ -43,7 +43,7 @@ $treatmentStats = dbFetchAll("
         treatment_status,
         COUNT(*) as count
     FROM cases
-    WHERE status NOT IN ('completed','closed')
+    WHERE status NOT IN ('closed')
     GROUP BY treatment_status
 ");
 

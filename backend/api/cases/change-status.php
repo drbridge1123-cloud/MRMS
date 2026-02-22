@@ -24,10 +24,13 @@ $currentStatus = $case['status'];
 
 // Valid forward transitions only
 $forwardTransitions = [
-    'collecting'   => ['in_review'],
-    'in_review'    => ['verification', 'completed'],
-    'verification' => ['completed'],
-    'completed'    => ['closed'],
+    'collecting'          => ['verification'],
+    'verification'        => ['completed'],
+    'completed'           => ['rfd'],
+    'rfd'                 => ['final_verification'],
+    'final_verification'  => ['disbursement'],
+    'disbursement'        => ['accounting'],
+    'accounting'          => ['closed'],
 ];
 
 if (!isset($forwardTransitions[$currentStatus]) || !in_array($newStatus, $forwardTransitions[$currentStatus])) {
@@ -45,11 +48,14 @@ if ($newOwner) {
 dbUpdate('cases', $updateData, 'id = ?', [$caseId]);
 
 $statusLabels = [
-    'collecting'   => 'Collecting',
-    'in_review'    => 'In Review',
-    'verification' => 'Verification',
-    'completed'    => 'Completed',
-    'closed'       => 'Closed',
+    'collecting'          => 'Collection',
+    'verification'        => 'Verification',
+    'completed'           => 'Completed',
+    'rfd'                 => 'Attorney',
+    'final_verification'  => 'Final Verification',
+    'disbursement'        => 'Disbursement',
+    'accounting'          => 'Accounting',
+    'closed'              => 'Closed',
 ];
 
 // Notify the new owner

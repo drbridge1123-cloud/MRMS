@@ -4,16 +4,46 @@ if ($method !== 'POST') {
     errorResponse('Method not allowed', 405);
 }
 
-$userId = requireAdmin();
+$userId = requireAuth();
 require_once __DIR__ . '/../../helpers/csv.php';
 
 $csv = parseCSV('file');
+
+// Map common bank CSV column names to our standard names
+$headerMap = [
+    'date' => 'date', 'posting_date' => 'date', 'transaction_date' => 'date', 'trans_date' => 'date',
+    'amount' => 'amount',
+    'description' => 'description', 'details' => 'description', 'memo' => 'description', 'transaction_description' => 'description',
+    'check_number' => 'check_number', 'check_#' => 'check_number', 'check_or_slip_#' => 'check_number', 'check' => 'check_number', 'card' => 'check_number',
+    'reference_number' => 'reference_number', 'reference' => 'reference_number', 'ref' => 'reference_number',
+    'category' => 'category', 'type' => 'category',
+];
+
+// Remap headers
+$mappedHeaders = [];
+foreach ($csv['headers'] as $h) {
+    $mappedHeaders[] = $headerMap[$h] ?? $h;
+}
+$csv['headers'] = $mappedHeaders;
+
+// Remap row keys (keep non-empty value when multiple columns map to same key)
+foreach ($csv['rows'] as &$row) {
+    $newRow = [];
+    foreach ($row as $key => $val) {
+        $newKey = $headerMap[$key] ?? $key;
+        if (!isset($newRow[$newKey]) || (trim($newRow[$newKey]) === '' && trim($val) !== '')) {
+            $newRow[$newKey] = $val;
+        }
+    }
+    $row = $newRow;
+}
+unset($row);
 
 // Validate required columns exist
 $requiredCols = ['date', 'amount'];
 $missingCols = array_diff($requiredCols, $csv['headers']);
 if (!empty($missingCols)) {
-    errorResponse('Missing required columns: ' . implode(', ', $missingCols) . '. Required: date, amount. Optional: description, check_number, reference_number, category');
+    errorResponse('Missing required columns: ' . implode(', ', $missingCols) . '. Found: ' . implode(', ', $csv['headers']) . '. Supported date columns: date, posting_date, transaction_date');
 }
 
 $batchId = bin2hex(random_bytes(16));
@@ -58,12 +88,20 @@ try {
         $reference = sanitizeString(trim($row['reference_number'] ?? $row['reference'] ?? $row['ref'] ?? '')) ?: null;
         $category = sanitizeString(trim($row['category'] ?? $row['type'] ?? '')) ?: null;
 
+        // Look up card holder from last 4 digits
+        $cardHolder = null;
+        if ($checkNumber) {
+            $last4 = substr($checkNumber, -4);
+            $cardHolder = CARD_OWNER_MAP[$last4] ?? null;
+        }
+
         $data = [
             'batch_id' => $batchId,
             'transaction_date' => $parsedDate,
             'description' => $description,
             'amount' => $amount,
             'check_number' => $checkNumber,
+            'card_holder' => $cardHolder,
             'reference_number' => $reference,
             'bank_category' => $category,
             'reconciliation_status' => 'unmatched',

@@ -18,11 +18,26 @@ define('ITEMS_PER_PAGE', 20);
 // Status-to-owner auto-assignment mapping
 // Each case status is owned by a specific user
 define('STATUS_OWNER_MAP', [
-    'collecting'   => 2,  // Miki
-    'in_review'    => 1,  // Ella
-    'verification' => 1,  // Ella
-    'completed'    => 4,  // Jimi
-    'closed'       => 4,  // Jimi
+    'collecting'          => 2,  // Miki
+    'verification'        => 1,  // Ella
+    'completed'           => 4,  // Jimi
+    'rfd'                 => 4,  // Jimi
+    'final_verification'  => 1,  // Ella
+    'disbursement'        => 4,  // Jimi
+    'accounting'          => 6,  // Chloe
+    'closed'              => 3,  // Daniel
+]);
+
+// Card last-4-digits → cardholder name mapping (for bank statement imports)
+define('CARD_OWNER_MAP', [
+    '9027' => 'Sunny',
+    '8433' => 'Soyong',
+    '2443' => 'Jimi',
+    '2518' => 'Karl',
+    '3052' => 'Miki',
+    '3060' => 'Ella',
+    '3128' => 'Dave',
+    '2984' => 'Chloe',
 ]);
 
 date_default_timezone_set('America/New_York');

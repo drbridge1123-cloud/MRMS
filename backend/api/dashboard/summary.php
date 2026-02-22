@@ -5,7 +5,7 @@ if ($method !== 'GET') {
 
 $userId = requireAuth();
 
-$activeCases = dbCount('cases', "status NOT IN ('completed','closed')");
+$activeCases = dbCount('cases', "status NOT IN ('closed')");
 
 $requestingCount = dbCount(
     'case_providers',
@@ -37,7 +37,7 @@ $escRows = dbFetchAll("
     FROM case_providers cp
     JOIN cases c ON c.id = cp.case_id
     WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-      AND c.status NOT IN ('completed','closed')
+      AND c.status NOT IN ('closed')
       AND cp.deadline IS NOT NULL AND cp.deadline <= CURDATE()
 ");
 

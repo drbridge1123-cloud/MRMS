@@ -13,6 +13,7 @@ function casesListPage() {
         }),
 
         // Page-specific state
+        summary: {},
         statusFilter: '',
         assignedFilter: '',
         showCreateModal: false,
@@ -70,10 +71,7 @@ function casesListPage() {
             }
 
             const uid = auth.user?.id;
-            const defaults = { 2: 'collecting', 1: 'in_review', 4: 'completed' };
-            if (uid && defaults[uid]) {
-                this.statusFilter = defaults[uid];
-            }
+            if (uid === 2) this.statusFilter = 'collecting';
 
             await this.loadData();
         }

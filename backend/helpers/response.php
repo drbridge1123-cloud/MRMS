@@ -27,8 +27,8 @@ function errorResponse($message = 'Error', $statusCode = 400) {
     ], $statusCode);
 }
 
-function paginatedResponse($data, $total, $page, $perPage) {
-    jsonResponse([
+function paginatedResponse($data, $total, $page, $perPage, $extra = []) {
+    $response = [
         'success' => true,
         'data' => $data,
         'pagination' => [
@@ -37,5 +37,9 @@ function paginatedResponse($data, $total, $page, $perPage) {
             'per_page' => (int)$perPage,
             'total_pages' => ceil($total / $perPage)
         ]
-    ]);
+    ];
+    if ($extra) {
+        $response = array_merge($response, $extra);
+    }
+    jsonResponse($response);
 }

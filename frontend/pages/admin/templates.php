@@ -267,16 +267,28 @@ Text if false
             </div>
             <div class="modal-v2-body flex-1 overflow-y-auto">
                 <div class="space-y-3">
-                    <template x-for="version in versions" :key="version.id">
+                    <template x-for="(version, idx) in versions" :key="version.id">
                         <div class="border border-v2-card-border rounded-lg p-4">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold text-v2-text">Version <span x-text="version.version_number"></span></span>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-v2-text">Version <span x-text="version.version_number"></span></span>
+                                    <span x-show="idx === 0" class="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Current</span>
+                                </div>
                                 <span class="text-xs text-v2-text-light" x-text="new Date(version.created_at).toLocaleString()"></span>
                             </div>
                             <div class="text-sm text-v2-text-mid mb-1">
                                 Changed by: <span x-text="version.changed_by_name || 'System'"></span>
                             </div>
-                            <div class="text-sm text-v2-text-light" x-text="version.change_notes || 'No notes'"></div>
+                            <div class="flex items-center justify-between">
+                                <div class="text-sm text-v2-text-light" x-text="version.change_notes || 'No notes'"></div>
+                                <button x-show="idx !== 0" @click="restoreVersion(version)"
+                                        class="px-3 py-1 text-xs font-medium rounded-lg border border-gold text-gold hover:bg-gold/10 transition-colors flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+                                    </svg>
+                                    Restore
+                                </button>
+                            </div>
                         </div>
                     </template>
                 </div>

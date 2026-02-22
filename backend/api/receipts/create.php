@@ -49,6 +49,33 @@ if (isset($input['notes'])) $data['notes'] = sanitizeString($input['notes']);
 
 $newId = dbInsert('record_receipts', $data);
 
+// Determine if all needed record types have been received
+$isComplete = $isComplete; // keep manual override
+if (!$isComplete && $cp['record_types_needed']) {
+    $needed = explode(',', $cp['record_types_needed']);
+    $agg = dbFetchOne(
+        "SELECT MAX(has_medical_records) AS has_medical_records,
+                MAX(has_billing) AS has_billing,
+                MAX(has_chart) AS has_chart,
+                MAX(has_imaging) AS has_imaging,
+                MAX(has_op_report) AS has_op_report
+         FROM record_receipts WHERE case_provider_id = ?",
+        [$cpId]
+    );
+    if ($agg) {
+        $allReceived = true;
+        foreach ($needed as $type) {
+            if (empty($agg['has_' . $type])) {
+                $allReceived = false;
+                break;
+            }
+        }
+        if ($allReceived) {
+            $isComplete = 1;
+        }
+    }
+}
+
 $newStatus = $isComplete ? 'received_complete' : 'received_partial';
 $statusUpdate = ['overall_status' => $newStatus];
 if (!$cp['received_date']) {
@@ -70,6 +97,40 @@ if ($isComplete) {
 }
 
 logActivity($userId, 'record_received', 'record_receipt', $newId, ['case_provider_id' => $cpId]);
+
+// Auto-advance case to verification if ALL providers are received_complete
+if ($isComplete && $cp['case_id']) {
+    $caseId = (int)$cp['case_id'];
+    $case = dbFetchOne("SELECT status FROM cases WHERE id = ?", [$caseId]);
+    if ($case && $case['status'] === 'collecting') {
+        $incomplete = dbFetchOne(
+            "SELECT COUNT(*) AS cnt FROM case_providers
+             WHERE case_id = ? AND overall_status NOT IN ('received_complete', 'verified')",
+            [$caseId]
+        );
+        if ($incomplete && (int)$incomplete['cnt'] === 0) {
+            $newOwner = STATUS_OWNER_MAP['verification'] ?? null;
+            $updateData = ['status' => 'verification'];
+            if ($newOwner) {
+                $updateData['assigned_to'] = $newOwner;
+            }
+            dbUpdate('cases', $updateData, 'id = ?', [$caseId]);
+            logActivity($userId, 'status_change', 'case', $caseId, [
+                'old_status' => 'collecting',
+                'new_status' => 'verification',
+                'reason' => 'All providers received complete'
+            ]);
+            if ($newOwner) {
+                dbInsert('notifications', [
+                    'user_id' => $newOwner,
+                    'type' => 'status_changed',
+                    'message' => "Case {$cp['case_number']} auto-moved to Verification — all records received. Assigned to you.",
+                    'due_date' => date('Y-m-d')
+                ]);
+            }
+        }
+    }
+}
 
 $record = dbFetchOne("SELECT * FROM record_receipts WHERE id = ?", [$newId]);
 successResponse($record, 'Receipt logged successfully');

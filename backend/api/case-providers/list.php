@@ -62,6 +62,24 @@ foreach ($rows as &$row) {
          FROM provider_contacts WHERE provider_id = ? ORDER BY is_primary DESC, department",
         [$row['provider_id']]
     );
+
+    // Aggregate received record types from receipts
+    $receipt = dbFetchOne(
+        "SELECT MAX(has_medical_records) AS has_medical_records,
+                MAX(has_billing) AS has_billing,
+                MAX(has_chart) AS has_chart,
+                MAX(has_imaging) AS has_imaging,
+                MAX(has_op_report) AS has_op_report
+         FROM record_receipts WHERE case_provider_id = ?",
+        [$row['id']]
+    );
+    $row['received_types'] = $receipt ? [
+        'medical_records' => (int)($receipt['has_medical_records'] ?? 0),
+        'billing' => (int)($receipt['has_billing'] ?? 0),
+        'chart' => (int)($receipt['has_chart'] ?? 0),
+        'imaging' => (int)($receipt['has_imaging'] ?? 0),
+        'op_report' => (int)($receipt['has_op_report'] ?? 0),
+    ] : null;
 }
 unset($row);
 

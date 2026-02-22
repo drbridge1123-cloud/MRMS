@@ -28,10 +28,13 @@ $currentStatus = $case['status'];
 
 // Validate allowed rollback paths
 $allowedPaths = [
-    'in_review'    => ['collecting'],
-    'verification' => ['collecting', 'in_review'],
-    'completed'    => ['collecting', 'in_review', 'verification'],
-    'closed'       => ['collecting', 'in_review', 'verification', 'completed'],
+    'verification'        => ['collecting'],
+    'completed'           => ['collecting', 'verification'],
+    'rfd'                 => ['collecting', 'verification', 'completed'],
+    'final_verification'  => ['collecting', 'verification', 'completed', 'rfd'],
+    'disbursement'        => ['collecting', 'verification', 'completed', 'rfd', 'final_verification'],
+    'accounting'          => ['collecting', 'verification', 'completed', 'rfd', 'final_verification', 'disbursement'],
+    'closed'              => ['collecting', 'verification', 'completed', 'rfd', 'final_verification', 'disbursement', 'accounting'],
 ];
 
 if (!isset($allowedPaths[$currentStatus]) || !in_array($targetStatus, $allowedPaths[$currentStatus])) {
@@ -51,11 +54,14 @@ dbUpdate('cases', $updateData, 'id = ?', [$caseId]);
 $notifyUserId = $newOwner;
 
 $statusLabels = [
-    'collecting'   => 'Collecting',
-    'in_review'    => 'In Review',
-    'verification' => 'Verification',
-    'completed'    => 'Completed',
-    'closed'       => 'Closed',
+    'collecting'          => 'Collection',
+    'verification'        => 'Verification',
+    'completed'           => 'Completed',
+    'rfd'                 => 'Attorney',
+    'final_verification'  => 'Final Verification',
+    'disbursement'        => 'Disbursement',
+    'accounting'          => 'Accounting',
+    'closed'              => 'Closed',
 ];
 $targetLabel = $statusLabels[$targetStatus] ?? $targetStatus;
 

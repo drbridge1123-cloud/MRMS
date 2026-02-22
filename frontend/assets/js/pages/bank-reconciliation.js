@@ -18,6 +18,7 @@ function bankReconciliationPage() {
         batches: [],
         batchFilter: '',
         statusFilter: '',
+        staffFilter: '',
         dateFrom: '',
         dateTo: '',
 
@@ -26,6 +27,9 @@ function bankReconciliationPage() {
         importFile: null,
         importing: false,
         importResult: null,
+
+        // Selection
+        selectedIds: [],
 
         // Match
         showMatchModal: false,
@@ -41,10 +45,12 @@ function bankReconciliationPage() {
         // Override loadData to also capture batches
         async loadData(page = 1) {
             this.loading = true;
+            this.selectedIds = [];
             try {
                 const filterParams = {
                     batch_id: this.batchFilter,
                     status: this.statusFilter,
+                    staff: this.staffFilter,
                     date_from: this.dateFrom,
                     date_to: this.dateTo,
                 };
@@ -75,12 +81,19 @@ function bankReconciliationPage() {
         _resetPageFilters() {
             this.batchFilter = '';
             this.statusFilter = '';
+            this.staffFilter = '';
             this.dateFrom = '';
             this.dateTo = '';
         },
 
         _hasPageFilters() {
-            return !!(this.batchFilter || this.statusFilter || this.dateFrom || this.dateTo);
+            return !!(this.batchFilter || this.statusFilter || this.staffFilter || this.dateFrom || this.dateTo);
+        },
+
+        sortIcon(col) {
+            if (this.sortBy !== col) return '';
+            const cls = this.sortDir === 'asc' ? '' : ' rotate-180';
+            return `<svg class="w-3 h-3 inline-block${cls}" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
         },
 
         formatMoney(val) {
@@ -190,6 +203,81 @@ function bankReconciliationPage() {
             try {
                 await api.put('bank-reconciliation/' + entry.id + '/unmatch');
                 showToast('Entry restored', 'success');
+                await this.loadData();
+            } catch (e) {
+                showToast(e.message || 'Failed', 'error');
+            }
+        },
+
+        // Row click
+        onRowClick(item) {
+            if (item.reconciliation_status === 'unmatched') {
+                this.openMatchModal(item);
+            } else if (item.reconciliation_status === 'matched') {
+                this.unmatchEntry(item);
+            } else if (item.reconciliation_status === 'ignored') {
+                this.restoreEntry(item);
+            }
+        },
+
+        // Selection
+        toggleSelect(id) {
+            const idx = this.selectedIds.indexOf(id);
+            if (idx === -1) this.selectedIds.push(id);
+            else this.selectedIds.splice(idx, 1);
+        },
+
+        toggleSelectAll(checked) {
+            if (checked) {
+                this.selectedIds = this.items.map(i => i.id);
+            } else {
+                this.selectedIds = [];
+            }
+        },
+
+        isAllSelected() {
+            return this.items.length > 0 && this.selectedIds.length === this.items.length;
+        },
+
+        isIndeterminate() {
+            return this.selectedIds.length > 0 && this.selectedIds.length < this.items.length;
+        },
+
+        clearSelection() {
+            this.selectedIds = [];
+        },
+
+        // Bulk actions
+        async bulkIgnore() {
+            if (!this.selectedIds.length) return;
+            try {
+                const res = await api.post('bank-reconciliation/bulk-action', { ids: this.selectedIds, action: 'ignore' });
+                showToast(res.message || 'Done', 'success');
+                this.selectedIds = [];
+                await this.loadData();
+            } catch (e) {
+                showToast(e.message || 'Failed', 'error');
+            }
+        },
+
+        async bulkRestore() {
+            if (!this.selectedIds.length) return;
+            try {
+                const res = await api.post('bank-reconciliation/bulk-action', { ids: this.selectedIds, action: 'restore' });
+                showToast(res.message || 'Done', 'success');
+                this.selectedIds = [];
+                await this.loadData();
+            } catch (e) {
+                showToast(e.message || 'Failed', 'error');
+            }
+        },
+
+        async bulkAutoMatch() {
+            if (!this.selectedIds.length) return;
+            try {
+                const res = await api.post('bank-reconciliation/bulk-action', { ids: this.selectedIds, action: 'auto-match' });
+                showToast(res.message || 'Done', 'success');
+                this.selectedIds = [];
                 await this.loadData();
             } catch (e) {
                 showToast(e.message || 'Failed', 'error');

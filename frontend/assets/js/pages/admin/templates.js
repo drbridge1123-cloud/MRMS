@@ -21,6 +21,7 @@ function templatesPage() {
         previewHtml: '',
 
         showVersionsModal: false,
+        versionsTemplateId: null,
         versions: [],
 
         async init() {
@@ -57,18 +58,24 @@ function templatesPage() {
             this.showModal = true;
         },
 
-        editTemplate(template) {
-            this.editingTemplate = template;
-            this.form = {
-                name: template.name,
-                description: template.description || '',
-                template_type: template.template_type,
-                subject_template: template.subject_template || '',
-                body_template: template.body_template,
-                is_default: template.is_default == 1,
-                change_notes: ''
-            };
-            this.showModal = true;
+        async editTemplate(template) {
+            try {
+                const full = await api.get(`templates/${template.id}`);
+                const t = full.data;
+                this.editingTemplate = t;
+                this.form = {
+                    name: t.name,
+                    description: t.description || '',
+                    template_type: t.template_type,
+                    subject_template: t.subject_template || '',
+                    body_template: t.body_template || '',
+                    is_default: t.is_default == 1,
+                    change_notes: ''
+                };
+                this.showModal = true;
+            } catch (e) {
+                showToast('Failed to load template: ' + (e.response?.data?.error || e.message), 'error');
+            }
         },
 
         closeModal() {
@@ -80,6 +87,14 @@ function templatesPage() {
             if (!this.form.name || !this.form.body_template) {
                 showToast('Name and body template are required', 'error');
                 return;
+            }
+
+            // Confirmation for edits
+            if (this.editingTemplate) {
+                const notes = this.form.change_notes ? ` (${this.form.change_notes})` : '';
+                if (!confirm(`Save changes to "${this.form.name}"?${notes}\n\nA new version will be created. You can restore previous versions from Version History.`)) {
+                    return;
+                }
             }
 
             try {
@@ -145,6 +160,7 @@ function templatesPage() {
 
         async viewVersions(template) {
             try {
+                this.versionsTemplateId = template.id;
                 const res = await api.get(`templates/${template.id}/versions`);
                 this.versions = res.data.versions || [];
                 this.showVersionsModal = true;
@@ -153,8 +169,30 @@ function templatesPage() {
             }
         },
 
+        async restoreVersion(version) {
+            if (!confirm(`Restore to version ${version.version_number}?\n\nThe current template will be replaced with this version's content. A new version entry will be created for the restore.`)) {
+                return;
+            }
+
+            try {
+                await api.post(`templates/${this.versionsTemplateId}/restore`, {
+                    version_id: version.id
+                });
+                showToast(`Restored to version ${version.version_number}`, 'success');
+
+                // Refresh versions list
+                const res = await api.get(`templates/${this.versionsTemplateId}/versions`);
+                this.versions = res.data.versions || [];
+
+                await this.loadTemplates();
+            } catch (e) {
+                showToast('Failed to restore: ' + (e.response?.data?.error || e.message), 'error');
+            }
+        },
+
         closeVersionsModal() {
             this.showVersionsModal = false;
+            this.versionsTemplateId = null;
             this.versions = [];
         }
     };

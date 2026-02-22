@@ -36,7 +36,7 @@ if ($isStaff) {
                 THEN cp.id
             END) as my_followup
         FROM users u
-        LEFT JOIN cases c ON c.assigned_to = u.id AND c.status NOT IN ('completed','closed')
+        LEFT JOIN cases c ON c.assigned_to = u.id AND c.status NOT IN ('closed')
         LEFT JOIN case_providers cp ON cp.assigned_to = u.id
         WHERE u.id = ?
         GROUP BY u.id, u.full_name
@@ -68,7 +68,7 @@ if ($isStaff) {
                     THEN cp.id
                 END) as followup_count
             FROM users u
-            LEFT JOIN cases c ON c.assigned_to = u.id AND c.status NOT IN ('completed','closed')
+            LEFT JOIN cases c ON c.assigned_to = u.id AND c.status NOT IN ('closed')
             LEFT JOIN case_providers cp ON cp.assigned_to = u.id
             WHERE u.is_active = 1 AND u.role = 'staff'
             GROUP BY u.id
@@ -115,7 +115,7 @@ if ($isStaff) {
                 THEN cp.id
             END) as followup_count
         FROM users u
-        LEFT JOIN cases c ON c.assigned_to = u.id AND c.status NOT IN ('completed','closed')
+        LEFT JOIN cases c ON c.assigned_to = u.id AND c.status NOT IN ('closed')
         LEFT JOIN case_providers cp ON cp.assigned_to = u.id
         WHERE u.is_active = 1
         GROUP BY u.id, u.full_name, u.role

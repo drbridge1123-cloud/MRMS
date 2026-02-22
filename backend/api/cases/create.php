@@ -33,7 +33,7 @@ if (!empty($input['doi']) && !validateDate($input['doi'])) {
 
 // Validate status if provided
 if (!empty($input['status'])) {
-    $allowedStatuses = ['collecting', 'in_review', 'verification', 'completed', 'closed'];
+    $allowedStatuses = ['collecting','verification','completed','rfd','final_verification','disbursement','accounting','closed'];
     if (!validateEnum($input['status'], $allowedStatuses)) {
         errorResponse('Invalid status. Allowed: ' . implode(', ', $allowedStatuses));
     }

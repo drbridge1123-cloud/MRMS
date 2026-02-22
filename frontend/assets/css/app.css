@@ -64,9 +64,12 @@
 .status-verified { background-color: #DCFCE7; color: #14532D; }
 
 .status-collecting { background-color: #EFF6FF; color: #1E40AF; }
-.status-in_review { background-color: #FFFBEB; color: #D97706; }
 .status-verification { background-color: #FFF7ED; color: #C2410C; }
 .status-completed { background-color: #DCFCE7; color: #14532D; }
+.status-rfd { background-color: #F5F3FF; color: #6B21A8; }
+.status-final_verification { background-color: #FFFBEB; color: #D97706; }
+.status-disbursement { background-color: #FFF1F2; color: #E11D48; }
+.status-accounting { background-color: #FDF2F8; color: #BE185D; }
 .status-closed { background-color: #F5F5F0; color: #5A6B82; }
 
 /* ===== Difficulty Badges ===== */

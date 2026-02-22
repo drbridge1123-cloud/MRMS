@@ -30,7 +30,7 @@ function generateEscalationNotifications() {
         JOIN cases c ON c.id = cp.case_id
         JOIN providers p ON p.id = cp.provider_id
         WHERE cp.overall_status NOT IN ('action_needed', 'received_complete', 'verified')
-          AND c.status NOT IN ('completed','closed')
+          AND c.status NOT IN ('closed')
           AND cp.deadline IS NOT NULL
           AND cp.deadline <= CURDATE()
     ");
@@ -76,7 +76,7 @@ function generateEscalationNotifications() {
         JOIN cases c ON c.id = cp.case_id
         JOIN providers p ON p.id = cp.provider_id
         WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-          AND c.status NOT IN ('completed','closed')
+          AND c.status NOT IN ('closed')
           AND cp.deadline IS NOT NULL
           AND DATEDIFF(CURDATE(), cp.deadline) >= " . ADMIN_ESCALATION_DAYS_AFTER_DEADLINE
     );
@@ -152,7 +152,7 @@ function getEscalatedItems($role, $userId = null) {
         JOIN providers p ON p.id = cp.provider_id
         LEFT JOIN users u ON cp.assigned_to = u.id
         WHERE cp.overall_status NOT IN ('received_complete', 'verified')
-          AND c.status NOT IN ('completed','closed')
+          AND c.status NOT IN ('closed')
           AND cp.deadline IS NOT NULL
           AND cp.deadline <= CURDATE()";
 

@@ -9,8 +9,67 @@ ob_start();
 
 <div x-data="casesListPage()">
 
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-7 gap-2 mb-3">
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 flex items-center justify-between cursor-pointer card-hover"
+             :class="statusFilter === 'collecting,verification,completed,rfd,final_verification,accounting' ? 'ring-2 ring-gold' : ''"
+             @click="statusFilter = statusFilter === 'collecting,verification,completed,rfd,final_verification,accounting' ? '' : 'collecting,verification,completed,rfd,final_verification,accounting'; loadData(1)">
+            <div>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Active</p>
+                <p class="text-lg font-bold text-v2-text" x-text="summary.active ?? '-'"></p>
+            </div>
+            <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
+             :class="statusFilter === 'collecting' ? 'ring-2 ring-blue-400' : ''"
+             @click="statusFilter = statusFilter === 'collecting' ? '' : 'collecting'; loadData(1)">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Collection</p>
+            <p class="text-lg font-bold text-blue-600" x-text="summary.collecting ?? '-'"></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
+             :class="statusFilter === 'verification' ? 'ring-2 ring-orange-400' : ''"
+             @click="statusFilter = statusFilter === 'verification' ? '' : 'verification'; loadData(1)">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Verification</p>
+            <p class="text-lg font-bold text-orange-600" x-text="summary.verification ?? '-'"></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
+             :class="statusFilter === 'completed,rfd' ? 'ring-2 ring-purple-400' : ''"
+             @click="statusFilter = statusFilter === 'completed,rfd' ? '' : 'completed,rfd'; loadData(1)">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Attorney</p>
+            <p class="text-lg font-bold text-purple-600" x-text="summary.attorney ?? '-'"></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 cursor-pointer card-hover"
+             :class="statusFilter === 'final_verification,accounting' ? 'ring-2 ring-amber-400' : ''"
+             @click="statusFilter = statusFilter === 'final_verification,accounting' ? '' : 'final_verification,accounting'; loadData(1)">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Closing</p>
+            <p class="text-lg font-bold text-amber-600" x-text="summary.closing ?? '-'"></p>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 flex items-center justify-between cursor-pointer card-hover"
+             :class="statusFilter === 'closed' ? 'ring-2 ring-gray-400' : ''"
+             @click="statusFilter = statusFilter === 'closed' ? '' : 'closed'; loadData(1)">
+            <div>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Closed</p>
+                <p class="text-lg font-bold text-gray-500" x-text="summary.closed ?? '-'"></p>
+            </div>
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-v2-card-border px-3 py-2 flex items-center justify-between">
+            <div>
+                <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Overdue</p>
+                <p class="text-lg font-bold text-red-600" x-text="summary.overdue_providers ?? '-'"></p>
+            </div>
+            <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+        </div>
+    </div>
+
     <!-- Top bar -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div class="flex items-center justify-between gap-3 mb-3">
         <div class="flex items-center gap-3">
             <!-- Search -->
             <div class="relative">
@@ -30,28 +89,6 @@ ob_start();
                     <option :value="u.id" x-text="u.full_name"></option>
                 </template>
             </select>
-
-            <!-- Status filter tabs -->
-            <div class="flex gap-1.5">
-                <button @click="statusFilter = ''; loadData(1)"
-                        :class="statusFilter === '' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">All</button>
-                <button @click="statusFilter = 'collecting'; loadData(1)"
-                        :class="statusFilter === 'collecting' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Collecting</button>
-                <button @click="statusFilter = 'in_review'; loadData(1)"
-                        :class="statusFilter === 'in_review' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">In Review</button>
-                <button @click="statusFilter = 'verification'; loadData(1)"
-                        :class="statusFilter === 'verification' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Verification</button>
-                <button @click="statusFilter = 'completed'; loadData(1)"
-                        :class="statusFilter === 'completed' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Completed</button>
-                <button @click="statusFilter = 'closed'; loadData(1)"
-                        :class="statusFilter === 'closed' ? 'bg-navy text-gold' : 'bg-white text-v2-text-mid border border-v2-card-border hover:bg-v2-bg'"
-                        class="px-3 py-1.5 rounded-lg text-xs font-medium">Closed</button>
-            </div>
         </div>
 
         <!-- Create button -->

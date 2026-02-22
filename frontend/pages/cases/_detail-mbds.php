@@ -627,6 +627,15 @@
                         </template>
                     </div>
                     <div style="display:flex;align-items:center;gap:10px;">
+                        <template x-if="report && report.status === 'draft'">
+                            <label @click.stop class="mbds-print-btn" style="cursor:pointer">
+                                <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                Import CSV
+                                <input type="file" accept=".csv" style="display:none" @change="handleMbdsImportFile($event)">
+                            </label>
+                        </template>
                         <template x-if="report">
                             <button @click.stop="printMbds()" class="mbds-print-btn">
                                 <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -998,5 +1007,99 @@
                     <template x-if="!loading && !report">
                         <div style="text-align:center;color:var(--mbds-muted);padding:32px 0;font-size:13px">Failed to load MBDS report</div>
                     </template>
+                </div>
+
+                <!-- MBDS Import Preview Modal -->
+                <div x-show="showMbdsImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
+                    <div class="modal-v2-backdrop fixed inset-0" @click="showMbdsImportModal = false"></div>
+                    <div class="modal-v2 relative w-full max-w-4xl z-10" @click.stop>
+                        <div class="modal-v2-header">
+                            <h3 class="modal-v2-title">Import MBDS Preview</h3>
+                            <button type="button" class="modal-v2-close" @click="showMbdsImportModal = false">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-v2-body">
+                            <div class="flex gap-4 mb-4">
+                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
+                                    <p class="text-lg font-bold text-v2-text" x-text="mbdsImportSummary.count || 0"></p>
+                                    <p class="text-[10px] text-v2-text-light">Lines</p>
+                                </div>
+                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
+                                    <p class="text-lg font-bold text-v2-text" x-text="formatCurrency(mbdsImportSummary.total_charges || 0)"></p>
+                                    <p class="text-[10px] text-v2-text-light">Total Charges</p>
+                                </div>
+                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
+                                    <p class="text-lg font-bold" x-text="formatCurrency(mbdsImportSummary.total_pip1 || 0)" style="color:var(--navy)"></p>
+                                    <p class="text-[10px] text-v2-text-light">Total PIP #1</p>
+                                </div>
+                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
+                                    <p class="text-lg font-bold" x-text="formatCurrency(mbdsImportSummary.total_balance || 0)"
+                                        :class="(mbdsImportSummary.total_balance || 0) > 0 ? 'text-amber-600' : 'text-green-600'"></p>
+                                    <p class="text-[10px] text-v2-text-light">Total Balance</p>
+                                </div>
+                            </div>
+
+                            <template x-if="lines.length > 0">
+                                <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-4 text-sm text-amber-800">
+                                    <strong>Warning:</strong> This will replace all <span x-text="lines.length"></span> existing MBDS lines with the imported data.
+                                </div>
+                            </template>
+
+                            <div class="max-h-80 overflow-y-auto border border-v2-card-border rounded-lg">
+                                <table class="w-full text-xs">
+                                    <thead class="sticky top-0 bg-white">
+                                        <tr class="border-b border-v2-card-border">
+                                            <th class="text-left px-3 py-2">Type</th>
+                                            <th class="text-left px-3 py-2">Provider</th>
+                                            <th class="text-right px-3 py-2">Charges</th>
+                                            <th class="text-right px-3 py-2">PIP #1</th>
+                                            <th class="text-right px-3 py-2">Discount</th>
+                                            <th class="text-right px-3 py-2">Balance</th>
+                                            <th class="text-left px-3 py-2">Dates</th>
+                                            <th class="text-center px-3 py-2">Visits</th>
+                                            <th class="text-center px-3 py-2">Matched</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="(row, idx) in mbdsImportPreview" :key="idx">
+                                            <tr class="border-b border-v2-bg">
+                                                <td class="px-3 py-1.5">
+                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                                                        :class="row.line_type === 'provider' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'"
+                                                        x-text="row.line_type.replace('_',' ').toUpperCase()"></span>
+                                                </td>
+                                                <td class="px-3 py-1.5 font-medium" x-text="row.provider_name"></td>
+                                                <td class="px-3 py-1.5 text-right" x-text="formatCurrency(row.charges)"></td>
+                                                <td class="px-3 py-1.5 text-right" x-text="formatCurrency(row.pip1_amount)"></td>
+                                                <td class="px-3 py-1.5 text-right" x-text="formatCurrency(row.discount)"></td>
+                                                <td class="px-3 py-1.5 text-right font-semibold"
+                                                    :class="row.balance > 0 ? 'text-amber-600' : (row.balance < 0 ? 'text-red-600' : 'text-green-600')"
+                                                    x-text="formatCurrency(row.balance)"></td>
+                                                <td class="px-3 py-1.5 text-xs" x-text="row.treatment_dates || '-'"></td>
+                                                <td class="px-3 py-1.5 text-center" x-text="row.visits || '-'"></td>
+                                                <td class="px-3 py-1.5 text-center">
+                                                    <span x-show="row.matched_provider" class="text-green-600">&#10003;</span>
+                                                    <span x-show="!row.matched_provider && row.line_type === 'provider'" class="text-v2-text-light">-</span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-v2-footer">
+                            <button type="button" @click="showMbdsImportModal = false" class="btn-v2-cancel">Cancel</button>
+                            <button type="button" @click="confirmMbdsImport()" :disabled="mbdsImporting"
+                                    class="btn-v2-primary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                                </svg>
+                                <span x-text="mbdsImporting ? 'Importing...' : 'Import ' + (mbdsImportSummary.count || 0) + ' Lines'"></span>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>

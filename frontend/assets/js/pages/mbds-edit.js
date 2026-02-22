@@ -16,6 +16,11 @@ function mbdsEditPage() {
         _editingField: null,
         expandedNote: null,
         notePopoverPos: { top: 0, right: 0 },
+        showMbdsImportModal: false,
+        mbdsImportPreview: [],
+        mbdsImportSummary: {},
+        mbdsImporting: false,
+        _mbdsImportFile: null,
 
         async init() {
             if (!this.caseId) {
@@ -341,6 +346,78 @@ function mbdsEditPage() {
         formatDate(d) {
             if (!d) return '';
             return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        },
+
+        // ==========================================
+        // CSV Import
+        // ==========================================
+
+        handleMbdsImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            this._mbdsImportFile = file;
+            this.previewMbdsImport(file);
+            event.target.value = '';
+        },
+
+        async previewMbdsImport(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('preview', '1');
+
+            try {
+                const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+                const res = await fetch('/MRMS/backend/api/mbds/' + this.caseId + '/import', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.message || 'Failed to parse CSV', 'error');
+                    return;
+                }
+                this.mbdsImportPreview = data.preview || [];
+                this.mbdsImportSummary = {
+                    count: data.count,
+                    total_charges: data.total_charges,
+                    total_pip1: data.total_pip1,
+                    total_balance: data.total_balance,
+                };
+                this.showMbdsImportModal = true;
+            } catch (e) {
+                showToast('Failed to preview CSV', 'error');
+            }
+        },
+
+        async confirmMbdsImport() {
+            if (!this._mbdsImportFile) return;
+            this.mbdsImporting = true;
+
+            const formData = new FormData();
+            formData.append('file', this._mbdsImportFile);
+
+            try {
+                const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+                const res = await fetch('/MRMS/backend/api/mbds/' + this.caseId + '/import', {
+                    method: 'POST',
+                    headers: { 'Authorization': 'Bearer ' + token },
+                    body: formData
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.message || 'Import failed', 'error');
+                    this.mbdsImporting = false;
+                    return;
+                }
+                showToast('Imported ' + data.imported + ' MBDS lines');
+                this.showMbdsImportModal = false;
+                this._mbdsImportFile = null;
+                await this.loadReport();
+            } catch (e) {
+                showToast('Import failed', 'error');
+            }
+            this.mbdsImporting = false;
         },
 
         printMbds() {
