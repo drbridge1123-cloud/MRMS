@@ -1,0 +1,32 @@
+/* ===== Timeline ===== */
+.timeline-item {
+    position: relative;
+    padding-left: 28px;
+    padding-bottom: 20px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 8px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #d1d5db;
+    border: 2px solid #fff;
+}
+
+.timeline-item::after {
+    content: '';
+    position: absolute;
+    left: 9px;
+    top: 22px;
+    width: 2px;
+    height: calc(100% - 14px);
+    background-color: var(--card-border);
+}
+
+.timeline-item:last-child::after {
+    display: none;
+}

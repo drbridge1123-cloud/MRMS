@@ -96,13 +96,6 @@ function bankReconciliationPage() {
             return `<svg class="w-3 h-3 inline-block${cls}" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.707a1 1 0 011.414 0L10 11l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>`;
         },
 
-        formatMoney(val) {
-            if (val === null || val === undefined) return '-';
-            const num = parseFloat(val);
-            if (isNaN(num)) return '-';
-            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        },
-
         goToCase(caseId) {
             if (caseId) window.location.href = '/MRMS/frontend/pages/cases/detail.php?id=' + caseId;
         },

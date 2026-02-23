@@ -112,17 +112,43 @@ function negotiatePanel(caseId) {
             };
         },
 
-        editRound(round) {
-            this.editingRound = round;
-            this.roundForm = {
-                demand_date: round.demand_date || '',
-                offer_date: round.offer_date || '',
-                demand_amount: parseFloat(round.demand_amount) || 0,
-                offer_amount: parseFloat(round.offer_amount) || 0,
-                notes: round.notes || '',
-                status: round.status || 'pending',
-            };
-            this.showRoundForm = true;
+        autoFillDate(round) {
+            const today = new Date().toISOString().split('T')[0];
+            if (round.demand_amount && !round.demand_date) round.demand_date = today;
+            if (round.offer_amount && !round.offer_date) round.offer_date = today;
+        },
+
+        inlineSaveRound(round) {
+            this.autoFillDate(round);
+            clearTimeout(this._inlineSaveTimers?.[round.id]);
+            if (!this._inlineSaveTimers) this._inlineSaveTimers = {};
+            this._inlineSaveTimers[round.id] = setTimeout(async () => {
+                try {
+                    const adj = this.adjusterInfo[this.activeCoverage];
+                    await api.post(`negotiations/${caseId}`, {
+                        coverage_type: this.activeCoverage,
+                        round: {
+                            id: round.id,
+                            round_number: round.round_number,
+                            demand_date: round.demand_date || null,
+                            demand_amount: round.demand_amount || 0,
+                            offer_date: round.offer_date || null,
+                            offer_amount: round.offer_amount || 0,
+                            insurance_company: adj.insurance_company || null,
+                            party: adj.party || null,
+                            adjuster_phone: adj.adjuster_phone || null,
+                            adjuster_fax: adj.adjuster_fax || null,
+                            adjuster_email: adj.adjuster_email || null,
+                            claim_number: adj.claim_number || null,
+                            status: round.status,
+                            notes: round.notes || null,
+                        },
+                    });
+                    await this.loadNegotiations();
+                } catch (e) {
+                    showToast('Failed to save round', 'error');
+                }
+            }, 500);
         },
 
         async saveAdjusterInfo() {
@@ -148,11 +174,14 @@ function negotiatePanel(caseId) {
         },
 
         async saveRound() {
+            this.autoFillDate(this.roundForm);
+            // Only save if at least one field has data
+            if (!this.roundForm.demand_amount && !this.roundForm.offer_amount && !this.roundForm.notes) return;
             try {
                 const adj = this.adjusterInfo[this.activeCoverage];
                 const roundData = {
-                    id: this.editingRound?.id || null,
-                    round_number: this.editingRound?.round_number || null,
+                    id: null,
+                    round_number: null,
                     demand_date: this.roundForm.demand_date || null,
                     demand_amount: this.roundForm.demand_amount || 0,
                     offer_date: this.roundForm.offer_date || null,
@@ -173,9 +202,7 @@ function negotiatePanel(caseId) {
                 });
 
                 if (res.success) {
-                    showToast('Negotiation round saved', 'success');
-                    this.showRoundForm = false;
-                    this.editingRound = null;
+                    showToast('Round added', 'success');
                     this.resetRoundForm();
                     await this.loadNegotiations();
                 }

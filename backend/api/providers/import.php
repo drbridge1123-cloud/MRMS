@@ -5,7 +5,22 @@ require_once __DIR__ . '/../../helpers/csv.php';
 
 $csv = parseCSV('file');
 
-$allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'other'];
+$allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'acupuncture', 'massage', 'pain_management', 'pt', 'other'];
+// Map display names back to DB values (for re-importing exported CSVs)
+$typeAliases = [
+    'hospital' => 'hospital',
+    'emergency room' => 'er',
+    'chiropractor' => 'chiro',
+    'imaging center' => 'imaging',
+    'physician' => 'physician',
+    'surgery center' => 'surgery_center',
+    'pharmacy' => 'pharmacy',
+    'acupuncture' => 'acupuncture',
+    'massage' => 'massage',
+    'pain management' => 'pain_management',
+    'physical therapy' => 'pt',
+    'other' => 'other',
+];
 $allowedMethods = ['email', 'fax', 'portal', 'phone', 'mail'];
 $allowedLevels = ['easy', 'medium', 'hard'];
 $truthy = ['1', 'true', 'yes', 'y'];
@@ -30,12 +45,16 @@ try {
             continue;
         }
 
-        // Required: type
+        // Required: type (accept both raw DB values and display names)
         $type = strtolower(trim($row['type'] ?? ''));
         if ($type === '') {
             $errors[] = ['row' => $rowNum, 'message' => 'type is required'];
             $skipped++;
             continue;
+        }
+        // Resolve display name aliases (e.g. "Chiropractor" → "chiro")
+        if (isset($typeAliases[$type])) {
+            $type = $typeAliases[$type];
         }
         if (!validateEnum($type, $allowedTypes)) {
             $errors[] = ['row' => $rowNum, 'message' => "invalid type '{$type}'. Allowed: " . implode(', ', $allowedTypes)];

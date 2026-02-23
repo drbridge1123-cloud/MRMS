@@ -13,7 +13,7 @@ function mbdsPanel(caseId) {
         totals: { charges: 0, pip1: 0, pip2: 0, health1: 0, health2: 0, health3: 0, discount: 0, officePaid: 0, clientPaid: 0, balance: 0 },
         loading: true,
         saving: false,
-        _saveTimers: {},
+        _debounceSave: null,
         _editingField: null,
         expandedNote: null,
         notePopoverPos: { top: 0, right: 0 },
@@ -24,6 +24,7 @@ function mbdsPanel(caseId) {
         _mbdsImportFile: null,
 
         async init() {
+            this._debounceSave = createDebouncedSave((line) => this.saveLine(line), 500);
             await this.loadReport();
             this.loading = false;
         },
@@ -84,27 +85,16 @@ function mbdsPanel(caseId) {
             try {
                 await api.put('mbds/' + this.report.id, this.settings);
                 await this.loadReport();
+                window.dispatchEvent(new CustomEvent('mbds-updated'));
             } catch (e) {
                 showToast('Failed to save settings', 'error');
             }
             this.saving = false;
         },
 
-        formatCurrency(v) {
-            const num = Number(v) || 0;
-            return '$' + num.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        },
-
-        parseCurrency(s) {
-            return parseFloat(String(s).replace(/[$,]/g, '')) || 0;
-        },
-
         cellVal(lineId, field, value) {
             if (this._editingField === lineId + '_' + field) return '';
-            return this.formatCurrency(value);
+            return formatCurrency(value);
         },
 
         startCellEdit(el, line, field) {
@@ -116,7 +106,7 @@ function mbdsPanel(caseId) {
         },
 
         endCellEdit(el, line, field) {
-            line[field] = this.parseCurrency(el.value);
+            line[field] = parseCurrency(el.value);
             this._editingField = null;
             this.debounceSaveLine(line);
         },
@@ -230,8 +220,7 @@ function mbdsPanel(caseId) {
 
         debounceSaveLine(line) {
             this.recalcTotals();
-            clearTimeout(this._saveTimers[line.id]);
-            this._saveTimers[line.id] = setTimeout(() => this.saveLine(line), 500);
+            this._debounceSave(line, line.id);
         },
 
         async saveLine(line) {
@@ -251,6 +240,7 @@ function mbdsPanel(caseId) {
                     visits: line.visits || '',
                     note: line.note || ''
                 });
+                window.dispatchEvent(new CustomEvent('mbds-updated'));
             } catch (e) {
                 showToast('Failed to save', 'error');
             }
@@ -266,6 +256,7 @@ function mbdsPanel(caseId) {
                     provider_name: name
                 });
                 await this.loadReport();
+                window.dispatchEvent(new CustomEvent('mbds-updated'));
             } catch (e) {
                 showToast('Failed to add line', 'error');
             }
@@ -276,6 +267,7 @@ function mbdsPanel(caseId) {
             try {
                 await api.delete('mbds-lines/' + line.id);
                 await this.loadReport();
+                window.dispatchEvent(new CustomEvent('mbds-updated'));
                 showToast('Line deleted');
             } catch (e) {
                 showToast('Failed to delete', 'error');
@@ -400,6 +392,7 @@ function mbdsPanel(caseId) {
                 this.showMbdsImportModal = false;
                 this._mbdsImportFile = null;
                 await this.loadReport();
+                window.dispatchEvent(new CustomEvent('mbds-updated'));
             } catch (e) {
                 showToast('Import failed', 'error');
             }
@@ -419,7 +412,7 @@ function mbdsPanel(caseId) {
 
             const fmtZero = (v) => {
                 const num = Number(v) || 0;
-                return num === 0 ? '' : this.formatCurrency(num);
+                return num === 0 ? '' : formatCurrency(num);
             };
 
             let thead = '<th style="text-align:left">Provider</th><th class="r">Charges</th>';
@@ -441,7 +434,7 @@ function mbdsPanel(caseId) {
                     tbody += '<td class="r mono">' + fmtZero(row.discount) + '</td>';
                     tbody += '<td class="r mono">' + fmtZero(row.office_paid) + '</td>';
                     tbody += '<td class="r mono">' + fmtZero(row.client_paid) + '</td>';
-                    tbody += '<td class="r mono ' + balClass + '">' + this.formatCurrency(bal) + '</td>';
+                    tbody += '<td class="r mono ' + balClass + '">' + formatCurrency(bal) + '</td>';
                     tbody += '<td class="dates">' + (row.treatment_dates || '') + '</td>';
                     tbody += '<td class="ctr">' + (row.visits || '') + '</td>';
                     tbody += '</tr>';
@@ -451,15 +444,15 @@ function mbdsPanel(caseId) {
             const t = this.totals;
             const totKeys = { pip1: 'pip1_amount', pip2: 'pip2_amount', health1: 'health1_amount', health2: 'health2_amount', health3: 'health3_amount' };
             tbody += '<tr class="total"><td class="total-label">TOTAL</td>';
-            tbody += '<td class="r">' + this.formatCurrency(t.charges) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.charges) + '</td>';
             insCols.forEach(c => {
                 const tKey = Object.keys(totKeys).find(k => totKeys[k] === c.key);
-                tbody += '<td class="r">' + this.formatCurrency(t[tKey] || 0) + '</td>';
+                tbody += '<td class="r">' + formatCurrency(t[tKey] || 0) + '</td>';
             });
-            tbody += '<td class="r">' + this.formatCurrency(t.discount) + '</td>';
-            tbody += '<td class="r">' + this.formatCurrency(t.officePaid) + '</td>';
-            tbody += '<td class="r">' + this.formatCurrency(t.clientPaid) + '</td>';
-            tbody += '<td class="r total-bal">' + this.formatCurrency(t.balance) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.discount) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.officePaid) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.clientPaid) + '</td>';
+            tbody += '<td class="r total-bal">' + formatCurrency(t.balance) + '</td>';
             tbody += '<td colspan="2"></td></tr>';
 
             const notes = s.notes ? '<div class="notes"><strong>Notes:</strong> ' + s.notes + '</div>' : '';

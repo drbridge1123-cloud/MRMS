@@ -1,0 +1,34 @@
+    /* Expanded provider highlight */
+    .provider-expanded-row {
+        border-left: 4px solid #C8A951;
+        background-color: #FDFBF5;
+    }
+
+    .provider-expanded-row>td {
+        border-left: none;
+    }
+
+    .history-panel {
+        background: linear-gradient(135deg, #FBF9F1 0%, #F7F4EA 100%);
+        border-left: 4px solid #C8A951;
+        border-top: 1px solid #E8E0C8;
+    }
+
+    /* Scroll highlight flash */
+    @keyframes historyFlash {
+        0% {
+            box-shadow: inset 0 0 0 2px #C8A951;
+        }
+
+        50% {
+            box-shadow: inset 0 0 0 2px #C8A951, 0 0 12px rgba(200, 169, 81, 0.3);
+        }
+
+        100% {
+            box-shadow: none;
+        }
+    }
+
+    .history-flash {
+        animation: historyFlash 1.5s ease-out;
+    }

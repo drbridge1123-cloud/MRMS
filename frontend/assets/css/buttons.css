@@ -1,0 +1,110 @@
+/* ===== Icon Buttons (Global) ===== */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border, #e8e4dc);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-mid, #3D4F63);
+    flex-shrink: 0;
+}
+.icon-btn:hover {
+    border-color: var(--gold, #C9A84C);
+    color: var(--gold, #C9A84C);
+    background: rgba(201,168,76,0.04);
+}
+.icon-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+}
+.icon-btn-danger {
+    color: #991b1b;
+}
+.icon-btn-danger:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: rgba(220,38,38,0.04);
+}
+.icon-btn-sm {
+    width: 28px;
+    height: 28px;
+}
+.icon-btn-sm svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* ===== Buttons v2 ===== */
+.btn-v2-cancel {
+    height: 40px;
+    padding: 0 20px;
+    border: 1.5px solid #D4D1C9;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-mid);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-v2-cancel:hover {
+    background: #F5F5F0;
+    border-color: #C0BDB5;
+}
+
+.btn-v2-primary {
+    height: 40px;
+    padding: 0 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--gold);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-v2-primary:hover {
+    background: var(--gold-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(201, 168, 76, 0.35);
+}
+
+.btn-v2-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-v2-danger {
+    height: 40px;
+    padding: 0 20px;
+    border: 1px solid #FECACA;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #DC2626;
+    background: #FEF2F2;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-v2-danger:hover {
+    background: #FEE2E2;
+    border-color: #FCA5A5;
+}

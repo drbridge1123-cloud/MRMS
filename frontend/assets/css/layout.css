@@ -1,0 +1,29 @@
+/* ===== Sidebar & Layout ===== */
+.sidebar {
+    width: 208px;
+    min-height: 100vh;
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 64px;
+}
+
+.sidebar.collapsed .sidebar-text {
+    display: none;
+}
+
+/* Main content area */
+.main-content {
+    margin-left: 208px;
+    transition: margin-left 0.3s ease;
+    min-height: 100vh;
+}
+
+.main-content.expanded {
+    margin-left: 64px;
+}
+
+/* ===== Panel scroll offset (accounts for sticky header) ===== */
+[data-panel] { scroll-margin-top: 60px; transition: border 0.2s ease; }
+[data-panel].panel-open { border: 2px solid var(--sidebar, #0F1B2D) !important; border-left: 2px solid var(--sidebar, #0F1B2D) !important; }

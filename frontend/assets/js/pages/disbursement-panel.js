@@ -27,14 +27,20 @@ function disbursementPanel(caseId) {
         // Calculated results
         calculated: null,
         mahlerCalc: { gross: 0, fee: 0, costs: 0, afe: 0, attorneyPercent: 0, attorneySharePip: 0, carrierShare: 0, medicalBalance: 0, subrogation: 0, clientNet: 0 },
-        hammCalc: { gross: 0, fee: 0, costs: 0, afe: 0, attorneyPercent: 0, hammFee: 0, medicalBalance: 0, subrogation: 0, clientNet: 0 },
+        hammCalc: { gross: 0, thirdParty: 0, umOffer: 0, fee: 0, costs: 0, afe: 0, pipRatio: 0, pip: 0, clientCredit: 0, medicalBalance: 0, subrogation: 0, clientNet: 0 },
         disbursementLines: [],
 
-        _saveTimer: null,
+        _debounceSave: null,
 
         async init() {
+            this._debounceSave = createDebouncedSave(() => this.saveSettings(), 500);
             await this.loadSettlementData();
             this.loading = false;
+
+            // Auto-reload when MBDS data changes
+            window.addEventListener('mbds-updated', () => {
+                this.loadSettlementData();
+            });
         },
 
         async loadSettlementData() {
@@ -54,11 +60,11 @@ function disbursementPanel(caseId) {
                     this.expenses = res.expenses;
                     this.pipInfo = res.pip_info;
 
-                    // Auto-fill PIP fields from MBDS if not set
-                    if (!this.settings.pip_insurance_company && this.pipInfo?.pip1_name) {
+                    // Always sync PIP fields from MBDS (source of truth)
+                    if (this.pipInfo?.pip1_name) {
                         this.settings.pip_insurance_company = this.pipInfo.pip1_name;
                     }
-                    if (!this.settings.pip_subrogation_amount && this.pipInfo?.pip1_total > 0) {
+                    if (this.pipInfo?.pip1_total > 0) {
                         this.settings.pip_subrogation_amount = this.pipInfo.pip1_total;
                     }
 
@@ -67,13 +73,6 @@ function disbursementPanel(caseId) {
             } catch (e) {
                 console.error('Failed to load settlement data:', e);
             }
-        },
-
-        fmtMoney(val) {
-            if (val === null || val === undefined) return '$0.00';
-            const abs = Math.abs(val);
-            const formatted = '$' + abs.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            return val < 0 ? '-' + formatted : formatted;
         },
 
         setFeePercent(pct) {
@@ -87,10 +86,15 @@ function disbursementPanel(caseId) {
         },
 
         showMahler() {
-            return this.settings.pip_subrogation_amount > 0 && this.settings.coverage_3rd_party;
+            // Mahler only when 3rd party + PIP, but NO UM/UIM coverage
+            return this.settings.pip_subrogation_amount > 0
+                && this.settings.coverage_3rd_party
+                && !this.settings.coverage_um
+                && !this.settings.coverage_uim;
         },
 
         showHamm() {
+            // Hamm when UM or UIM is checked (with PIP)
             return this.settings.pip_subrogation_amount > 0 && (this.settings.coverage_um || this.settings.coverage_uim);
         },
 
@@ -100,8 +104,7 @@ function disbursementPanel(caseId) {
         },
 
         debouncedSave() {
-            clearTimeout(this._saveTimer);
-            this._saveTimer = setTimeout(() => this.saveSettings(), 500);
+            this._debounceSave();
         },
 
         async saveSettings() {
@@ -172,23 +175,31 @@ function disbursementPanel(caseId) {
         },
 
         getHammCalc() {
-            const umOffer = Math.max(this.bestOffers['um'] || 0, this.bestOffers['uim'] || 0);
+            // Hamm/Winters/Matsyuk: Gross = ALL sources (3rd Party + UM + UIM + PIP)
+            const thirdParty = this.bestOffers['3rd_party'] || 0;
+            const umOffer = (this.bestOffers['um'] || 0) + (this.bestOffers['uim'] || 0);
             const pip = this.settings.pip_subrogation_amount || 0;
-            const gross = umOffer + pip;
+            const gross = thirdParty + umOffer + pip;
             const feePercent = this.settings.attorney_fee_percent || 1/3;
             const fee = Math.round(gross * feePercent * 100) / 100;
             const costs = this.expenses.reimbursable || 0;
-            const afe = fee + costs;
-            const attorneyPercent = gross > 0 ? afe / gross : 0;
-            const hammFee = Math.round(attorneyPercent * pip * 100) / 100;
+            const legalFeeAndExpenses = fee + costs;
+
+            // PIP ratio & Client Credit (Hamm Fee)
+            const pipRatio = gross > 0 ? pip / gross : 0;
+            const clientCredit = Math.round(pipRatio * legalFeeAndExpenses * 100) / 100;
+
             const medBal = this.medicalBalance || 0;
             const subrogation = this.healthSubrogation || 0;
-            const totalDeductions = fee + costs + hammFee + medBal + subrogation;
-            const clientNet = Math.round((umOffer - fee - costs - hammFee - medBal - subrogation) * 100) / 100;
+
+            // Net = Gross - Attorney Fee - Costs - PIP (to carrier) + Client Credit - Medical - Subrogation
+            const totalDeductions = fee + costs + pip + medBal + subrogation - clientCredit;
+            const clientNet = Math.round((gross - totalDeductions) * 100) / 100;
 
             return {
                 method: 'hamm',
-                gross, fee, costs, afe, attorneyPercent, hammFee,
+                gross, thirdParty, umOffer, fee, costs,
+                afe: legalFeeAndExpenses, pipRatio, pip, clientCredit,
                 medicalBalance: medBal, subrogation, totalDeductions, clientNet,
             };
         },
@@ -230,13 +241,13 @@ function disbursementPanel(caseId) {
             if (c.method === 'mahler') {
                 lines.push({ label: '3rd Party Settlement', amount: c.gross, indent: true });
             } else if (c.method === 'hamm') {
-                lines.push({ label: 'UM/UIM Settlement + PIP', amount: c.gross, indent: true });
+                lines.push({ label: 'Gross Settlement (All Sources)', amount: c.gross, indent: true });
             } else {
                 lines.push({ label: 'Settlement Proceeds', amount: c.gross, indent: true });
             }
 
             // Attorney Fees & Costs
-            lines.push({ section: true, label: 'Attorney Fees & Costs' });
+            lines.push({ section: true, label: 'Legal Fee & Expenses' });
             const feeLabel = this.settings.attorney_fee_percent >= 0.34
                 ? 'Attorney Fee (40%)'
                 : 'Attorney Fee (33.33%)';
@@ -255,8 +266,10 @@ function disbursementPanel(caseId) {
                     lines.push({ label: `Carrier Share → ${company}`, amount: -c.carrierShare, indent: true });
                 }
             } else if (c.method === 'hamm' && this.settings.pip_subrogation_amount > 0) {
+                const company = this.settings.pip_insurance_company || 'PIP Carrier';
                 lines.push({ section: true, label: 'PIP Subrogation (Hamm)' });
-                lines.push({ label: 'Hamm Fee (PIP Recovery)', amount: -c.hammFee, indent: true });
+                lines.push({ label: `Total PIP Payment → ${company}`, amount: -c.pip, indent: true });
+                lines.push({ label: `Client Credit (PIP Ratio: ${(c.pipRatio * 100).toFixed(2)}%)`, amount: c.clientCredit, indent: true });
             }
 
             // Medical Bills & Liens
@@ -313,10 +326,10 @@ function disbursementPanel(caseId) {
                 if (line.section) {
                     rows += `<tr class="section"><td colspan="2">${line.label}</td></tr>`;
                 } else if (line.isTotal) {
-                    rows += `<tr class="total"><td style="padding:10px 16px;">${line.label}</td><td class="amt" style="padding:10px 16px; font-family:'IBM Plex Mono',monospace;">${this.fmtMoney(line.amount)}</td></tr>`;
+                    rows += `<tr class="total"><td style="padding:10px 16px;">${line.label}</td><td class="amt" style="padding:10px 16px; font-family:'IBM Plex Mono',monospace;">${formatCurrency(line.amount)}</td></tr>`;
                 } else {
                     const cls = line.amount < 0 ? 'neg' : (line.amount > 0 ? 'pos' : '');
-                    rows += `<tr><td style="padding:6px 16px; ${line.indent ? 'padding-left:32px;' : ''}">${line.label}</td><td class="amt ${cls}" style="padding:6px 16px;">${this.fmtMoney(line.amount)}</td></tr>`;
+                    rows += `<tr><td style="padding:6px 16px; ${line.indent ? 'padding-left:32px;' : ''}">${line.label}</td><td class="amt ${cls}" style="padding:6px 16px;">${formatCurrency(line.amount)}</td></tr>`;
                 }
             }
             return rows;
@@ -357,18 +370,17 @@ function disbursementPanel(caseId) {
                 }
                 lines.push({ isTotal: true, label: 'CLIENT NET PROCEEDS', amount: calc.clientNet });
             } else {
-                const umOffer = Math.max(this.bestOffers['um'] || 0, this.bestOffers['uim'] || 0);
-                const pip = this.settings.pip_subrogation_amount || 0;
-                lines.push({ section: true, label: 'Hamm Method — UM/UIM + PIP Subrogation' });
-                lines.push({ label: 'UM/UIM Offer', amount: umOffer, indent: true });
-                lines.push({ label: 'PIP Subrogation', amount: pip, indent: true });
-                lines.push({ label: 'Combined Gross (UM/UIM + PIP)', amount: calc.gross, indent: true });
-                lines.push({ label: `Attorney Fee (${(this.settings.attorney_fee_percent * 100).toFixed(2)}%)`, amount: -calc.fee, indent: true });
-                lines.push({ label: 'Costs (Reimbursable)', amount: -calc.costs, indent: true });
-                lines.push({ section: true, label: 'Hamm Fee Calculation' });
-                lines.push({ label: 'AFE (Fee + Costs)', amount: calc.afe, indent: true });
-                lines.push({ label: `Attorney % of Gross (${(calc.attorneyPercent * 100).toFixed(2)}%)`, amount: null, indent: true });
-                lines.push({ label: 'Hamm Fee (Attorney % × PIP)', amount: -calc.hammFee, indent: true });
+                const company = this.settings.pip_insurance_company || 'PIP Carrier';
+                lines.push({ section: true, label: 'Hamm/Winters/Matsyuk Formula' });
+                lines.push({ label: 'Gross Settlement (All Sources)', amount: calc.gross, indent: true });
+                lines.push({ section: true, label: 'Legal Fee & Expenses' });
+                lines.push({ label: `Attorney Fee (${(this.settings.attorney_fee_percent * 100).toFixed(2)}% of Gross)`, amount: -calc.fee, indent: true });
+                lines.push({ label: 'Client Costs', amount: -calc.costs, indent: true });
+                lines.push({ label: 'Total Legal Fee & Expenses', amount: calc.afe, indent: true });
+                lines.push({ section: true, label: 'PIP Subrogation' });
+                lines.push({ label: `Total PIP Payment → ${company}`, amount: -calc.pip, indent: true });
+                lines.push({ label: `PIP / Gross Settlement Ratio`, amount: null, indent: true, note: (calc.pipRatio * 100).toFixed(4) + '%' });
+                lines.push({ label: `Client Credit for Attorney Fees & Cost`, amount: calc.clientCredit, indent: true });
                 lines.push({ section: true, label: 'Deductions' });
                 lines.push({ label: 'Medical Balance', amount: -calc.medicalBalance, indent: true });
                 if (calc.subrogation > 0) {
@@ -389,9 +401,9 @@ function disbursementPanel(caseId) {
                 if (line.section) {
                     rows += `<tr class="section"><td colspan="2">${line.label}</td></tr>`;
                 } else if (line.isTotal) {
-                    rows += `<tr class="total"><td style="padding:10px 16px;">${line.label}</td><td class="amt" style="padding:10px 16px; font-family:'IBM Plex Mono',monospace;">${this.fmtMoney(line.amount)}</td></tr>`;
+                    rows += `<tr class="total"><td style="padding:10px 16px;">${line.label}</td><td class="amt" style="padding:10px 16px; font-family:'IBM Plex Mono',monospace;">${formatCurrency(line.amount)}</td></tr>`;
                 } else {
-                    const amtStr = line.amount !== undefined ? this.fmtMoney(line.amount) : '';
+                    const amtStr = line.amount !== undefined ? formatCurrency(line.amount) : '';
                     const cls = (line.amount || 0) < 0 ? 'neg' : ((line.amount || 0) > 0 ? 'pos' : '');
                     rows += `<tr><td style="padding:6px 16px; ${line.indent ? 'padding-left:32px;' : ''}">${line.label}</td><td class="amt ${cls}" style="padding:6px 16px;">${amtStr}</td></tr>`;
                 }

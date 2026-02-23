@@ -54,22 +54,7 @@ $sortDir = ($_GET['sort_dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 // Use case_number alias for sorting
 $sortCol = $sortBy === 'case_number' ? 'c.case_number' : "p.{$sortBy}";
 
-// Pagination
-$page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = min(100, max(10, (int)($_GET['per_page'] ?? 25)));
-$offset = ($page - 1) * $perPage;
-
-// Count total
-$countRow = dbFetchOne(
-    "SELECT COUNT(*) AS total
-     FROM mr_fee_payments p
-     LEFT JOIN cases c ON p.case_id = c.id
-     {$whereClause}",
-    $params
-);
-$total = (int)$countRow['total'];
-
-// Fetch rows
+// Fetch all rows (no pagination)
 $rows = dbFetchAll(
     "SELECT p.*,
             c.case_number,
@@ -84,10 +69,10 @@ $rows = dbFetchAll(
      LEFT JOIN case_providers cp ON p.case_provider_id = cp.id
      LEFT JOIN providers prov ON cp.provider_id = prov.id
      {$whereClause}
-     ORDER BY {$sortCol} {$sortDir}, p.id DESC
-     LIMIT {$perPage} OFFSET {$offset}",
+     ORDER BY {$sortCol} {$sortDir}, p.id DESC",
     $params
 );
+$total = count($rows);
 
 // Summary aggregates (using same filters)
 $summaryRow = dbFetchOne(
@@ -154,12 +139,7 @@ $staff = dbFetchAll(
 jsonResponse([
     'success' => true,
     'data' => $rows,
-    'pagination' => [
-        'total' => $total,
-        'page' => $page,
-        'per_page' => $perPage,
-        'total_pages' => (int)ceil($total / $perPage)
-    ],
+    'total' => $total,
     'summary' => [
         'total_billed' => round((float)$summaryRow['total_billed'], 2),
         'total_paid' => round((float)$summaryRow['total_paid'], 2),

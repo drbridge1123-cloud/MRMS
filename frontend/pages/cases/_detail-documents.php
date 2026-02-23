@@ -1,84 +1,74 @@
-
             <!-- Documents Section -->
-            <div class="bg-white mb-4" data-panel :class="{'panel-open': docsOpen}" style="border:1px solid #e8e4dc; border-left:3px solid var(--gold); border-radius:10px; box-shadow:0 1px 4px rgba(15,27,45,0.04); overflow:hidden;"
+            <div class="doc-panel panel-section bg-white mb-4" data-panel :class="{'panel-open': docsOpen}"
                 x-data="{...documentUploader(caseId), docsOpen: false}" x-init="init()">
-                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer" @click="docsOpen = !docsOpen; if(docsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer panel-header-bordered" @click="docsOpen = !docsOpen; if(docsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
                     <div class="flex items-center gap-2.5">
                         <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="docsOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <h3 class="font-semibold text-v2-text" style="font-size:14px;">Documents</h3>
-                        <span class="text-xs text-v2-text-light" x-text="'(' + documents.length + ')'"></span>
+                        <h3 class="panel-title">Documents</h3>
+                        <span class="panel-count" x-text="documents.length"></span>
                     </div>
                     <button @click.stop="docsOpen = true; $nextTick(() => $refs.fileInput.click())"
-                        class="bg-gold text-white px-2.5 py-1 rounded-lg text-xs hover:bg-gold-hover">
+                        class="doc-upload-btn" style="width:auto; padding:5px 14px;">
                         Upload
                     </button>
                 </div>
-                <div class="px-6 pb-4" x-show="docsOpen" x-collapse>
+                <div x-show="docsOpen" x-collapse>
+                <div class="doc-body">
                     <!-- Upload Area -->
-                    <div class="mb-4"
-                        @dragover="handleDragOver($event)"
+                    <div @dragover="handleDragOver($event)"
                         @dragleave="handleDragLeave()"
                         @drop="handleDrop($event)">
-                        <!-- Drag and Drop Zone -->
-                        <div class="border-2 border-dashed rounded-lg p-3 text-center transition-colors"
-                            :class="dragOver ? 'border-gold bg-gold/5' : 'border-v2-card-border hover:border-gold/50'">
-                            <input type="file" x-ref="fileInput" @change="handleFileSelect($event)"
-                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.tif,.tiff"
-                                class="hidden">
+                        <input type="file" x-ref="fileInput" @change="handleFileSelect($event)"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.tif,.tiff"
+                            class="hidden">
 
-                            <template x-if="!selectedFile">
-                                <div>
-                                    <p class="text-xs text-v2-text-light">
-                                        Drag files here or
-                                        <button type="button" @click="$refs.fileInput.click()"
-                                            class="text-gold hover:text-gold-hover font-medium">browse</button>
-                                        — PDF, DOC, XLS, JPG, PNG, TIFF (max 10MB)
-                                    </p>
+                        <template x-if="!selectedFile">
+                            <div class="doc-upload-zone" :class="dragOver ? 'drag-active' : ''">
+                                <p class="doc-upload-hint">
+                                    Drag files here or
+                                    <a @click="$refs.fileInput.click()">browse</a>
+                                    — PDF, DOC, XLS, JPG, PNG, TIFF (max 10MB)
+                                </p>
+                            </div>
+                        </template>
+
+                        <template x-if="selectedFile">
+                            <div class="doc-selected-card">
+                                <div class="doc-selected-header">
+                                    <div class="doc-selected-label">Selected File</div>
+                                    <div class="doc-selected-label" style="text-align:right;">Notes</div>
                                 </div>
-                            </template>
-
-                            <template x-if="selectedFile">
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between bg-v2-bg rounded-lg p-3">
-                                        <div class="flex items-center gap-3">
-                                            <svg class="w-8 h-8 text-gold" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                            </svg>
-                                            <div class="text-left">
-                                                <p class="text-sm font-medium text-v2-text" x-text="selectedFile.name"></p>
-                                                <p class="text-xs text-v2-text-light" x-text="(selectedFile.size / 1024 / 1024).toFixed(2) + ' MB'"></p>
-                                            </div>
-                                        </div>
-                                        <button type="button" @click="selectedFile = null"
-                                            class="text-v2-text-light hover:text-red-500">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
+                                <div class="doc-selected-body" style="display:flex; gap:12px; align-items:center; border-bottom:1px solid #e8e4dc;">
+                                    <div class="doc-icon" x-text="selectedFile.name.split('.').pop()"></div>
+                                    <div style="flex:1; min-width:0;">
+                                        <p style="font-size:13px; font-weight:500; color:#1a2535; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" x-text="selectedFile.name"></p>
+                                        <p style="font-size:11px; color:#8a8a82;" x-text="(selectedFile.size / 1024 / 1024).toFixed(2) + ' MB'"></p>
                                     </div>
+                                    <button type="button" @click="selectedFile = null"
+                                        class="icon-btn icon-btn-danger icon-btn-sm flex-shrink-0" title="Remove">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div style="padding:10px 16px; display:flex; gap:10px; align-items:center; border-bottom:1px solid #e8e4dc;">
+                                    <input type="text" x-model="uploadForm.notes" placeholder="Add notes (optional)..."
+                                        class="doc-form-input" style="flex:1;">
+                                </div>
 
-                                    <!-- Notes -->
-                                    <div>
-                                        <label class="block text-xs font-medium text-v2-text mb-1">Notes (Optional)</label>
-                                        <input type="text" x-model="uploadForm.notes" placeholder="Add notes..."
-                                            class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
-                                    </div>
-
-                                    <!-- Provider Template Mode -->
-                                    <div class="border-t border-v2-card-border pt-3">
-                                        <label class="flex items-center gap-2 cursor-pointer">
-                                            <input type="checkbox" x-model="uploadForm.is_provider_template"
-                                                class="rounded border-gray-300 text-gold focus:ring-gold">
-                                            <span class="text-xs font-medium text-v2-text">
-                                                This is a provider name template
-                                                <span class="text-v2-text-light">(allows changing provider name for different providers)</span>
-                                            </span>
-                                        </label>
+                                <!-- Provider Template Mode -->
+                                <div style="padding:10px 16px; border-bottom:1px solid #e8e4dc;">
+                                    <label class="flex items-center gap-2 cursor-pointer">
+                                        <input type="checkbox" x-model="uploadForm.is_provider_template"
+                                            class="rounded border-gray-300 text-gold focus:ring-gold">
+                                        <span style="font-size:12px; font-weight:500; color:#1a2535;">
+                                            This is a provider name template
+                                            <span style="color:#8a8a82;">(allows changing provider name for different providers)</span>
+                                        </span>
+                                    </label>
 
                                         <!-- Template Coordinate Picker (shown when template mode is enabled) -->
                                         <template x-if="uploadForm.is_provider_template">
@@ -264,81 +254,71 @@
                                                 </template>
                                             </div>
                                         </template>
-                                    </div>
+                                </div>
 
-                                    <!-- Progress Bar -->
-                                    <template x-if="uploading">
-                                        <div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                                <div class="bg-gold h-2 rounded-full transition-all duration-300"
-                                                    :style="'width: ' + uploadProgress + '%'"></div>
-                                            </div>
-                                            <p class="text-xs text-center text-v2-text-light" x-text="uploadProgress + '%'"></p>
+                                <!-- Progress Bar -->
+                                <template x-if="uploading">
+                                    <div style="padding:0 16px 10px;">
+                                        <div style="width:100%; background:#e8e4dc; border-radius:4px; height:6px; margin-bottom:6px;">
+                                            <div style="height:6px; border-radius:4px; background:#C9A84C; transition:width 0.3s;"
+                                                :style="'width:' + uploadProgress + '%'"></div>
                                         </div>
-                                    </template>
+                                        <p style="font-size:11px; text-align:center; color:#8a8a82;" x-text="uploadProgress + '%'"></p>
+                                    </div>
+                                </template>
 
-                                    <!-- Upload Button -->
-                                    <button type="button" @click="uploadDocument()" :disabled="uploading"
-                                        class="w-full px-4 py-2 bg-gold text-white rounded-lg text-sm hover:bg-gold-hover disabled:opacity-50">
+                                <!-- Upload Button -->
+                                <div style="padding:10px 16px;">
+                                    <button type="button" @click="uploadDocument()" :disabled="uploading" class="doc-upload-btn">
                                         <span x-show="!uploading">Upload Document</span>
                                         <span x-show="uploading">Uploading...</span>
                                     </button>
                                 </div>
-                            </template>
-                        </div>
+                            </div>
+                        </template>
                     </div>
 
                     <!-- Documents List -->
-                    <template x-if="loading">
-                        <div class="flex justify-center py-8">
-                            <div class="spinner"></div>
-                        </div>
-                    </template>
+                    <div class="doc-list">
+                        <template x-if="loading">
+                            <div style="display:flex; justify-content:center; padding:24px 0;">
+                                <div class="spinner"></div>
+                            </div>
+                        </template>
 
-                    <template x-if="!loading && documents.length === 0">
-                        <p class="text-sm text-v2-text-light text-center py-3">No documents uploaded yet</p>
-                    </template>
+                        <template x-if="!loading && documents.length === 0">
+                            <p style="text-align:center; color:#8a8a82; padding:24px 0; font-size:13px;">No documents uploaded yet</p>
+                        </template>
 
-                    <template x-if="!loading && documents.length > 0">
-                        <div class="space-y-2">
-                            <template x-for="doc in documents" :key="doc.id">
-                                <div class="flex items-center justify-between p-3 border border-v2-card-border rounded-lg hover:bg-v2-bg transition-colors">
-                                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                                        <div class="flex-shrink-0">
-                                            <div class="w-10 h-10 bg-gold/10 rounded flex items-center justify-center">
-                                                <span class="text-xs font-bold text-gold" x-text="getFileExtension(doc.original_file_name)"></span>
-                                            </div>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-medium text-v2-text truncate" x-text="doc.original_file_name"></p>
-                                            <div class="flex items-center gap-2 mt-1">
-                                                <template x-if="doc.is_provider_template == 1">
-                                                    <span class="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-800" title="Provider name can be changed">
-                                                        📋 Template
-                                                    </span>
-                                                </template>
-                                                <span class="text-xs text-v2-text-light" x-text="doc.file_size_formatted"></span>
-                                                <span class="text-xs text-v2-text-light" x-text="formatDate(doc.created_at)"></span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <!-- Generate for Provider button (only for templates) -->
+                        <template x-for="doc in documents" :key="doc.id">
+                            <div class="doc-entry group">
+                                <div class="doc-icon" x-text="getFileExtension(doc.original_file_name)"></div>
+                                <div class="doc-info">
+                                    <div class="doc-name" x-text="doc.original_file_name"></div>
+                                    <div class="doc-meta">
                                         <template x-if="doc.is_provider_template == 1">
-                                            <button @click="promptGenerateProviderVersion(doc)" title="Generate for Provider" class="icon-btn icon-btn-sm">
-                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            </button>
+                                            <span class="doc-meta-chip doc-meta-template">Template</span>
                                         </template>
-                                        <button @click="downloadDocument(doc.id)" title="Download" class="icon-btn icon-btn-sm">
-                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                        </button>
-                                        <button @click="deleteDocument(doc.id, doc.original_file_name)" title="Delete" class="icon-btn icon-btn-danger icon-btn-sm">
-                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </button>
+                                        <span class="doc-meta-size" x-text="doc.file_size_formatted"></span>
+                                        <span class="doc-meta-date" x-text="formatDate(doc.created_at)"></span>
                                     </div>
                                 </div>
-                            </template>
-                        </div>
-                    </template>
+                                <div class="doc-actions">
+                                    <template x-if="doc.is_provider_template == 1">
+                                        <button @click="promptGenerateProviderVersion(doc)" title="Generate for Provider" class="icon-btn icon-btn-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        </button>
+                                    </template>
+                                    <button @click="downloadDocument(doc.id)" title="Download" class="icon-btn icon-btn-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    </button>
+                                    <button @click="deleteDocument(doc.id, doc.original_file_name)" title="Delete" class="icon-btn icon-btn-danger icon-btn-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
                 </div>
             </div>

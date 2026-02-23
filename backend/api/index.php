@@ -118,6 +118,46 @@ switch ($resource) {
         }
         break;
 
+    case 'insurance-companies':
+        if ($method === 'GET' && $id === 'search') {
+            require __DIR__ . '/insurance-companies/search.php';
+        } elseif ($method === 'GET' && !$id) {
+            require __DIR__ . '/insurance-companies/list.php';
+        } elseif ($method === 'GET' && $id && !$action) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/insurance-companies/get.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/insurance-companies/create.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/insurance-companies/update.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/insurance-companies/delete.php';
+        } else {
+            errorResponse('Insurance company endpoint not found', 404);
+        }
+        break;
+
+    case 'adjusters':
+        if ($method === 'GET' && !$id) {
+            require __DIR__ . '/adjusters/list.php';
+        } elseif ($method === 'GET' && $id && !$action) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/adjusters/get.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/adjusters/create.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/adjusters/update.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/adjusters/delete.php';
+        } else {
+            errorResponse('Adjuster endpoint not found', 404);
+        }
+        break;
+
     case 'case-providers':
         if ($method === 'GET' && !$id) {
             require __DIR__ . '/case-providers/list.php';

@@ -1,0 +1,139 @@
+                .act-panel {
+                    --navy: var(--sidebar, #0F1B2D);
+                    --gold: #C9A84C;
+                    --gold-hover: #B8973F;
+                    --off-white: #fdfdfb;
+                    --border: #e8e4dc;
+                    --muted: #8a8a82;
+                    --text: #1a2535;
+                }
+                .act-body {
+                    background: var(--off-white);
+                }
+                /* Form card — gold label bar + inputs */
+                .act-form-card {
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    margin: 16px 20px;
+                }
+                .act-form-labels {
+                    display: grid;
+                    grid-template-columns: 120px 1fr 120px 160px;
+                    gap: 10px;
+                    background: #b5a070;
+                    padding: 7px 16px;
+                }
+                .act-form-label {
+                    font-size: 11px;
+                    font-weight: 700;
+                    color: #0F1B2D;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .act-form-inputs {
+                    display: grid;
+                    grid-template-columns: 120px 1fr 120px 160px;
+                    gap: 10px;
+                    padding: 10px 16px;
+                    border-bottom: 1px solid var(--border);
+                }
+                .act-form-input {
+                    width: 100%;
+                    padding: 5px 8px;
+                    border: 1px solid transparent;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    font-family: 'IBM Plex Sans', sans-serif;
+                    background: transparent;
+                    color: var(--text);
+                }
+                .act-form-input:hover { border-color: var(--border); background: var(--off-white); }
+                .act-form-input:focus { outline: none; border-color: var(--gold); background: #fff; box-shadow: 0 0 0 2px rgba(201,168,76,0.15); }
+                .act-form-note-row {
+                    display: flex;
+                    gap: 10px;
+                    padding: 10px 16px;
+                    align-items: center;
+                }
+                .act-form-note-input {
+                    flex: 1;
+                    padding: 7px 12px;
+                    border: 1px solid transparent;
+                    border-radius: 5px;
+                    font-size: 14px;
+                    font-family: 'IBM Plex Sans', sans-serif;
+                    background: var(--off-white);
+                    color: var(--text);
+                }
+                .act-form-note-input:hover { border-color: var(--border); }
+                .act-form-note-input:focus { outline: none; border-color: var(--gold); background: #fff; box-shadow: 0 0 0 2px rgba(201,168,76,0.15); }
+                .act-form-btn {
+                    padding: 7px 18px;
+                    border-radius: 5px;
+                    font-size: 13px;
+                    font-weight: 700;
+                    background: #F0F2F5;
+                    color: #0F1B2D;
+                    border: 1px solid #d0cdc6;
+                    cursor: pointer;
+                    transition: all 0.15s;
+                    white-space: nowrap;
+                }
+                .act-form-btn:hover { background: #e4e6ea; border-color: #b0ada6; }
+                .act-form-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+                /* Activity entries */
+                .activity-list {
+                    border-top: 1px solid var(--border);
+                }
+                .activity-entry {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    padding: 10px 18px;
+                    border-bottom: 1px solid #f0ede6;
+                }
+                .activity-entry:nth-child(odd) { background: #fff; }
+                .activity-entry:nth-child(even) { background: #fdfcf8; }
+                .activity-avatar {
+                    width: 20px;
+                    height: 20px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 8.5px;
+                    font-weight: 800;
+                    flex-shrink: 0;
+                    letter-spacing: -0.02em;
+                }
+                .activity-avatar-gold { background: #C9A84C; color: #fff; }
+                .activity-avatar-navy { background: #0F1B2D; color: rgba(255,255,255,0.8); }
+                .activity-chip {
+                    font-size: 11px;
+                    font-weight: 600;
+                    padding: 2px 8px;
+                    border-radius: 10px;
+                    white-space: nowrap;
+                    flex-shrink: 0;
+                }
+                .activity-chip-type { background: #f0ede6; color: #8a8a82; }
+                .activity-chip-provider { background: rgba(201,168,76,0.10); color: #B8973F; }
+                .activity-chip-contact { background: #f3e8ff; color: #7e22ce; }
+                .activity-text {
+                    flex: 1;
+                    font-size: 14px;
+                    color: #1a2535;
+                    min-width: 0;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+                .activity-date-text {
+                    font-size: 11.5px;
+                    color: #8a8a82;
+                    flex-shrink: 0;
+                    white-space: nowrap;
+                }

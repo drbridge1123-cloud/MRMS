@@ -12,7 +12,7 @@ function mbdsEditPage() {
         totals: { charges: 0, pip1: 0, pip2: 0, health1: 0, health2: 0, health3: 0, discount: 0, officePaid: 0, clientPaid: 0, balance: 0 },
         loading: true,
         saving: false,
-        _saveTimers: {},
+        _debounceSave: null,
         _editingField: null,
         expandedNote: null,
         notePopoverPos: { top: 0, right: 0 },
@@ -27,6 +27,7 @@ function mbdsEditPage() {
                 window.location.href = '/MRMS/frontend/pages/cases/index.php';
                 return;
             }
+            this._debounceSave = createDebouncedSave((line) => this.saveLine(line), 500);
             await this.loadReport();
             this.loading = false;
         },
@@ -93,26 +94,10 @@ function mbdsEditPage() {
             this.saving = false;
         },
 
-        // ==========================================
-        // Currency formatting helpers
-        // ==========================================
-
-        formatCurrency(v) {
-            const num = Number(v) || 0;
-            return '$' + num.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        },
-
-        parseCurrency(s) {
-            return parseFloat(String(s).replace(/[$,]/g, '')) || 0;
-        },
-
         cellVal(lineId, field, value) {
             if (this._editingField === lineId + '_' + field) return '';
             const num = Number(value) || 0;
-            return num === 0 ? '' : this.formatCurrency(num);
+            return num === 0 ? '' : formatCurrency(num);
         },
 
         startCellEdit(el, line, field) {
@@ -124,7 +109,7 @@ function mbdsEditPage() {
         },
 
         endCellEdit(el, line, field) {
-            line[field] = this.parseCurrency(el.value);
+            line[field] = parseCurrency(el.value);
             this._editingField = null;
             this.debounceSaveLine(line);
         },
@@ -252,8 +237,7 @@ function mbdsEditPage() {
 
         debounceSaveLine(line) {
             this.recalcTotals();
-            clearTimeout(this._saveTimers[line.id]);
-            this._saveTimers[line.id] = setTimeout(() => this.saveLine(line), 500);
+            this._debounceSave(line, line.id);
         },
 
         async saveLine(line) {
@@ -447,12 +431,12 @@ function mbdsEditPage() {
                     const balClass = bal < 0 ? 'neg' : (bal > 0 ? 'pos' : 'zero');
                     tbody += '<tr>';
                     tbody += '<td class="prov">' + (row.provider_name || '') + '</td>';
-                    tbody += '<td class="r">' + this.formatCurrency(row.charges) + '</td>';
-                    insCols.forEach(c => { tbody += '<td class="r">' + this.formatCurrency(row[c.key]) + '</td>'; });
-                    tbody += '<td class="r">' + this.formatCurrency(row.discount) + '</td>';
-                    tbody += '<td class="r">' + this.formatCurrency(row.office_paid) + '</td>';
-                    tbody += '<td class="r">' + this.formatCurrency(row.client_paid) + '</td>';
-                    tbody += '<td class="r ' + balClass + '">' + this.formatCurrency(bal) + '</td>';
+                    tbody += '<td class="r">' + formatCurrency(row.charges) + '</td>';
+                    insCols.forEach(c => { tbody += '<td class="r">' + formatCurrency(row[c.key]) + '</td>'; });
+                    tbody += '<td class="r">' + formatCurrency(row.discount) + '</td>';
+                    tbody += '<td class="r">' + formatCurrency(row.office_paid) + '</td>';
+                    tbody += '<td class="r">' + formatCurrency(row.client_paid) + '</td>';
+                    tbody += '<td class="r ' + balClass + '">' + formatCurrency(bal) + '</td>';
                     tbody += '<td class="dates">' + (row.treatment_dates || '') + '</td>';
                     tbody += '<td class="ctr">' + (row.visits || '') + '</td>';
                     tbody += '</tr>';
@@ -463,16 +447,16 @@ function mbdsEditPage() {
             const t = this.totals;
             const totKeys = { pip1: 'pip1_amount', pip2: 'pip2_amount', health1: 'health1_amount', health2: 'health2_amount', health3: 'health3_amount' };
             tbody += '<tr class="total"><td>TOTAL</td>';
-            tbody += '<td class="r">' + this.formatCurrency(t.charges) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.charges) + '</td>';
             insCols.forEach(c => {
                 const tKey = Object.keys(totKeys).find(k => totKeys[k] === c.key);
-                tbody += '<td class="r">' + this.formatCurrency(t[tKey] || 0) + '</td>';
+                tbody += '<td class="r">' + formatCurrency(t[tKey] || 0) + '</td>';
             });
-            tbody += '<td class="r">' + this.formatCurrency(t.discount) + '</td>';
-            tbody += '<td class="r">' + this.formatCurrency(t.officePaid) + '</td>';
-            tbody += '<td class="r">' + this.formatCurrency(t.clientPaid) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.discount) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.officePaid) + '</td>';
+            tbody += '<td class="r">' + formatCurrency(t.clientPaid) + '</td>';
             const balClass = t.balance < 0 ? 'neg' : (t.balance > 0 ? 'pos' : 'zero');
-            tbody += '<td class="r ' + balClass + '">' + this.formatCurrency(t.balance) + '</td>';
+            tbody += '<td class="r ' + balClass + '">' + formatCurrency(t.balance) + '</td>';
             tbody += '<td colspan="2"></td></tr>';
 
             // Notes

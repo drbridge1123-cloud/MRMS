@@ -1,0 +1,181 @@
+.cost-panel {
+    --navy: var(--sidebar, #0F1B2D);
+    --navy-light: var(--sidebar-light, #1A2A40);
+    --navy-border: var(--sidebar-border, #243347);
+    --gold: #C9A84C;
+    --gold-hover: #B8973F;
+    --gold-light: #E8D5A0;
+    --off-white: #fdfdfb;
+    --border: #e8e4dc;
+    --border-soft: #f0ede6;
+    --mbds-muted: #8a8a82;
+    --mbds-text: #1a2535;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    color: var(--mbds-text);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(15,27,45,0.04);
+    overflow: hidden;
+    margin-bottom: 24px;
+    background: #fff;
+}
+.cost-header {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+}
+.cost-header:hover { background: var(--off-white); }
+.cost-header-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cost-header-title { color: var(--mbds-text); font-size: 15px; font-weight: 600; letter-spacing: 0.3px; white-space: nowrap; }
+.cost-header-badge {
+    background: #F0F2F5;
+    color: #0F1B2D;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.cost-chevron { color: var(--mbds-muted); transition: transform 0.2s; width: 14px !important; height: 14px !important; min-width: 14px; max-width: 14px; flex-shrink: 0; }
+.cost-btn {
+    border: 1px solid var(--border);
+    color: var(--mbds-muted);
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.cost-btn:hover { border-color: #ccc8be; color: var(--mbds-text); }
+.cost-btn-primary {
+    background: #F0F2F5;
+    color: #0F1B2D;
+    border: 1px solid #d0cdc6;
+    padding: 6px 14px;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.cost-btn-primary:hover { background: #e4e6ea; border-color: #b0ada6; }
+.cost-body {
+    background: var(--off-white);
+}
+.cost-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: #fff;
+    table-layout: fixed;
+}
+.cost-table th {
+    background: #b5a070;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 9px 10px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    border-right: 1px solid rgba(255,255,255,0.25);
+    white-space: nowrap;
+    overflow: hidden;
+}
+.cost-table th:last-child { border-right: none; }
+.cost-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.cost-table tr:hover { background: #fafaf7; }
+.cost-table .cost-total-row {
+    background: var(--navy);
+    font-weight: 600;
+}
+.cost-table .cost-total-row td {
+    background: var(--navy);
+    color: rgba(255,255,255,0.7);
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 10px 10px;
+    border: none;
+    border-right: 1px solid var(--navy-border);
+    border-top: 2px solid var(--gold);
+}
+.cost-table .cost-total-row td:last-child { border-right: none; }
+.cost-category-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.cost-cat-mr_cost { background: #e8f0fe; color: #1a56db; }
+.cost-cat-litigation { background: #fce8e8; color: #b83232; }
+.cost-cat-filing_fee { background: #fef3e2; color: #b45309; }
+.cost-cat-other { background: #f0f0ec; color: #5a5a54; }
+.cost-action-btn {
+    padding: 4px;
+    border-radius: 4px;
+    color: var(--mbds-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: none;
+    border: none;
+}
+.cost-action-btn:hover { color: var(--gold); background: rgba(201,168,76,0.1); }
+.cost-action-btn.delete:hover { color: #b83232; background: rgba(184,50,50,0.08); }
+.cost-empty {
+    padding: 32px 20px;
+    text-align: center;
+    color: var(--mbds-muted);
+    font-size: 14px;
+}
+.cost-money { font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+.cost-money-paid { color: var(--gold); font-weight: 600; }
+.cost-section-header td {
+    background: #f0ede6;
+    color: var(--gold);
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 5px 10px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+.cost-section-header:hover { background: #f0ede6 !important; }
+.cost-subtotal-row td {
+    background: var(--navy);
+    color: rgba(255,255,255,0.7);
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 10px 10px;
+    border: none;
+    border-right: 1px solid var(--navy-border);
+    border-top: 2px solid var(--gold);
+}
+.cost-subtotal-row td:last-child { border-right: none; }
+.cost-subtotal-row:hover td { background: var(--navy) !important; }

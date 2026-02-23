@@ -1,0 +1,66 @@
+/* ===== Shared Panel Components ===== */
+
+/* Collapsible panel wrapper (Providers, Activity, Documents) */
+.panel-section {
+    border: 1px solid #e8e4dc;
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(15, 27, 45, 0.04);
+    overflow: hidden;
+}
+
+/* Panel header divider (Activity, Documents) */
+.panel-section > .panel-header-bordered {
+    border-bottom: 1px solid #e8e4dc;
+}
+
+/* Panel title text */
+.panel-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a2535;
+}
+
+/* Gold count badge */
+.panel-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: #C9A84C;
+    background: rgba(201, 168, 76, 0.12);
+    padding: 2px 8px;
+    border-radius: 10px;
+    min-width: 22px;
+    text-align: center;
+}
+
+/* Panel action button (gray + border) */
+.panel-btn {
+    padding: 5px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    background: #F0F2F5;
+    color: #0F1B2D;
+    border: 1px solid #d0cdc6;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.panel-btn:hover {
+    background: #e4e6ea;
+}
+
+/* Info card label (case header) */
+.info-label {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+/* Info card value (case header) */
+.info-value {
+    font-size: 15px;
+    font-weight: 500;
+}

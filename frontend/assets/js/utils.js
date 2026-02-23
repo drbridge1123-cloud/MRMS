@@ -102,3 +102,32 @@ function formatPhoneNumber(phone) {
     // Return original if format is unexpected
     return phone;
 }
+
+// Format number as currency: $1,234.56
+function formatCurrency(val, hideZero = false) {
+    const num = parseFloat(String(val).replace(/[^0-9.\-]/g, '')) || 0;
+    if (hideZero && num === 0) return '';
+    const abs = Math.abs(num);
+    const formatted = '$' + abs.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    return num < 0 ? '-' + formatted : formatted;
+}
+
+// Parse currency string to number: "$1,234.56" → 1234.56
+function parseCurrency(val) {
+    return parseFloat(String(val).replace(/[^0-9.\-]/g, '')) || 0;
+}
+
+// Debounced save: returns a function that tracks timers by key
+// Usage: this._debounceSave = createDebouncedSave((data) => this.saveLine(data), 500);
+//        this._debounceSave(line, line.id);
+function createDebouncedSave(saveFn, delay = 500) {
+    const timers = {};
+    return function(data, key) {
+        const k = key || '_default';
+        clearTimeout(timers[k]);
+        timers[k] = setTimeout(() => saveFn(data), delay);
+    };
+}

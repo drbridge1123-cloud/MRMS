@@ -628,9 +628,9 @@ ob_start();
                             <template x-for="item in items" :key="item.id">
                                 <tr>
                                     <td colspan="11" class="!p-0">
-                                        <div>
+                                        <div :class="expandedId === item.id ? 'border-2 border-gold rounded-lg bg-white' : ''" class="transition-all">
                                             <div class="flex items-center cursor-pointer hover:bg-v2-bg/50 transition-colors"
-                                                 :class="{ 'hl-row-followup': item.is_followup_due }"
+                                                 :class="{ 'hl-row-followup': item.is_followup_due && expandedId !== item.id }"
                                                  @click="toggleExpand(item.id)">
                                                 <div class="w-10 px-3 py-3 flex-shrink-0">
                                                     <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="expandedId === item.id ? 'rotate-90' : ''" fill="currentColor" viewBox="0 0 20 20"><path d="M7.293 4.707a1 1 0 011.414 0L14.414 10l-5.707 5.707a1 1 0 01-1.414-1.414L11.586 10 7.293 5.707a1 1 0 010-1z"/></svg>

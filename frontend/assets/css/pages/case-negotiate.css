@@ -1,0 +1,304 @@
+.neg-panel {
+    --navy: var(--sidebar, #0F1B2D);
+    --navy-light: var(--sidebar-light, #1A2A40);
+    --navy-border: var(--sidebar-border, #243347);
+    --gold: #C9A84C;
+    --gold-hover: #B8973F;
+    --gold-light: #E8D5A0;
+    --off-white: #fdfdfb;
+    --border: #e8e4dc;
+    --border-soft: #f0ede6;
+    --mbds-muted: #6b6b63;
+    --mbds-text: #1a2535;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 15px;
+    color: var(--mbds-text);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(15,27,45,0.04);
+    overflow: visible;
+    margin-bottom: 24px;
+    background: #fff;
+}
+.neg-header {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+}
+.neg-header:hover { background: var(--off-white); }
+.neg-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.neg-header-title {
+    color: var(--mbds-text);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+.neg-header-badge {
+    background: rgba(201,168,76,0.10);
+    color: var(--gold-hover);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(201,168,76,0.28);
+}
+.neg-chevron {
+    color: var(--mbds-muted);
+    transition: transform 0.2s;
+}
+.neg-body {
+    background: var(--off-white);
+    padding: 16px 20px;
+}
+
+/* Coverage tabs */
+.neg-coverage-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+}
+.neg-coverage-tab {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--mbds-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+}
+.neg-coverage-tab:hover { color: var(--mbds-text); }
+.neg-coverage-tab.active {
+    color: var(--navy);
+    border-bottom-color: var(--gold);
+}
+.neg-coverage-tab .tab-count {
+    font-size: 11px;
+    color: var(--mbds-muted);
+    margin-left: 4px;
+}
+
+/* Rounds table */
+.neg-rounds-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 13px;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+.neg-rounds-table th {
+    background: #b5a070;
+    color: #0F1B2D;
+    font-weight: 700;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+    border-right: 1px solid rgba(255,255,255,0.25);
+}
+.neg-rounds-table th:last-child { border-right: none; }
+.neg-rounds-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+    font-weight: 600;
+}
+.neg-rounds-table tbody tr { background: #f0ede6; }
+.neg-rounds-table tr:last-child td { border-bottom: none; }
+.neg-rounds-table tr:hover { background: #e8e4dc; }
+
+/* Inline table inputs */
+.neg-inline-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: transparent;
+    color: var(--mbds-text);
+    box-sizing: border-box;
+}
+.neg-inline-input:hover { border-color: var(--border); background: var(--off-white); }
+.neg-inline-input:focus { outline: none; border-color: var(--gold); background: #fff; box-shadow: 0 0 0 2px rgba(201,168,76,0.15); }
+.neg-inline-money { text-align: right; font-family: 'IBM Plex Mono', monospace; }
+
+/* Status badges */
+.neg-status { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 10px; }
+.neg-status-pending { background: #f3f4f6; color: #6b7280; }
+.neg-status-countered { background: #fef3c7; color: #92400e; }
+.neg-status-accepted { background: #d1fae5; color: #065f46; }
+.neg-status-rejected { background: #fee2e2; color: #991b1b; }
+
+/* Best offer card */
+.neg-best-offer {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 12px;
+}
+.neg-best-label { color: var(--gold); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.neg-best-amount { color: #fff; font-size: 20px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+
+/* Provider negotiations section */
+.neg-provider-section {
+    margin-top: 20px;
+    padding-top: 0;
+    border-top: none;
+}
+.neg-provider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    background: #f0ede6;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+.neg-provider-title {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+.neg-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+.neg-btn-gold { background: #F0F2F5; color: #0F1B2D; border: 1px solid #d0cdc6; }
+.neg-btn-gold:hover { background: #e4e6ea; border-color: #b0ada6; }
+.neg-btn-outline { background: transparent; border: 1px solid var(--border); color: var(--mbds-muted); }
+.neg-btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.neg-btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* Provider neg inline inputs */
+.neg-prov-input {
+    width: 90px;
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: right;
+    background: transparent;
+}
+.neg-prov-input:hover { border-color: var(--border); background: #fff; }
+.neg-prov-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
+}
+
+/* Adjuster info card */
+.neg-adjuster-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.neg-adjuster-labels {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    background: #b5a070;
+    padding: 7px 16px;
+    gap: 10px;
+}
+.neg-adjuster-labels .neg-adj-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #0F1B2D;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.neg-adjuster-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    padding: 10px 16px;
+    gap: 10px;
+}
+.neg-adjuster-card .neg-adj-input {
+    width: 100%;
+    padding: 5px 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: transparent;
+}
+.neg-adjuster-card .neg-adj-input:hover {
+    border-color: var(--border);
+    background: var(--off-white);
+}
+.neg-adjuster-card .neg-adj-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: #fff;
+    box-shadow: 0 0 0 2px rgba(201,168,76,0.15);
+}
+
+/* Neg status select */
+.neg-prov-status {
+    padding: 4px 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: transparent;
+    cursor: pointer;
+}
+.neg-prov-status:hover { border-color: var(--border); background: #fff; }
+.neg-prov-status:focus { outline: none; border-color: var(--gold); }
+
+/* Action buttons in table */
+.neg-action-btn {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: #fff;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.15s;
+}
+.neg-action-btn svg { width: 14px; height: 14px; }
+.neg-action-btn-add { color: var(--gold); border-color: var(--gold); }
+.neg-action-btn-add:hover { background: rgba(201,168,76,0.1); }
+.neg-action-btn-del { color: #999; }
+.neg-action-btn-del:hover { color: #dc2626; border-color: #dc2626; background: #fef2f2; }

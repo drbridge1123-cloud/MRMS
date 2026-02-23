@@ -1,0 +1,117 @@
+/* ===== Stat Cards ===== */
+.stat-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    border-bottom: 3px solid var(--card-border);
+}
+
+.stat-card-blue { border-bottom-color: #1E40AF; }
+.stat-card-gold { border-bottom-color: var(--gold); }
+.stat-card-orange { border-bottom-color: #D97706; }
+.stat-card-red { border-bottom-color: #DC2626; }
+
+/* ===== Info Card (Case Detail) ===== */
+.info-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    border-bottom: 2px solid var(--gold);
+}
+
+/* ===== Template card v2 ===== */
+.template-card-v2 {
+    background: rgba(201, 168, 76, 0.08);
+    border: 1.5px solid rgba(201, 168, 76, 0.25);
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.template-card-v2-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+/* ===== Attachment card v2 ===== */
+.attachment-card-v2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid #E8E5DE;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.attachment-card-v2:hover {
+    border-color: #D4D1C9;
+    background: #FAFAF8;
+}
+
+.attachment-card-v2.selected {
+    border-color: var(--gold);
+    background: rgba(201, 168, 76, 0.06);
+}
+
+.attachment-card-v2 input[type="checkbox"] {
+    accent-color: var(--gold);
+    width: 16px;
+    height: 16px;
+}
+
+/* ===== Detail card v2 (read-only display) ===== */
+.detail-card-v2 {
+    background: #F5F5F0;
+    border: 1px solid #E5E5E0;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.detail-label-v2 {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #5A6B82;
+}
+
+.detail-value-v2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-top: 2px;
+    color: #0F1B2D;
+}
+
+.detail-value-v2.empty {
+    color: #5A6B82;
+}
+
+.detail-value-v2.large {
+    font-size: 20px;
+    font-weight: 900;
+}
+
+.detail-section-title {
+    font-size: 11px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #5A6B82;
+    margin-bottom: 10px;
+}
+
+.detail-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    background: #F5F5F0;
+    border: 1px solid #E5E5E0;
+    border-radius: 8px;
+    font-size: 14px;
+}

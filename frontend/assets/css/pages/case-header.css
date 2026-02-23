@@ -1,0 +1,149 @@
+                /* ── Hero Section ── */
+                .case-hero {
+                    background: #FFFFFF;
+                    margin: -24px -24px 0;
+                    padding: 24px 28px 0;
+                    border-bottom: 3px solid var(--gold, #C9A84C);
+                }
+                .hero-top {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    margin-bottom: 24px;
+                }
+                .hero-left {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+                .hero-id-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .hero-case-num {
+                    font-size: 30px;
+                    font-weight: 600;
+                    color: #1a2535;
+                    font-family: 'IBM Plex Mono', 'Libre Franklin', monospace;
+                    letter-spacing: -0.02em;
+                    line-height: 1;
+                }
+                .hero-badge {
+                    font-size: 11px;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: 3px;
+                    letter-spacing: 0.07em;
+                    text-transform: uppercase;
+                    background: rgba(201,168,76,0.15);
+                    color: #B8973F;
+                    border: 1px solid rgba(201,168,76,0.35);
+                }
+                .hero-client {
+                    font-size: 15px;
+                    color: #8a8a82;
+                }
+                .hero-actions {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                }
+                .hero-btn {
+                    padding: 7px 16px;
+                    border-radius: 5px;
+                    font-size: 13px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    font-family: inherit;
+                    transition: all 0.12s;
+                    letter-spacing: 0.02em;
+                }
+                .hero-btn-ghost {
+                    background: #fff;
+                    border: 1px solid #d0cdc6;
+                    color: #6b6b63;
+                }
+                .hero-btn-ghost:hover {
+                    border-color: #b0ada6;
+                    color: #1a2535;
+                }
+                .hero-btn-gold {
+                    background: #F0F2F5;
+                    border: 1px solid #d0cdc6;
+                    color: #0F1B2D;
+                }
+                .hero-btn-gold:hover {
+                    background: #e4e6ea;
+                    border-color: #b0ada6;
+                }
+                .hero-btn-gold-outline {
+                    background: #fff;
+                    border: 1px solid #d0cdc6;
+                    color: #6b6b63;
+                }
+                .hero-btn-gold-outline:hover {
+                    border-color: #b0ada6;
+                    color: #1a2535;
+                }
+
+                /* ── Stage Pipeline (Arrow Steps) ── */
+                .pipeline {
+                    display: flex;
+                    margin: 0 -28px;
+                }
+                .stage {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 12px 0 14px;
+                    position: relative;
+                    /* Default: future/todo */
+                    background: #f0ede8;
+                    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%, 12px 50%);
+                }
+                .stage-first {
+                    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+                }
+                /* States */
+                .stage-done {
+                    background: rgba(201,168,76,0.20);
+                }
+                .stage-cur {
+                    background: var(--gold, #C9A84C);
+                }
+                /* Number */
+                .stage-num {
+                    font-size: 16px;
+                    font-weight: 700;
+                    line-height: 1;
+                    margin-bottom: 3px;
+                    /* Default: todo */
+                    color: #bbb;
+                }
+                .stage-done .stage-num {
+                    color: #B8973F;
+                }
+                .stage-cur .stage-num {
+                    color: #fff;
+                }
+                /* Label */
+                .stage-label {
+                    font-size: 10px;
+                    font-weight: 700;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    text-align: center;
+                    line-height: 1;
+                    /* Default: todo */
+                    color: #bbb;
+                }
+                .stage-done .stage-label {
+                    color: #B8973F;
+                    opacity: 0.7;
+                }
+                .stage-cur .stage-label {
+                    color: rgba(255,255,255,0.9);
+                }

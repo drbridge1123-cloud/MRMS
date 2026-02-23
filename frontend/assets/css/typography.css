@@ -1,0 +1,47 @@
+/* ===== Card Hover Effect ===== */
+.card-hover {
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.card-hover:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transform: translateY(-1px);
+}
+
+/* ===== v2 Typography ===== */
+.v2-page-title {
+    font-weight: 900;
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text);
+}
+
+.v2-section-title {
+    font-weight: 900;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-mid);
+}
+
+.v2-stat-number {
+    font-weight: 900;
+    font-size: 30px;
+    color: var(--text);
+}
+
+/* ===== Escalation Rows ===== */
+.esc-row {
+    background: var(--card);
+    border-left: 4px solid transparent;
+}
+
+.esc-row-admin { border-left-color: #DC2626; }
+.esc-row-manager { border-left-color: #D97706; }
+.esc-row-action { border-left-color: #CA8A04; }
+
+/* ===== Row Dimming (Staff unassigned) ===== */
+.row-dimmed {
+    opacity: 0.35;
+}

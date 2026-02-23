@@ -3,6 +3,7 @@ function expenseReportPage() {
         ...listPageBase('expense-report', {
             defaultSort: 'payment_date',
             defaultDir: 'desc',
+            perPage: 0,
             filtersToParams() {
                 return {
                     date_from: this.dateFrom,
@@ -47,13 +48,6 @@ function expenseReportPage() {
             return !!(this.dateFrom || this.dateTo || this.categoryFilter || this.paymentTypeFilter || this.staffFilter);
         },
 
-        formatMoney(val) {
-            if (val === null || val === undefined) return '-';
-            const num = parseFloat(val);
-            if (isNaN(num)) return '-';
-            return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        },
-
         getCategoryLabel(cat) {
             const labels = { mr_cost: 'MR Cost', litigation: 'Litigation', other: 'Other' };
             return labels[cat] || cat || '-';
@@ -68,21 +62,6 @@ function expenseReportPage() {
             if (caseId) {
                 window.location.href = '/MRMS/frontend/pages/cases/detail.php?id=' + caseId;
             }
-        },
-
-        getPageNumbers() {
-            if (!this.pagination) return [];
-            const total = this.pagination.total_pages;
-            const current = this.pagination.page;
-            const pages = [];
-            let start = Math.max(1, current - 2);
-            let end = Math.min(total, current + 2);
-            if (end - start < 4) {
-                if (start === 1) end = Math.min(total, start + 4);
-                else start = Math.max(1, end - 4);
-            }
-            for (let i = start; i <= end; i++) pages.push(i);
-            return pages;
         },
 
         exportCSV() {

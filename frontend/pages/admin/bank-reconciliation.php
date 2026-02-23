@@ -30,19 +30,19 @@ ob_start();
              :class="statusFilter === '' ? 'ring-2 ring-gold' : ''">
             <p class="text-xs text-v2-text-light uppercase tracking-wide">Total Entries</p>
             <p class="text-2xl font-bold text-v2-text mt-1" x-text="summary.total_count ?? '-'"></p>
-            <p class="text-xs text-v2-text-light mt-1" x-text="formatMoney(summary.total_amount)"></p>
+            <p class="text-xs text-v2-text-light mt-1" x-text="formatCurrency(summary.total_amount)"></p>
         </div>
         <div @click="toggleStatusFilter('matched')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
              :class="statusFilter === 'matched' ? 'ring-2 ring-green-400' : ''">
             <p class="text-xs text-v2-text-light uppercase tracking-wide">Matched</p>
             <p class="text-2xl font-bold text-green-600 mt-1" x-text="summary.matched_count ?? '-'"></p>
-            <p class="text-xs text-green-600 mt-1" x-text="formatMoney(summary.matched_amount)"></p>
+            <p class="text-xs text-green-600 mt-1" x-text="formatCurrency(summary.matched_amount)"></p>
         </div>
         <div @click="toggleStatusFilter('unmatched')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
              :class="statusFilter === 'unmatched' ? 'ring-2 ring-red-400' : ''">
             <p class="text-xs text-v2-text-light uppercase tracking-wide">Unmatched</p>
             <p class="text-2xl font-bold text-red-600 mt-1" x-text="summary.unmatched_count ?? '-'"></p>
-            <p class="text-xs text-red-600 mt-1" x-text="formatMoney(summary.unmatched_amount)"></p>
+            <p class="text-xs text-red-600 mt-1" x-text="formatCurrency(summary.unmatched_amount)"></p>
         </div>
         <div @click="toggleStatusFilter('ignored')" class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5 cursor-pointer card-hover"
              :class="statusFilter === 'ignored' ? 'ring-2 ring-gray-400' : ''">
@@ -158,7 +158,7 @@ ob_start();
                             </td>
                             <td class="whitespace-nowrap text-sm" x-text="formatDate(item.transaction_date)"></td>
                             <td class="max-w-[250px] truncate text-sm" x-text="item.description || '-'"></td>
-                            <td class="text-right font-mono text-sm font-medium" x-text="formatMoney(item.amount)"></td>
+                            <td class="text-right font-mono text-sm font-medium" x-text="formatCurrency(item.amount)"></td>
                             <td class="text-sm" x-text="item.check_number || '-'"></td>
                             <td class="text-sm" x-text="item.card_holder || '-'"></td>
                             <td>
@@ -178,7 +178,7 @@ ob_start();
                                               x-text="item.matched_case_number"></span>
                                         <span class="text-v2-text-light"> &mdash; </span>
                                         <span x-text="item.matched_provider_name || item.matched_description || ''"></span>
-                                        <span class="text-v2-text-light font-mono text-xs ml-1" x-text="formatMoney(item.matched_paid_amount)"></span>
+                                        <span class="text-v2-text-light font-mono text-xs ml-1" x-text="formatCurrency(item.matched_paid_amount)"></span>
                                     </div>
                                 </template>
                                 <template x-if="item.reconciliation_status !== 'matched'">
@@ -310,7 +310,7 @@ ob_start();
                     <template x-if="matchingEntry">
                         <div class="modal-v2-subtitle">
                             <span x-text="formatDate(matchingEntry.transaction_date)"></span> &mdash;
-                            <span class="font-mono" x-text="formatMoney(matchingEntry.amount)"></span>
+                            <span class="font-mono" x-text="formatCurrency(matchingEntry.amount)"></span>
                             <template x-if="matchingEntry.check_number">
                                 <span> &mdash; Check #<span x-text="matchingEntry.check_number"></span></span>
                             </template>
@@ -348,7 +348,7 @@ ob_start();
                                         <span class="text-sm" x-text="p.provider_name || p.description || 'No description'"></span>
                                     </div>
                                     <div class="flex items-center gap-3">
-                                        <span class="font-mono font-medium" x-text="formatMoney(p.paid_amount)"></span>
+                                        <span class="font-mono font-medium" x-text="formatCurrency(p.paid_amount)"></span>
                                         <template x-if="p.paid_amount == matchingEntry?.amount">
                                             <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Amount match</span>
                                         </template>

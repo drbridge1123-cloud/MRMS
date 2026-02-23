@@ -1,0 +1,93 @@
+/* ===== Status Badges ===== */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-not_started { background-color: #F5F5F0; color: #5A6B82; }
+.status-requesting { background-color: #EFF6FF; color: #1E40AF; }
+.status-follow_up { background-color: #FFFBEB; color: #D97706; }
+.status-action_needed { background-color: #FFF7ED; color: #EA580C; font-weight: 600; }
+.status-received_partial { background-color: #FFF7ED; color: #C2410C; }
+.status-on_hold { background-color: #F5F3FF; color: #6B21A8; }
+.status-received_complete { background-color: #F0FDF4; color: #166534; }
+.status-verified { background-color: #DCFCE7; color: #14532D; }
+
+.status-collecting { background-color: #EFF6FF; color: #1E40AF; }
+.status-verification { background-color: #FFF7ED; color: #C2410C; }
+.status-completed { background-color: #DCFCE7; color: #14532D; }
+.status-rfd { background-color: #F5F3FF; color: #6B21A8; }
+.status-final_verification { background-color: #FFFBEB; color: #D97706; }
+.status-disbursement { background-color: #FFF1F2; color: #E11D48; }
+.status-accounting { background-color: #FDF2F8; color: #BE185D; }
+.status-closed { background-color: #F5F5F0; color: #5A6B82; }
+
+/* ===== Difficulty Badges ===== */
+.difficulty-easy { background-color: #F0FDF4; color: #166534; }
+.difficulty-medium { background-color: #FFFBEB; color: #D97706; }
+.difficulty-hard { background-color: #FEF2F2; color: #DC2626; }
+
+/* ===== Escalation Badges ===== */
+.escalation-normal { background-color: #F5F5F0; color: #5A6B82; }
+.escalation-action-needed { background-color: #FEFCE8; color: #CA8A04; }
+.escalation-manager { background-color: #FFFBEB; color: #D97706; }
+.escalation-admin { background-color: #FEF2F2; color: #DC2626; }
+
+.escalation-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.escalation-pulse {
+    animation: escalation-pulse 2s ease-in-out infinite;
+}
+
+@keyframes escalation-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+/* ===== Notification Borders ===== */
+.notif-escalation-action-needed { border-left: 3px solid #CA8A04; }
+.notif-escalation-manager { border-left: 3px solid #D97706; }
+.notif-escalation-admin { border-left: 3px solid #DC2626; }
+.notif-default { border-left: 3px solid var(--gold); }
+
+/* ===== Send Status Badges ===== */
+.send-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.send-status-draft { background-color: #F5F5F0; color: #5A6B82; }
+.send-status-sending { background-color: #EFF6FF; color: #1E40AF; }
+.send-status-sent { background-color: #F0FDF4; color: #166534; }
+.send-status-failed { background-color: #FEF2F2; color: #DC2626; }
+
+/* ===== Notification Dot ===== */
+.notification-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background-color: #ef4444;
+    border-radius: 50%;
+}

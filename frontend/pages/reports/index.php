@@ -24,107 +24,89 @@ ob_start();
         </button>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <p class="text-xs text-v2-text-light uppercase tracking-wide">Total Payments</p>
-            <p class="text-2xl font-bold text-v2-text mt-1" x-text="summary.total_count ?? '-'"></p>
+    <!-- Summary + Breakdown -->
+    <div class="grid grid-cols-4 lg:grid-cols-7 gap-3 mb-5">
+        <!-- Summary Cards -->
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Payments</p>
+            <p class="text-lg font-bold text-v2-text mt-0.5" x-text="summary.total_count ?? '-'"></p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <p class="text-xs text-v2-text-light uppercase tracking-wide">Total Billed</p>
-            <p class="text-2xl font-bold text-v2-text mt-1" x-text="formatMoney(summary.total_billed)"></p>
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Total Billed</p>
+            <p class="text-lg font-bold text-v2-text mt-0.5" x-text="formatCurrency(summary.total_billed)"></p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <p class="text-xs text-v2-text-light uppercase tracking-wide">Total Paid</p>
-            <p class="text-2xl font-bold text-green-600 mt-1" x-text="formatMoney(summary.total_paid)"></p>
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Total Paid</p>
+            <p class="text-lg font-bold text-green-600 mt-0.5" x-text="formatCurrency(summary.total_paid)"></p>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <p class="text-xs text-v2-text-light uppercase tracking-wide">Outstanding</p>
-            <p class="text-2xl font-bold mt-1"
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide">Outstanding</p>
+            <p class="text-lg font-bold mt-0.5"
                :class="(summary.total_billed - summary.total_paid) > 0 ? 'text-red-600' : 'text-green-600'"
-               x-text="formatMoney((summary.total_billed || 0) - (summary.total_paid || 0))"></p>
+               x-text="formatCurrency((summary.total_billed || 0) - (summary.total_paid || 0))"></p>
         </div>
-    </div>
 
-    <!-- Breakdown Cards Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
         <!-- By Category -->
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <h3 class="text-xs text-v2-text-light uppercase tracking-wide mb-3">By Category</h3>
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide mb-2">By Category</p>
             <template x-if="summary.by_category && summary.by_category.length > 0">
-                <div class="space-y-2">
+                <div class="space-y-1">
                     <template x-for="cat in summary.by_category" :key="cat.expense_category">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full"
-                                      :class="{
-                                          'bg-blue-500': cat.expense_category === 'mr_cost',
-                                          'bg-purple-500': cat.expense_category === 'litigation',
-                                          'bg-gray-400': cat.expense_category === 'other'
-                                      }"></span>
-                                <span class="text-sm text-v2-text" x-text="getCategoryLabel(cat.expense_category)"></span>
-                                <span class="text-xs text-v2-text-light" x-text="'(' + cat.count + ')'"></span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full"
+                                      :class="{'bg-blue-500': cat.expense_category === 'mr_cost', 'bg-purple-500': cat.expense_category === 'litigation', 'bg-gray-400': cat.expense_category === 'other'}"></span>
+                                <span class="text-xs text-v2-text" x-text="getCategoryLabel(cat.expense_category)"></span>
+                                <span class="text-[10px] text-v2-text-light" x-text="'(' + cat.count + ')'"></span>
                             </div>
-                            <span class="text-sm font-mono font-medium" x-text="formatMoney(cat.total_paid)"></span>
+                            <span class="text-xs font-mono font-medium" x-text="formatCurrency(cat.total_paid)"></span>
                         </div>
                     </template>
                 </div>
             </template>
-            <template x-if="!summary.by_category || summary.by_category.length === 0">
-                <p class="text-sm text-v2-text-light">No data</p>
-            </template>
+            <template x-if="!summary.by_category || summary.by_category.length === 0"><p class="text-xs text-v2-text-light">—</p></template>
         </div>
 
         <!-- By Staff -->
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <h3 class="text-xs text-v2-text-light uppercase tracking-wide mb-3">By Staff</h3>
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide mb-2">By Staff</p>
             <template x-if="summary.by_staff && summary.by_staff.length > 0">
-                <div class="space-y-2">
+                <div class="space-y-1">
                     <template x-for="s in summary.by_staff" :key="s.paid_by">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-navy flex items-center justify-center text-white text-xs font-semibold"
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-4 h-4 rounded-full bg-navy flex items-center justify-center text-white text-[9px] font-semibold flex-shrink-0"
                                      x-text="(s.staff_name || '?').charAt(0)"></div>
-                                <span class="text-sm text-v2-text" x-text="s.staff_name || 'Unknown'"></span>
-                                <span class="text-xs text-v2-text-light" x-text="'(' + s.count + ')'"></span>
+                                <span class="text-xs text-v2-text truncate" x-text="s.staff_name || 'Unknown'"></span>
+                                <span class="text-[10px] text-v2-text-light" x-text="'(' + s.count + ')'"></span>
                             </div>
-                            <span class="text-sm font-mono font-medium" x-text="formatMoney(s.total_paid)"></span>
+                            <span class="text-xs font-mono font-medium" x-text="formatCurrency(s.total_paid)"></span>
                         </div>
                     </template>
                 </div>
             </template>
-            <template x-if="!summary.by_staff || summary.by_staff.length === 0">
-                <p class="text-sm text-v2-text-light">No data</p>
-            </template>
+            <template x-if="!summary.by_staff || summary.by_staff.length === 0"><p class="text-xs text-v2-text-light">—</p></template>
         </div>
 
         <!-- By Payment Type -->
-        <div class="bg-white rounded-xl shadow-sm border border-v2-card-border p-5">
-            <h3 class="text-xs text-v2-text-light uppercase tracking-wide mb-3">By Payment Type</h3>
+        <div class="bg-white rounded-lg border border-v2-card-border px-4 py-3">
+            <p class="text-[10px] text-v2-text-light uppercase tracking-wide mb-2">By Type</p>
             <template x-if="summary.by_payment_type && summary.by_payment_type.length > 0">
-                <div class="space-y-2">
+                <div class="space-y-1">
                     <template x-for="t in summary.by_payment_type" :key="t.payment_type">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-2">
-                                <span class="w-2 h-2 rounded-full"
-                                      :class="{
-                                          'bg-green-500': t.payment_type === 'check',
-                                          'bg-blue-500': t.payment_type === 'card',
-                                          'bg-amber-500': t.payment_type === 'cash',
-                                          'bg-indigo-500': t.payment_type === 'wire',
-                                          'bg-gray-400': t.payment_type === 'other'
-                                      }"></span>
-                                <span class="text-sm text-v2-text" x-text="getPaymentTypeLabel(t.payment_type)"></span>
-                                <span class="text-xs text-v2-text-light" x-text="'(' + t.count + ')'"></span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full"
+                                      :class="{'bg-green-500': t.payment_type === 'check', 'bg-blue-500': t.payment_type === 'card', 'bg-amber-500': t.payment_type === 'cash', 'bg-indigo-500': t.payment_type === 'wire', 'bg-gray-400': t.payment_type === 'other'}"></span>
+                                <span class="text-xs text-v2-text" x-text="getPaymentTypeLabel(t.payment_type)"></span>
+                                <span class="text-[10px] text-v2-text-light" x-text="'(' + t.count + ')'"></span>
                             </div>
-                            <span class="text-sm font-mono font-medium" x-text="formatMoney(t.total_paid)"></span>
+                            <span class="text-xs font-mono font-medium" x-text="formatCurrency(t.total_paid)"></span>
                         </div>
                     </template>
                 </div>
             </template>
-            <template x-if="!summary.by_payment_type || summary.by_payment_type.length === 0">
-                <p class="text-sm text-v2-text-light">No data</p>
-            </template>
+            <template x-if="!summary.by_payment_type || summary.by_payment_type.length === 0"><p class="text-xs text-v2-text-light">—</p></template>
         </div>
     </div>
 
@@ -266,8 +248,8 @@ ob_start();
                                       }"
                                       x-text="getCategoryLabel(item.expense_category)"></span>
                             </td>
-                            <td class="text-right font-mono text-sm" x-text="formatMoney(item.billed_amount)"></td>
-                            <td class="text-right font-mono text-sm font-medium text-green-700" x-text="formatMoney(item.paid_amount)"></td>
+                            <td class="text-right font-mono text-sm" x-text="formatCurrency(item.billed_amount)"></td>
+                            <td class="text-right font-mono text-sm font-medium text-green-700" x-text="formatCurrency(item.paid_amount)"></td>
                             <td class="text-sm" x-text="getPaymentTypeLabel(item.payment_type)"></td>
                             <td class="text-sm text-v2-text-mid" x-text="item.check_number || '-'"></td>
                             <td class="text-sm text-v2-text-mid max-w-[100px] truncate" x-text="item.paid_by_name || '-'"></td>
@@ -279,8 +261,8 @@ ob_start();
                     <tfoot>
                         <tr class="bg-v2-bg font-semibold border-t-2 border-v2-card-border">
                             <td colspan="6" class="text-right text-sm text-v2-text-mid">Page Totals:</td>
-                            <td class="text-right font-mono text-sm" x-text="formatMoney(pageTotalBilled)"></td>
-                            <td class="text-right font-mono text-sm text-green-700" x-text="formatMoney(pageTotalPaid)"></td>
+                            <td class="text-right font-mono text-sm" x-text="formatCurrency(pageTotalBilled)"></td>
+                            <td class="text-right font-mono text-sm text-green-700" x-text="formatCurrency(pageTotalPaid)"></td>
                             <td colspan="3"></td>
                         </tr>
                     </tfoot>
@@ -289,30 +271,6 @@ ob_start();
         </div>
     </template>
 
-    <!-- Pagination -->
-    <template x-if="pagination && pagination.total_pages > 1">
-        <div class="flex items-center justify-between mt-4">
-            <div class="text-sm text-v2-text-light">
-                Showing <span x-text="((pagination.page - 1) * pagination.per_page) + 1"></span>-<span x-text="Math.min(pagination.page * pagination.per_page, pagination.total)"></span> of <span x-text="pagination.total"></span>
-            </div>
-            <div class="flex gap-1">
-                <button @click="loadData(pagination.page - 1)" :disabled="pagination.page <= 1"
-                        class="px-3 py-1.5 text-sm border border-v2-card-border rounded-lg hover:bg-v2-bg disabled:opacity-40 disabled:cursor-not-allowed">
-                    Prev
-                </button>
-                <template x-for="p in getPageNumbers()" :key="p">
-                    <button @click="loadData(p)"
-                            class="px-3 py-1.5 text-sm border rounded-lg"
-                            :class="p === pagination.page ? 'bg-navy text-white border-navy' : 'border-v2-card-border hover:bg-v2-bg'"
-                            x-text="p"></button>
-                </template>
-                <button @click="loadData(pagination.page + 1)" :disabled="pagination.page >= pagination.total_pages"
-                        class="px-3 py-1.5 text-sm border border-v2-card-border rounded-lg hover:bg-v2-bg disabled:opacity-40 disabled:cursor-not-allowed">
-                    Next
-                </button>
-            </div>
-        </div>
-    </template>
 </div>
 
 <?php

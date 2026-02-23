@@ -1,0 +1,21 @@
+/* MRMS v2 — Design Tokens */
+:root {
+    --bg: #F0F2F5;
+    --card: #FFFFFF;
+    --card-border: #E5E5E0;
+    --card-bg: #F5F5F0;
+    --sidebar: #0F1B2D;
+    --sidebar-light: #1A2A40;
+    --sidebar-border: #243347;
+    --gold: #C9A84C;
+    --gold-hover: #B8973F;
+    --gold-light: #E8D5A0;
+    --gold-pale: rgba(201,168,76,0.10);
+    --text: #0F1B2D;
+    --text-mid: #3D4F63;
+    --text-light: #5A6B82;
+    --off-white: #fdfdfb;
+    --border: #e8e4dc;
+    --border-soft: #f0ede6;
+    --muted: #8a8a82;
+}

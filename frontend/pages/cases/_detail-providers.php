@@ -1,15 +1,14 @@
             <!-- Provider List -->
-            <div class="bg-white mb-4" data-panel :class="{'panel-open': showProviders}" style="border:1px solid #e8e4dc; border-left:3px solid var(--gold); border-radius:10px; box-shadow:0 1px 4px rgba(15,27,45,0.04); overflow:hidden;">
+            <div class="panel-section bg-white mb-4" data-panel :class="{'panel-open': showProviders}">
                 <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer" @click="showProviders = !showProviders; if(showProviders) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
                     <div class="flex items-center gap-2.5">
                         <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="showProviders ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <h3 class="font-semibold text-v2-text" style="font-size:14px;">Providers</h3>
-                        <span class="text-xs text-v2-text-light" x-text="'(' + providers.length + ')'"></span>
+                        <h3 class="panel-title">Providers</h3>
+                        <span class="panel-count" x-text="providers.length"></span>
                     </div>
-                    <button @click.stop="showAddProviderModal = true"
-                        class="bg-gold text-white px-2.5 py-1 rounded-lg text-xs hover:bg-gold-hover flex items-center gap-1">
+                    <button @click.stop="showAddProviderModal = true" class="panel-btn">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -182,11 +181,10 @@
                                 <tr x-show="expandedProvider === p.id" x-transition :id="'history-' + p.id">
                                     <td colspan="10" class="history-panel px-4 py-4">
                                         <div class="flex items-center justify-between mb-3">
-                                            <h4 class="text-xs font-bold tracking-wider text-v2-text-mid uppercase"
+                                            <h4 class="history-label"
                                                 x-text="'REQUEST HISTORY (' + (expandedProvider === p.id ? requestHistory.length : 0) + ')'">
                                             </h4>
-                                            <button @click.stop="openRequestModal(p)"
-                                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-gold text-white hover:bg-gold-hover">
+                                            <button @click.stop="openRequestModal(p)" class="panel-btn">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -278,39 +276,3 @@
                 </div>
             </div>
 
-            <style>
-                /* ── Provider Selection ── */
-                tbody.provider-dimmed {
-                    opacity: 0.45;
-                    transition: opacity 0.2s;
-                }
-                tbody.provider-selected {
-                    filter: drop-shadow(0 2px 8px rgba(201,168,76,0.18));
-                    transition: filter 0.2s;
-                }
-
-                /* Gold border via td borders */
-                tbody.provider-selected > tr:first-child > td {
-                    border-top: 2px solid var(--gold, #C9A84C);
-                }
-                tbody.provider-selected > tr > td:first-child {
-                    border-left: 2px solid var(--gold, #C9A84C);
-                }
-                tbody.provider-selected > tr > td:last-child {
-                    border-right: 2px solid var(--gold, #C9A84C);
-                }
-                tbody.provider-selected > tr:nth-child(2) > td {
-                    border-bottom: 2px solid var(--gold, #C9A84C);
-                }
-
-                /* Rounded corners */
-                tbody.provider-selected > tr:first-child > td:first-child { border-top-left-radius: 8px; }
-                tbody.provider-selected > tr:first-child > td:last-child { border-top-right-radius: 8px; }
-                tbody.provider-selected > tr:nth-child(2) > td:first-child { border-bottom-left-radius: 8px; }
-                tbody.provider-selected > tr:nth-child(2) > td:last-child { border-bottom-right-radius: 8px; }
-
-                /* Selected row background */
-                tbody.provider-selected > tr > td {
-                    background: #fff;
-                }
-            </style>

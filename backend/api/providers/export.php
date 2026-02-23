@@ -16,8 +16,23 @@ if (!empty($_GET['template'])) {
 $where = '1=1';
 $params = [];
 
+$typeLabels = [
+    'hospital' => 'Hospital',
+    'er' => 'Emergency Room',
+    'chiro' => 'Chiropractor',
+    'imaging' => 'Imaging Center',
+    'physician' => 'Physician',
+    'surgery_center' => 'Surgery Center',
+    'pharmacy' => 'Pharmacy',
+    'acupuncture' => 'Acupuncture',
+    'massage' => 'Massage',
+    'pain_management' => 'Pain Management',
+    'pt' => 'Physical Therapy',
+    'other' => 'Other',
+];
+$allowedTypes = array_keys($typeLabels);
+
 if (!empty($_GET['type'])) {
-    $allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'other'];
     if (validateEnum($_GET['type'], $allowedTypes)) {
         $where .= ' AND p.type = ?';
         $params[] = $_GET['type'];
@@ -47,8 +62,9 @@ $providers = dbFetchAll(
     $params
 );
 
-// Convert uses_third_party to yes/no for readability
+// Convert values to human-readable labels
 foreach ($providers as &$p) {
+    $p['type'] = $typeLabels[$p['type']] ?? $p['type'];
     $p['uses_third_party'] = $p['uses_third_party'] ? 'yes' : 'no';
 }
 unset($p);

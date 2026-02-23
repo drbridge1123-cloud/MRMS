@@ -1,0 +1,62 @@
+                /* ── Gold Header (matching Medical Balance / Cost Ledger) ── */
+                .data-table thead th {
+                    background: #b5a070;
+                    color: #0F1B2D;
+                    font-weight: 700;
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                    padding: 9px 16px;
+                    border-bottom: 2px solid #e8e4dc;
+                    border-right: 1px solid rgba(255,255,255,0.25);
+                    position: static;
+                }
+                .data-table thead th:last-child { border-right: none; }
+
+                /* ── Provider Selection ── */
+                tbody.provider-dimmed {
+                    opacity: 0.45;
+                    transition: opacity 0.2s;
+                }
+                tbody.provider-selected {
+                    filter: drop-shadow(0 2px 8px rgba(201,168,76,0.18));
+                    transition: filter 0.2s;
+                }
+
+                /* Gold border via td borders */
+                tbody.provider-selected > tr:first-child > td {
+                    border-top: 2px solid var(--gold, #C9A84C);
+                }
+                tbody.provider-selected > tr > td:first-child {
+                    border-left: 2px solid var(--gold, #C9A84C);
+                }
+                tbody.provider-selected > tr > td:last-child {
+                    border-right: 2px solid var(--gold, #C9A84C);
+                }
+                tbody.provider-selected > tr:nth-child(2) > td {
+                    border-bottom: 2px solid var(--gold, #C9A84C);
+                }
+
+                /* Rounded corners */
+                tbody.provider-selected > tr:first-child > td:first-child { border-top-left-radius: 8px; }
+                tbody.provider-selected > tr:first-child > td:last-child { border-top-right-radius: 8px; }
+                tbody.provider-selected > tr:nth-child(2) > td:first-child { border-bottom-left-radius: 8px; }
+                tbody.provider-selected > tr:nth-child(2) > td:last-child { border-bottom-right-radius: 8px; }
+
+                /* Selected row background */
+                tbody.provider-selected > tr > td {
+                    background: #fff;
+                }
+
+                /* ── Request History Section Label ── */
+                .history-label {
+                    background: #f0ede6;
+                    color: #C9A84C;
+                    font-size: 9px;
+                    font-weight: 700;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                    padding: 6px 12px;
+                    border-radius: 4px;
+                    display: inline-block;
+                }
