@@ -41,9 +41,9 @@
                             <label class="form-v2-label">Assigned To *</label>
                             <select x-model="editData.assigned_to" required class="form-v2-select">
                                 <option value="">Select...</option>
-                                <option value="1">Ella</option>
-                                <option value="2">Miki</option>
-                                <option value="4">Jimi</option>
+                                <template x-for="u in staffList" :key="u.id">
+                                    <option :value="u.id" x-text="u.full_name"></option>
+                                </template>
                             </select>
                         </div>
                     </div>

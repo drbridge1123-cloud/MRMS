@@ -67,7 +67,7 @@ function usersPage() {
             this.form = {
                 username: u.username, full_name: u.full_name, title: u.title || '',
                 role: u.role, card_last4: u.card_last4 || '', smtp_email: u.smtp_email || '', smtp_app_password: '',
-                permissions: u.permissions || [...(this.roleDefaults[u.role] || this.roleDefaults.staff)]
+                permissions: (typeof u.permissions === 'string' ? JSON.parse(u.permissions) : u.permissions) || [...(this.roleDefaults[u.role] || this.roleDefaults.staff)]
             };
             this.showModal = true;
         },

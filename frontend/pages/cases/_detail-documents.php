@@ -82,17 +82,17 @@
                                                         Provider Name
                                                         <span x-show="hasCoordinates()" class="text-green-600 ml-1">&#10003;</span>
                                                     </button>
-                                                    <button type="button" @click="selectionMode = 'date'; uploadForm.use_date_overlay = true"
-                                                        class="flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
-                                                        :class="selectionMode === 'date' ? 'bg-white text-emerald-800 shadow-sm' : 'text-blue-600 hover:text-blue-800'">
-                                                        Date (Optional)
-                                                        <span x-show="hasDateCoordinates()" class="text-green-600 ml-1">&#10003;</span>
-                                                    </button>
                                                     <button type="button" @click="selectionMode = 'custom_text'; uploadForm.use_custom_text_overlay = true"
                                                         class="flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
                                                         :class="selectionMode === 'custom_text' ? 'bg-white text-amber-800 shadow-sm' : 'text-blue-600 hover:text-blue-800'">
                                                         Custom Text
                                                         <span x-show="hasCustomTextCoordinates()" class="text-green-600 ml-1">&#10003;</span>
+                                                    </button>
+                                                    <button type="button" @click="selectionMode = 'date'; uploadForm.use_date_overlay = true"
+                                                        class="flex-1 px-2 py-1.5 rounded-md text-xs font-medium transition-colors"
+                                                        :class="selectionMode === 'date' ? 'bg-white text-emerald-800 shadow-sm' : 'text-blue-600 hover:text-blue-800'">
+                                                        Date (Optional)
+                                                        <span x-show="hasDateCoordinates()" class="text-green-600 ml-1">&#10003;</span>
                                                     </button>
                                                 </div>
 

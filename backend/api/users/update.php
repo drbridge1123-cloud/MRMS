@@ -70,7 +70,7 @@ dbUpdate('users', $data, 'id = ?', [$targetId]);
 
 // Backfill card_last4 into existing card payments
 if (!empty($data['card_last4'])) {
-    dbExecute(
+    dbQuery(
         "UPDATE mr_fee_payments SET check_number = ? WHERE paid_by = ? AND payment_type = 'card' AND (check_number IS NULL OR check_number = '')",
         [$data['card_last4'], $targetId]
     );
@@ -79,7 +79,7 @@ if (!empty($data['card_last4'])) {
 logActivity($currentUserId, 'user_updated', 'user', $targetId, $data);
 
 $updated = dbFetchOne(
-    "SELECT id, username, full_name, title, email, smtp_email, role, is_active, card_last4, created_at, updated_at FROM users WHERE id = ?",
+    "SELECT id, username, full_name, title, email, smtp_email, role, permissions, is_active, card_last4, created_at, updated_at FROM users WHERE id = ?",
     [$targetId]
 );
 

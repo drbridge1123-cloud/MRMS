@@ -1,8 +1,10 @@
 <?php
 // Suppress PHP errors and warnings to prevent HTML output in JSON responses
-error_reporting(0);
+error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('display_startup_errors', '0');
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/../../logs/php_errors.log');
 
 // Start output buffering to catch any unexpected output
 ob_start();

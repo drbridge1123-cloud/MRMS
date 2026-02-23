@@ -33,6 +33,7 @@ ob_start();
                     <option value="health_ledger">Health Ledger</option>
                     <option value="bulk_request">Bulk Request</option>
                     <option value="balance_verification">Balance Verification</option>
+                    <option value="medical_discount">Medical Discount</option>
                     <option value="custom">Custom</option>
                 </select>
             </div>
@@ -158,6 +159,7 @@ ob_start();
                                     <option value="health_ledger">Health Ledger</option>
                                     <option value="bulk_request">Bulk Request</option>
                                     <option value="balance_verification">Balance Verification</option>
+                                    <option value="medical_discount">Medical Discount</option>
                                     <option value="custom">Custom</option>
                                 </select>
                             </div>

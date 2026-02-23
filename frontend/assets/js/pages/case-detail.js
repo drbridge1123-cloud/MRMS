@@ -930,8 +930,8 @@ function caseDetailPage() {
 
         async loadStaffList() {
             try {
-                const res = await api.get('users');
-                this.staffList = (res.data || []).filter(u => u.is_active == 1);
+                const res = await api.get('users?active_only=1');
+                this.staffList = res.data || [];
             } catch (e) {
                 this.staffList = [];
             }
