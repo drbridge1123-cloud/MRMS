@@ -20,10 +20,20 @@ ob_start();
         <div>
             <?php include __DIR__ . '/_detail-header.php'; ?>
             <?php include __DIR__ . '/_detail-providers.php'; ?>
-            <?php include __DIR__ . '/_detail-costs.php'; ?>
             <?php include __DIR__ . '/_detail-activity.php'; ?>
             <?php include __DIR__ . '/_detail-documents.php'; ?>
+
+            <!-- Workflow Section Divider -->
+            <div class="flex items-center gap-3 mb-4 mt-2">
+                <div class="h-px flex-1" style="background:var(--gold-light,#E8D5A0);"></div>
+                <span class="text-xs font-black uppercase tracking-widest" style="color:var(--gold-hover,#B8973F);letter-spacing:0.15em;">WORKFLOW</span>
+                <div class="h-px flex-1" style="background:var(--gold-light,#E8D5A0);"></div>
+            </div>
+
+            <?php include __DIR__ . '/_detail-costs.php'; ?>
             <?php include __DIR__ . '/_detail-mbds.php'; ?>
+            <?php include __DIR__ . '/_detail-negotiate.php'; ?>
+            <?php include __DIR__ . '/_detail-disbursement.php'; ?>
         </div>
     </template>
 
@@ -68,6 +78,8 @@ ob_start();
 </style>
 
 <script src="/MRMS/frontend/assets/js/pages/mbds-panel.js"></script>
+<script src="/MRMS/frontend/assets/js/pages/negotiate-panel.js"></script>
+<script src="/MRMS/frontend/assets/js/pages/disbursement-panel.js"></script>
 <script src="/MRMS/frontend/components/template-selector.js"></script>
 <script src="/MRMS/frontend/components/document-uploader.js"></script>
 <script src="/MRMS/frontend/components/document-selector.js"></script>

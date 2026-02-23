@@ -1,11 +1,11 @@
             <!-- Activity Log section -->
-            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border" x-data="{logOpen: false}">
-                <div class="px-6 py-3 flex items-center justify-between cursor-pointer" @click="logOpen = !logOpen">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="logOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white mb-4" data-panel :class="{'panel-open': logOpen}" style="border:1px solid #e8e4dc; border-left:3px solid var(--gold); border-radius:10px; box-shadow:0 1px 4px rgba(15,27,45,0.04); overflow:hidden;" x-data="{logOpen: false}">
+                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer" @click="logOpen = !logOpen; if(logOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+                    <div class="flex items-center gap-2.5">
+                        <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="logOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <h3 class="font-semibold text-v2-text text-sm">Activity Log</h3>
+                        <h3 class="font-semibold text-v2-text" style="font-size:14px;">Activity Log</h3>
                         <span class="text-xs text-v2-text-light" x-text="'(' + notes.length + ')'"></span>
                     </div>
                     <select x-model="noteFilterProvider" @change="loadNotes()" @click.stop
@@ -82,12 +82,9 @@
                                             x-text="timeAgo(note.created_at)"></span>
                                     </template>
                                     <button @click="deleteNote(note.id)"
-                                        class="ml-auto text-gray-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        class="ml-auto icon-btn icon-btn-danger icon-btn-sm opacity-0 group-hover:opacity-100 transition-opacity"
                                         title="Delete note">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                     </button>
                                 </div>
                                 <p class="text-sm text-v2-text-mid" x-text="note.content"></p>

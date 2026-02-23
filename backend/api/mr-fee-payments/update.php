@@ -39,10 +39,28 @@ if (!empty($input['payment_date']) && !validateDate($input['payment_date'])) {
 
 $data = [];
 
+// Handle case_provider_id change
+if (array_key_exists('case_provider_id', $input)) {
+    $newCpId = !empty($input['case_provider_id']) ? (int)$input['case_provider_id'] : null;
+    if ($newCpId) {
+        $cp = dbFetchOne(
+            "SELECT cp.id, p.name AS provider_name FROM case_providers cp JOIN providers p ON cp.provider_id = p.id WHERE cp.id = ? AND cp.case_id = ?",
+            [$newCpId, $existing['case_id']]
+        );
+        if (!$cp) {
+            errorResponse('Case provider not found', 404);
+        }
+        if (empty($input['provider_name'])) {
+            $data['provider_name'] = $cp['provider_name'];
+        }
+    }
+    $data['case_provider_id'] = $newCpId;
+}
+
 $allowedFields = [
     'expense_category', 'provider_name', 'description',
     'billed_amount', 'paid_amount', 'payment_type',
-    'check_number', 'payment_date', 'paid_by',
+    'check_number', 'payment_date', 'paid_date', 'paid_by',
     'receipt_document_id', 'notes'
 ];
 
@@ -52,7 +70,7 @@ foreach ($allowedFields as $field) {
             $data[$field] = round((float)$input[$field], 2);
         } elseif (in_array($field, ['paid_by', 'receipt_document_id'])) {
             $data[$field] = !empty($input[$field]) ? (int)$input[$field] : null;
-        } elseif ($field === 'payment_date') {
+        } elseif (in_array($field, ['payment_date', 'paid_date'])) {
             $data[$field] = !empty($input[$field]) ? $input[$field] : null;
         } elseif ($field === 'payment_type') {
             $data[$field] = !empty($input[$field]) ? $input[$field] : null;
@@ -74,6 +92,10 @@ dbUpdate('mr_fee_payments', $data, 'id = ?', [$paymentId]);
 $oldCpId = $existing['case_provider_id'];
 if ($oldCpId) {
     syncMbdsOfficePaid((int)$oldCpId);
+}
+$newCpId = $data['case_provider_id'] ?? $oldCpId;
+if ($newCpId && $newCpId != $oldCpId) {
+    syncMbdsOfficePaid((int)$newCpId);
 }
 
 logActivity($userId, 'payment_updated', 'mr_fee_payment', $paymentId, [

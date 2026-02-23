@@ -72,6 +72,7 @@ $data = [
     'payment_type' => $paymentType,
     'check_number' => isset($input['check_number']) ? sanitizeString($input['check_number']) : null,
     'payment_date' => !empty($input['payment_date']) ? $input['payment_date'] : null,
+    'paid_date' => !empty($input['paid_date']) ? $input['paid_date'] : null,
     'paid_by' => !empty($input['paid_by']) ? (int)$input['paid_by'] : null,
     'receipt_document_id' => !empty($input['receipt_document_id']) ? (int)$input['receipt_document_id'] : null,
     'notes' => isset($input['notes']) ? sanitizeString($input['notes']) : null,

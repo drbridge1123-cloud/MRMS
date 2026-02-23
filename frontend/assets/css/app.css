@@ -2,7 +2,7 @@
 
 /* ===== Design Tokens ===== */
 :root {
-    --bg: #F5F5F0;
+    --bg: #F5F0E8;
     --card: #FFFFFF;
     --card-border: #E5E5E0;
     --card-bg: #F5F5F0;
@@ -11,9 +11,15 @@
     --sidebar-border: #243347;
     --gold: #C9A84C;
     --gold-hover: #B8973F;
+    --gold-light: #E8D5A0;
+    --gold-pale: rgba(201,168,76,0.10);
     --text: #0F1B2D;
     --text-mid: #3D4F63;
     --text-light: #5A6B82;
+    --off-white: #fdfdfb;
+    --border: #e8e4dc;
+    --border-soft: #f0ede6;
+    --muted: #8a8a82;
 }
 
 /* ===== Sidebar ===== */
@@ -40,6 +46,52 @@
 
 .main-content.expanded {
     margin-left: 64px;
+}
+
+/* ===== Panel scroll offset (accounts for sticky header) ===== */
+[data-panel] { scroll-margin-top: 60px; transition: border 0.2s ease; }
+[data-panel].panel-open { border: 2px solid var(--sidebar, #0F1B2D) !important; border-left: 2px solid var(--sidebar, #0F1B2D) !important; }
+
+/* ===== Icon Buttons (Global) ===== */
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    border: 1px solid var(--border, #e8e4dc);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text-mid, #3D4F63);
+    flex-shrink: 0;
+}
+.icon-btn:hover {
+    border-color: var(--gold, #C9A84C);
+    color: var(--gold, #C9A84C);
+    background: rgba(201,168,76,0.04);
+}
+.icon-btn svg {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2;
+}
+.icon-btn-danger {
+    color: #991b1b;
+}
+.icon-btn-danger:hover {
+    border-color: #dc2626;
+    color: #dc2626;
+    background: rgba(220,38,38,0.04);
+}
+.icon-btn-sm {
+    width: 28px;
+    height: 28px;
+}
+.icon-btn-sm svg {
+    width: 13px;
+    height: 13px;
 }
 
 /* ===== Status Badges ===== */
@@ -154,19 +206,19 @@
 }
 
 .data-table thead th {
-    background-color: var(--card-bg);
-    padding: 12px 16px;
+    background-color: transparent;
+    padding: 10px 16px;
     text-align: left;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--text-light);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border-bottom: 2px solid var(--card-border);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #8a8a82;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    border-bottom: 2px solid var(--gold, #C9A84C);
     position: sticky;
     top: 0;
     z-index: 10;
-    box-shadow: 0 2px 0 var(--card-border);
+    box-shadow: none;
 }
 
 .data-table tbody td {

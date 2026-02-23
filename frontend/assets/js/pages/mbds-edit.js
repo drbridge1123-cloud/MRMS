@@ -74,7 +74,7 @@ function mbdsEditPage() {
                     case_status: caseRes.data.status
                 };
                 await api.post('mbds/' + this.caseId);
-                showToast('MBDS report created');
+                showToast('Medical Balance report created');
                 await this.loadReport();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to create report', 'error');
@@ -99,10 +99,8 @@ function mbdsEditPage() {
 
         formatCurrency(v) {
             const num = Number(v) || 0;
-            if (num === 0) return '$0';
-            const hasDecimals = num !== Math.floor(num);
             return '$' + num.toLocaleString('en-US', {
-                minimumFractionDigits: hasDecimals ? 2 : 0,
+                minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
         },
@@ -113,7 +111,8 @@ function mbdsEditPage() {
 
         cellVal(lineId, field, value) {
             if (this._editingField === lineId + '_' + field) return '';
-            return this.formatCurrency(value);
+            const num = Number(value) || 0;
+            return num === 0 ? '' : this.formatCurrency(num);
         },
 
         startCellEdit(el, line, field) {
@@ -306,7 +305,7 @@ function mbdsEditPage() {
         },
 
         async markComplete() {
-            if (!confirm('Mark this MBDS report as complete? This will move the case to Completed status.')) return;
+            if (!confirm('Mark this Medical Balance report as complete? This will move the case to Completed status.')) return;
             try {
                 await api.post('mbds/' + this.report.id + '/complete');
                 showToast('Report marked as completed');
@@ -410,7 +409,7 @@ function mbdsEditPage() {
                     this.mbdsImporting = false;
                     return;
                 }
-                showToast('Imported ' + data.imported + ' MBDS lines');
+                showToast('Imported ' + data.imported + ' Medical Balance lines');
                 this.showMbdsImportModal = false;
                 this._mbdsImportFile = null;
                 await this.loadReport();
@@ -479,7 +478,7 @@ function mbdsEditPage() {
             // Notes
             const notes = s.notes ? '<div class="notes"><strong>Notes:</strong> ' + s.notes + '</div>' : '';
 
-            const html = `<!DOCTYPE html><html><head><title>MBDS - ${cd.case_number}</title>
+            const html = `<!DOCTYPE html><html><head><title>Medical Balance - ${cd.case_number}</title>
 <style>
     @page { size: landscape; margin: 15mm; }
     body { font-family: Arial, sans-serif; font-size: 11px; }

@@ -56,7 +56,7 @@ function mbdsPanel(caseId) {
                 if (e.response?.status === 404) {
                     await this.createReport();
                 } else {
-                    showToast('Failed to load MBDS report', 'error');
+                    showToast('Failed to load Medical Balance report', 'error');
                 }
             }
         },
@@ -71,7 +71,7 @@ function mbdsPanel(caseId) {
                     case_status: caseRes.data.status
                 };
                 await api.post('mbds/' + this.caseId);
-                showToast('MBDS report created');
+                showToast('Medical Balance report created');
                 await this.loadReport();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to create report', 'error');
@@ -92,10 +92,8 @@ function mbdsPanel(caseId) {
 
         formatCurrency(v) {
             const num = Number(v) || 0;
-            if (num === 0) return '$0';
-            const hasDecimals = num !== Math.floor(num);
             return '$' + num.toLocaleString('en-US', {
-                minimumFractionDigits: hasDecimals ? 2 : 0,
+                minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
         },
@@ -285,7 +283,7 @@ function mbdsPanel(caseId) {
         },
 
         async markComplete() {
-            if (!confirm('Mark this MBDS report as complete? This will move the case to Completed status.')) return;
+            if (!confirm('Mark this Medical Balance report as complete? This will move the case to Completed status.')) return;
             try {
                 await api.post('mbds/' + this.report.id + '/complete');
                 showToast('Report marked as completed');
@@ -398,7 +396,7 @@ function mbdsPanel(caseId) {
                     this.mbdsImporting = false;
                     return;
                 }
-                showToast('Imported ' + data.imported + ' MBDS lines');
+                showToast('Imported ' + data.imported + ' Medical Balance lines');
                 this.showMbdsImportModal = false;
                 this._mbdsImportFile = null;
                 await this.loadReport();
@@ -421,8 +419,7 @@ function mbdsPanel(caseId) {
 
             const fmtZero = (v) => {
                 const num = Number(v) || 0;
-                const txt = this.formatCurrency(num);
-                return num === 0 ? '<span class="zero-val">' + txt + '</span>' : txt;
+                return num === 0 ? '' : this.formatCurrency(num);
             };
 
             let thead = '<th style="text-align:left">Provider</th><th class="r">Charges</th>';
@@ -467,7 +464,7 @@ function mbdsPanel(caseId) {
 
             const notes = s.notes ? '<div class="notes"><strong>Notes:</strong> ' + s.notes + '</div>' : '';
 
-            const html = `<!DOCTYPE html><html><head><title>MBDS - ${cd.case_number}</title>
+            const html = `<!DOCTYPE html><html><head><title>Medical Balance - ${cd.case_number}</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
     @page { size: landscape; margin: 15mm; }

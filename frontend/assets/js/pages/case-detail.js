@@ -11,6 +11,8 @@ function caseDetailPage() {
         showAddProviderModal: false,
         showSendBackModal: false,
         sendBackForm: { target_status: '', reason: '' },
+        showMoveForwardModal: false,
+        moveForwardForm: { target_status: '', note: '' },
         nextStatus: '',
         showRequestModal: false,
         showReceiptModal: false,
@@ -47,7 +49,20 @@ function caseDetailPage() {
         payments: [],
         paymentTotal: 0,
         staffList: [],
-        paymentForm: { id: null, description: 'Record Fee', expense_category: 'mr_cost', billed_amount: 0, paid_amount: 0, payment_type: 'check', check_number: '', payment_date: new Date().toISOString().split('T')[0], paid_by: '', receipt_document_id: null, receipt_file_name: '', notes: '' },
+        paymentForm: { id: null, case_provider_id: null, provider_name: '', description: 'Record Fee', expense_category: 'mr_cost', billed_amount: 0, paid_amount: 0, payment_type: 'check', check_number: '', payment_date: new Date().toISOString().split('T')[0], paid_date: '', paid_by: '', receipt_document_id: null, receipt_file_name: '', notes: '' },
+        paymentProviderSearch: '',
+        paymentProviderResults: [],
+
+        // Workflow stepper
+        workflowSteps: [
+            { key: 'treatment', label: 'TREATMENT', statuses: ['collecting'] },
+            { key: 'collection', label: 'COLLECTION', statuses: ['verification'] },
+            { key: 'verification', label: 'VERIFICATION', statuses: ['completed'] },
+            { key: 'demand', label: 'DEMAND', statuses: ['rfd'] },
+            { key: 'negotiate', label: 'NEGOTIATE', statuses: ['final_verification'] },
+            { key: 'settlement', label: 'SETTLEMENT', statuses: ['disbursement', 'accounting'] },
+            { key: 'closed', label: 'CLOSED', statuses: ['closed'] },
+        ],
 
         // Cost Ledger state
         allCosts: [],
@@ -66,6 +81,11 @@ function caseDetailPage() {
             // Set default deadline (2 weeks from today)
             this.newProvider.deadline = this.getDefaultDeadline();
             await Promise.all([this.loadCase(), this.loadProviders(), this.loadNotes(), this.loadStaffList(), this.loadAllCosts()]);
+
+            // Auto-collapse providers if all are complete
+            if (this.providers.length > 0 && this.providers.every(p => p.overall_status === 'received_complete')) {
+                this.showProviders = false;
+            }
 
             // Auto-expand provider if cp param is present (from tracker)
             const cpId = getQueryParam('cp');
@@ -141,15 +161,26 @@ function caseDetailPage() {
             this.saving = false;
         },
 
-        async changeStatus() {
-            if (!this.nextStatus) return;
+        openMoveForwardModal() {
+            const nextStatuses = FORWARD_TRANSITIONS[this.caseData.status] || [];
+            if (nextStatuses.length === 0) return;
+            this.moveForwardForm = { target_status: nextStatuses[0], note: '' };
+            this.showMoveForwardModal = true;
+        },
+
+        async submitMoveForward() {
+            if (!this.moveForwardForm.target_status || this.moveForwardForm.note.trim().length < 5) {
+                showToast('Please enter a note (min 5 characters)', 'error');
+                return;
+            }
             this.saving = true;
             try {
                 await api.post('cases/' + this.caseId + '/change-status', {
-                    new_status: this.nextStatus
+                    new_status: this.moveForwardForm.target_status,
+                    note: this.moveForwardForm.note.trim()
                 });
                 showToast('Status updated');
-                this.nextStatus = '';
+                this.showMoveForwardModal = false;
                 await this.loadCase();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to update status', 'error');
@@ -330,7 +361,8 @@ function caseDetailPage() {
 
         openReceiptModal(p) {
             this.currentProvider = p;
-            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '' };
+            const alreadyComplete = p.overall_status === 'received_complete';
+            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: alreadyComplete, incomplete_reason: '', file_location: '' };
             this.showReceiptModal = true;
         },
 
@@ -654,12 +686,45 @@ function caseDetailPage() {
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
         },
 
+        // ---- Panel scroll helper ----
+        scrollToPanel(el) {
+            this.$nextTick(() => {
+                const panel = el.closest('[data-panel]') || el.parentElement;
+                panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        },
+
+        // ---- Workflow Stepper ----
+
+        getStepState(stepKey) {
+            const statusOrder = ['collecting', 'verification', 'completed', 'rfd', 'final_verification', 'disbursement', 'accounting', 'closed'];
+            const currentIdx = statusOrder.indexOf(this.caseData.status);
+            const step = this.workflowSteps.find(s => s.key === stepKey);
+            const stepStatuses = step.statuses.map(s => statusOrder.indexOf(s));
+            const maxIdx = Math.max(...stepStatuses);
+            const minIdx = Math.min(...stepStatuses);
+
+            if (currentIdx > maxIdx) return 'completed';
+            if (currentIdx >= minIdx && currentIdx <= maxIdx) return 'active';
+            return 'pending';
+        },
+
+        getStepNumber(stepKey) {
+            return this.workflowSteps.findIndex(s => s.key === stepKey) + 1;
+        },
+
         // ---- Cost Ledger Methods ----
 
         async loadAllCosts() {
             try {
                 const res = await api.get('mr-fee-payments?case_id=' + this.caseId);
-                this.allCosts = res.data.payments || [];
+                const catOrder = { mr_cost: 0, litigation: 1, other: 2 };
+                this.allCosts = (res.data.payments || []).sort((a, b) => {
+                    const ca = catOrder[a.expense_category] ?? 9;
+                    const cb = catOrder[b.expense_category] ?? 9;
+                    if (ca !== cb) return ca - cb;
+                    return (b.payment_date || '').localeCompare(a.payment_date || '');
+                });
                 this.allCostsTotal = {
                     billed: res.data.total_billed || 0,
                     paid: res.data.total_paid || 0
@@ -674,6 +739,8 @@ function caseDetailPage() {
             this.currentProvider = null;
             this.paymentForm = {
                 id: null,
+                case_provider_id: null,
+                provider_name: '',
                 description: '',
                 expense_category: 'other',
                 billed_amount: 0,
@@ -681,11 +748,14 @@ function caseDetailPage() {
                 payment_type: 'check',
                 check_number: '',
                 payment_date: new Date().toISOString().split('T')[0],
+                paid_date: '',
                 paid_by: '',
                 receipt_document_id: null,
                 receipt_file_name: '',
                 notes: ''
             };
+            this.paymentProviderSearch = '';
+            this.paymentProviderResults = [];
             this.showPaymentModal = true;
         },
 
@@ -709,8 +779,28 @@ function caseDetailPage() {
         },
 
         getCategoryLabel(cat) {
-            const labels = { mr_cost: 'MR Cost', litigation: 'Litigation', other: 'Other' };
+            const labels = { mr_cost: 'Records Fee', litigation: 'Litigation', other: 'Other' };
             return labels[cat] || cat;
+        },
+
+        getCostGroups() {
+            const order = ['mr_cost', 'litigation', 'other'];
+            const labels = { mr_cost: 'Costs', litigation: 'Litigation', other: 'Other Expenses' };
+            return order.map(cat => {
+                const costs = this.allCosts.filter(c => c.expense_category === cat).sort((a, b) => {
+                    const aB = (a.provider_name || a.linked_provider_name || '').toUpperCase().includes('BRIDGE LAW') ? 0 : 1;
+                    const bB = (b.provider_name || b.linked_provider_name || '').toUpperCase().includes('BRIDGE LAW') ? 0 : 1;
+                    if (aB !== bB) return aB - bB;
+                    return (b.payment_date || '').localeCompare(a.payment_date || '');
+                });
+                return {
+                    category: cat,
+                    label: labels[cat],
+                    costs: costs,
+                    totalBilled: costs.reduce((s, c) => s + parseFloat(c.billed_amount || 0), 0),
+                    totalPaid: costs.reduce((s, c) => s + parseFloat(c.paid_amount || 0), 0),
+                };
+            }).filter(g => g.costs.length > 0);
         },
 
         printCostLedger() {
@@ -764,7 +854,7 @@ function caseDetailPage() {
             formData.append('preview', '1');
 
             try {
-                const res = await fetch('/MRMS/backend/api/index.php/mr-fee-payments/import', {
+                const res = await fetch('/MRMS/backend/api/mr-fee-payments/import', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') },
                     body: formData
@@ -798,7 +888,7 @@ function caseDetailPage() {
             formData.append('case_id', this.caseId);
 
             try {
-                const res = await fetch('/MRMS/backend/api/index.php/mr-fee-payments/import', {
+                const res = await fetch('/MRMS/backend/api/mr-fee-payments/import', {
                     method: 'POST',
                     headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('auth_token') || '') },
                     body: formData
@@ -862,6 +952,8 @@ function caseDetailPage() {
             this.currentProvider = provider;
             this.paymentForm = {
                 id: null,
+                case_provider_id: provider?.id || null,
+                provider_name: provider?.provider_name || '',
                 description: 'Record Fee',
                 expense_category: 'mr_cost',
                 billed_amount: 0,
@@ -869,17 +961,22 @@ function caseDetailPage() {
                 payment_type: 'check',
                 check_number: '',
                 payment_date: new Date().toISOString().split('T')[0],
+                paid_date: '',
                 paid_by: '',
                 receipt_document_id: null,
                 receipt_file_name: '',
                 notes: ''
             };
+            this.paymentProviderSearch = provider?.provider_name || '';
+            this.paymentProviderResults = [];
             this.showPaymentModal = true;
         },
 
         editPayment(pmt) {
             this.paymentForm = {
                 id: pmt.id,
+                case_provider_id: pmt.case_provider_id || null,
+                provider_name: pmt.provider_name || pmt.linked_provider_name || '',
                 description: pmt.description || '',
                 expense_category: pmt.expense_category || 'mr_cost',
                 billed_amount: parseFloat(pmt.billed_amount) || 0,
@@ -887,11 +984,14 @@ function caseDetailPage() {
                 payment_type: pmt.payment_type || '',
                 check_number: pmt.check_number || '',
                 payment_date: pmt.payment_date || '',
+                paid_date: pmt.paid_date || '',
                 paid_by: pmt.paid_by || '',
                 receipt_document_id: pmt.receipt_document_id || null,
                 receipt_file_name: pmt.receipt_file_name || '',
                 notes: pmt.notes || ''
             };
+            this.paymentProviderSearch = pmt.provider_name || pmt.linked_provider_name || '';
+            this.paymentProviderResults = [];
             this.showPaymentModal = true;
         },
 
@@ -900,7 +1000,8 @@ function caseDetailPage() {
             try {
                 const payload = {
                     case_id: parseInt(this.caseId),
-                    case_provider_id: this.currentProvider?.id || null,
+                    case_provider_id: this.paymentForm.case_provider_id || null,
+                    provider_name: this.paymentForm.provider_name || null,
                     description: this.paymentForm.description,
                     expense_category: this.paymentForm.expense_category,
                     billed_amount: this.paymentForm.billed_amount || 0,
@@ -908,6 +1009,7 @@ function caseDetailPage() {
                     payment_type: this.paymentForm.payment_type || null,
                     check_number: this.paymentForm.check_number || null,
                     payment_date: this.paymentForm.payment_date || null,
+                    paid_date: this.paymentForm.paid_date || null,
                     paid_by: this.paymentForm.paid_by || null,
                     receipt_document_id: this.paymentForm.receipt_document_id || null,
                     notes: this.paymentForm.notes || null
@@ -930,6 +1032,54 @@ function caseDetailPage() {
                 showToast(e.data?.message || 'Failed to save payment', 'error');
             }
             this.saving = false;
+        },
+
+        async searchPaymentProviders() {
+            if (this.paymentProviderSearch.length < 2) {
+                this.paymentProviderResults = [];
+                return;
+            }
+            try {
+                const res = await api.get('providers/search?q=' + encodeURIComponent(this.paymentProviderSearch));
+                this.paymentProviderResults = res.data || [];
+            } catch (e) {
+                this.paymentProviderResults = [];
+            }
+        },
+
+        selectPaymentProvider(pr) {
+            this.paymentProviderSearch = pr.name;
+            this.paymentProviderResults = [];
+            this.paymentForm.provider_name = pr.name;
+            const matched = this.providers.find(p => p.provider_id == pr.id);
+            if (matched) {
+                this.paymentForm.case_provider_id = matched.id;
+                this.currentProvider = matched;
+            } else {
+                this.paymentForm.case_provider_id = null;
+                this.currentProvider = null;
+            }
+        },
+
+        clearPaymentProvider() {
+            this.paymentProviderSearch = '';
+            this.paymentProviderResults = [];
+            this.paymentForm.provider_name = '';
+            this.paymentForm.case_provider_id = null;
+            this.currentProvider = null;
+        },
+
+        autoFillCardNumber() {
+            if (this.paymentForm.payment_type === 'card' && this.paymentForm.paid_by) {
+                const staff = this.staffList.find(u => u.id == this.paymentForm.paid_by);
+                if (staff && staff.card_last4) {
+                    this.paymentForm.check_number = staff.card_last4;
+                } else {
+                    this.paymentForm.check_number = '';
+                }
+            } else if (this.paymentForm.payment_type !== 'check') {
+                this.paymentForm.check_number = '';
+            }
         },
 
         async deletePayment(pmt) {

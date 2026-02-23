@@ -41,7 +41,7 @@ if ($newOwner) {
     dbInsert('notifications', [
         'user_id' => $newOwner,
         'type' => 'mbds_completed',
-        'message' => "MBDS report for case {$report['case_number']} is ready for review — assigned to you",
+        'message' => "Medical Balance report for case {$report['case_number']} is ready for review — assigned to you",
         'due_date' => date('Y-m-d')
     ]);
 }

@@ -23,7 +23,7 @@ $report = dbFetchOne(
 );
 
 if (!$report) {
-    errorResponse('MBDS report not found', 404);
+    errorResponse('Medical Balance report not found', 404);
 }
 
 $lines = dbFetchAll(

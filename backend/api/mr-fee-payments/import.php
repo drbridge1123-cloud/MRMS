@@ -40,14 +40,20 @@ $parsedRows = [];
 $currentCategory = 'mr_cost';
 
 // Build staff name → user ID lookup
-$staffUsers = dbFetchAll("SELECT id, full_name FROM users");
+$staffUsers = dbFetchAll("SELECT id, full_name, card_last4 FROM users");
 $staffMap = [];
+$staffCardMap = [];
 foreach ($staffUsers as $u) {
+    $uid = (int)$u['id'];
     // Map by first name (lowercase)
     $firstName = strtolower(explode(' ', trim($u['full_name']))[0]);
-    $staffMap[$firstName] = (int)$u['id'];
+    $staffMap[$firstName] = $uid;
     // Also map full name
-    $staffMap[strtolower(trim($u['full_name']))] = (int)$u['id'];
+    $staffMap[strtolower(trim($u['full_name']))] = $uid;
+    // Card last4 lookup by user ID
+    if ($u['card_last4']) {
+        $staffCardMap[$uid] = $u['card_last4'];
+    }
 }
 
 // Get case providers for matching
@@ -97,8 +103,8 @@ foreach ($lines as $line) {
     $billedAmount = parseAmount($billedRaw);
     $paidAmount = parseAmount(trim($cols[23] ?? ''));
 
-    // Skip zero rows (empty template rows with $0 or $-)
-    if ($billedAmount == 0 && $paidAmount == 0) continue;
+    // Skip zero rows only if no provider name (empty template rows)
+    if ($billedAmount == 0 && $paidAmount == 0 && $providerName === '') continue;
 
     // Parse date
     $dateRaw = trim($cols[4] ?? '');
@@ -106,8 +112,7 @@ foreach ($lines as $line) {
     $paidDateRaw = trim($cols[25] ?? '');
     $paidDate = parseExcelDate($paidDateRaw);
 
-    // Use paid date if available, otherwise payment date
-    $finalDate = $paidDate ?: $paymentDate;
+    // payment_date = original date (Col 4), paid_date = paid date (Col 25)
 
     // Parse payment type
     $paymentTypeRaw = strtolower(trim($cols[19] ?? ''));
@@ -134,6 +139,12 @@ foreach ($lines as $line) {
         }
     }
 
+    // Auto-fill card last 4 for card payments
+    $checkNumber = null;
+    if ($paymentType === 'card' && $paidBy && isset($staffCardMap[$paidBy])) {
+        $checkNumber = $staffCardMap[$paidBy];
+    }
+
     $parsedRows[] = [
         'case_id' => $caseId,
         'case_provider_id' => $cpId,
@@ -143,7 +154,10 @@ foreach ($lines as $line) {
         'billed_amount' => $billedAmount,
         'paid_amount' => $paidAmount,
         'payment_type' => $paymentType,
-        'payment_date' => $finalDate,
+        'check_number' => $checkNumber,
+        'payment_date' => $paymentDate,
+        'original_date' => $paymentDate,
+        'paid_date' => $paidDate,
         'paid_by' => $paidBy,
         'created_by' => $userId,
     ];
@@ -174,6 +188,8 @@ if (!empty($_POST['preview'])) {
             'paid_amount' => $row['paid_amount'],
             'payment_type' => $row['payment_type'],
             'payment_date' => $row['payment_date'],
+            'original_date' => $row['original_date'],
+            'paid_date' => $row['paid_date'],
             'paid_by_name' => $staffName,
             'matched_provider' => $row['case_provider_id'] ? true : false,
         ];
@@ -193,6 +209,7 @@ $imported = 0;
 $errors = [];
 foreach ($parsedRows as $i => $row) {
     try {
+        unset($row['original_date']);
         dbInsert('mr_fee_payments', $row);
         $imported++;
 

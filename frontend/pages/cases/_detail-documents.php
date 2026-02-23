@@ -1,13 +1,13 @@
 
             <!-- Documents Section -->
-            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mb-6"
+            <div class="bg-white mb-4" data-panel :class="{'panel-open': docsOpen}" style="border:1px solid #e8e4dc; border-left:3px solid var(--gold); border-radius:10px; box-shadow:0 1px 4px rgba(15,27,45,0.04); overflow:hidden;"
                 x-data="{...documentUploader(caseId), docsOpen: false}" x-init="init()">
-                <div class="px-6 py-3 flex items-center justify-between cursor-pointer" @click="docsOpen = !docsOpen">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="docsOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer" @click="docsOpen = !docsOpen; if(docsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+                    <div class="flex items-center gap-2.5">
+                        <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="docsOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <h3 class="font-semibold text-v2-text text-sm">Documents</h3>
+                        <h3 class="font-semibold text-v2-text" style="font-size:14px;">Documents</h3>
                         <span class="text-xs text-v2-text-light" x-text="'(' + documents.length + ')'"></span>
                     </div>
                     <button @click.stop="docsOpen = true; $nextTick(() => $refs.fileInput.click())"
@@ -325,27 +325,15 @@
                                     <div class="flex items-center gap-2">
                                         <!-- Generate for Provider button (only for templates) -->
                                         <template x-if="doc.is_provider_template == 1">
-                                            <button @click="promptGenerateProviderVersion(doc)" title="Generate for Provider"
-                                                class="p-2 text-v2-text-light hover:text-blue-600 hover:bg-blue-50 rounded">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
+                                            <button @click="promptGenerateProviderVersion(doc)" title="Generate for Provider" class="icon-btn icon-btn-sm">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                             </button>
                                         </template>
-                                        <button @click="downloadDocument(doc.id)" title="Download"
-                                            class="p-2 text-v2-text-light hover:text-gold hover:bg-gold/10 rounded">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                            </svg>
+                                        <button @click="downloadDocument(doc.id)" title="Download" class="icon-btn icon-btn-sm">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                         </button>
-                                        <button @click="deleteDocument(doc.id, doc.original_file_name)" title="Delete"
-                                            class="p-2 text-v2-text-light hover:text-red-500 hover:bg-red-50 rounded">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
+                                        <button @click="deleteDocument(doc.id, doc.original_file_name)" title="Delete" class="icon-btn icon-btn-danger icon-btn-sm">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
                                     </div>
                                 </div>

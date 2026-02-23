@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
-$pageTitle = 'MBDS Report';
+$pageTitle = 'Medical Balance Report';
 $currentPage = 'mbds';
 $pageScripts = ['/MRMS/frontend/assets/js/pages/mbds-edit.js'];
 ob_start();
@@ -28,7 +28,7 @@ ob_start();
                     </a>
                     <div>
                         <div class="flex items-center gap-2.5">
-                            <h2 class="text-2xl font-bold text-navy">MBDS</h2>
+                            <h2 class="text-2xl font-bold text-navy">Medical Balance Report</h2>
                             <span class="status-badge text-xs px-2.5 py-1" :class="'status-' + caseData.case_status"
                                 x-text="getStatusLabel(caseData.case_status)"></span>
                             <template x-if="report && report.status === 'draft'">
@@ -50,7 +50,7 @@ ob_start();
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <button @click="printMbds()" title="Print MBDS"
+                    <button @click="printMbds()" title="Print Medical Balance Report"
                         class="border border-v2-card-border text-v2-text-mid px-3 py-1.5 rounded-lg text-sm hover:bg-v2-bg flex items-center gap-1.5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -440,7 +440,7 @@ ob_start();
                 <div class="modal-v2-backdrop fixed inset-0" @click="showMbdsImportModal = false"></div>
                 <div class="modal-v2 relative w-full max-w-4xl z-10" @click.stop>
                     <div class="modal-v2-header">
-                        <h3 class="modal-v2-title">Import MBDS Preview</h3>
+                        <h3 class="modal-v2-title">Import Medical Balance Preview</h3>
                         <button type="button" class="modal-v2-close" @click="showMbdsImportModal = false">
                             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -472,7 +472,7 @@ ob_start();
                         <!-- Warning if existing lines -->
                         <template x-if="lines.length > 0">
                             <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-4 text-sm text-amber-800">
-                                <strong>Warning:</strong> This will replace all <span x-text="lines.length"></span> existing MBDS lines with the imported data.
+                                <strong>Warning:</strong> This will replace all <span x-text="lines.length"></span> existing Medical Balance lines with the imported data.
                             </div>
                         </template>
 

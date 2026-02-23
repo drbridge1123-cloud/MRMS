@@ -10,8 +10,8 @@
  * @param array $rows Array of associative arrays
  */
 function outputCSV($filename, $headers, $rows) {
-    // Clear any previous output
-    if (ob_get_level()) ob_end_clean();
+    // Clear ALL output buffer levels
+    while (ob_get_level()) ob_end_clean();
 
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');

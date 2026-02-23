@@ -1,7 +1,7 @@
 <?php
 require_once __DIR__ . '/../../../backend/helpers/auth.php';
 requireAuth();
-$pageTitle = 'MBDS Reports';
+$pageTitle = 'Medical Balance Reports';
 $currentPage = 'mbds';
 $pageScripts = ['/MRMS/frontend/assets/js/pages/mbds.js'];
 ob_start();
@@ -12,8 +12,8 @@ ob_start();
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-v2-text">MBDS Reports</h1>
-            <p class="text-sm text-v2-text-light mt-1">Medical Bills Summary reports across all cases</p>
+            <h1 class="text-2xl font-bold text-v2-text">Medical Balance Reports</h1>
+            <p class="text-sm text-v2-text-light mt-1">Medical Balance reports across all cases</p>
         </div>
     </div>
 
@@ -111,7 +111,7 @@ ob_start();
                     </thead>
                     <tbody>
                         <template x-if="items.length === 0">
-                            <tr><td colspan="9" class="text-center text-v2-text-light py-12">No MBDS reports found</td></tr>
+                            <tr><td colspan="9" class="text-center text-v2-text-light py-12">No Medical Balance reports found</td></tr>
                         </template>
                         <template x-for="item in items" :key="item.id">
                             <tr class="hover:bg-v2-bg/50 transition-colors cursor-pointer"

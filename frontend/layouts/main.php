@@ -35,10 +35,10 @@
                             DEFAULT: '#C9A84C',
                             hover: '#B8973F',
                         },
-                        'v2-bg': '#F5F5F0',
+                        'v2-bg': '#F5F0E8',
                         'v2-card': '#FFFFFF',
                         'v2-card-border': '#E5E5E0',
-                        'v2-card-bg': '#F5F5F0',
+                        'v2-card-bg': '#F5F0E8',
                         'v2-text': '#0F1B2D',
                         'v2-text-mid': '#3D4F63',
                         'v2-text-light': '#5A6B82',
@@ -80,7 +80,7 @@
 
     <?php if (!empty($pageScripts)): ?>
         <?php foreach ($pageScripts as $script): ?>
-            <script src="<?= $script ?>"></script>
+            <script src="<?= $script ?>?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . $script) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
     <script src="/MRMS/frontend/assets/js/alpine-stores.js"></script>

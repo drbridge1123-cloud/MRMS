@@ -51,8 +51,8 @@ $total = dbFetchOne("SELECT COUNT(*) as cnt FROM users WHERE {$whereClause}", $p
 
 // Select only basic fields for dropdowns (active_only), full fields for admin
 $selectFields = (isset($_GET['active_only']) && $_GET['active_only'] == '1')
-    ? "id, username, full_name, title, role"
-    : "id, username, full_name, title, email, smtp_email, role, is_active, created_at, updated_at";
+    ? "id, username, full_name, title, role, card_last4"
+    : "id, username, full_name, title, email, smtp_email, role, is_active, card_last4, created_at, updated_at";
 
 $users = dbFetchAll(
     "SELECT {$selectFields}

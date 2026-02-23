@@ -57,16 +57,29 @@ if (array_key_exists('smtp_app_password', $input)) {
     $data['smtp_app_password'] = $input['smtp_app_password'] ? $input['smtp_app_password'] : null;
 }
 
+if (array_key_exists('card_last4', $input)) {
+    $val = $input['card_last4'] ? preg_replace('/[^0-9]/', '', $input['card_last4']) : null;
+    $data['card_last4'] = $val ? substr($val, 0, 4) : null;
+}
+
 if (empty($data)) {
     errorResponse('No fields to update');
 }
 
 dbUpdate('users', $data, 'id = ?', [$targetId]);
 
+// Backfill card_last4 into existing card payments
+if (!empty($data['card_last4'])) {
+    dbExecute(
+        "UPDATE mr_fee_payments SET check_number = ? WHERE paid_by = ? AND payment_type = 'card' AND (check_number IS NULL OR check_number = '')",
+        [$data['card_last4'], $targetId]
+    );
+}
+
 logActivity($currentUserId, 'user_updated', 'user', $targetId, $data);
 
 $updated = dbFetchOne(
-    "SELECT id, username, full_name, title, email, smtp_email, role, is_active, created_at, updated_at FROM users WHERE id = ?",
+    "SELECT id, username, full_name, title, email, smtp_email, role, is_active, card_last4, created_at, updated_at FROM users WHERE id = ?",
     [$targetId]
 );
 

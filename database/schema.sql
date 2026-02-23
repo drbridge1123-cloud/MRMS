@@ -30,6 +30,16 @@ CREATE TABLE IF NOT EXISTS cases (
     status ENUM('collecting','verification','completed','rfd','final_verification','disbursement','accounting','closed') NOT NULL DEFAULT 'collecting',
     treatment_status ENUM('in_treatment','treatment_done','neg','rfd') NULL,
     treatment_end_date DATE NULL,
+    settlement_amount DECIMAL(12,2) DEFAULT 0,
+    attorney_fee_percent DECIMAL(5,4) DEFAULT 0.3333,
+    coverage_3rd_party TINYINT(1) DEFAULT 0,
+    coverage_um TINYINT(1) DEFAULT 0,
+    coverage_uim TINYINT(1) DEFAULT 0,
+    policy_limit TINYINT(1) DEFAULT 0,
+    um_uim_limit TINYINT(1) DEFAULT 0,
+    pip_subrogation_amount DECIMAL(12,2) DEFAULT 0,
+    pip_insurance_company VARCHAR(255) NULL,
+    settlement_method VARCHAR(20) NULL,
     attorney_name VARCHAR(100) NULL,
     ini_completed TINYINT(1) NOT NULL DEFAULT 0,
     notes TEXT NULL,
@@ -330,3 +340,57 @@ CREATE INDEX idx_mr_fee_payments_cp ON mr_fee_payments(case_provider_id);
 CREATE INDEX idx_mr_fee_payments_paid_by ON mr_fee_payments(paid_by);
 CREATE INDEX idx_mr_fee_payments_date ON mr_fee_payments(payment_date);
 CREATE INDEX idx_mr_fee_payments_category ON mr_fee_payments(expense_category);
+
+-- Case Negotiations (Coverage-level insurance negotiations)
+CREATE TABLE IF NOT EXISTS case_negotiations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id INT NOT NULL,
+    coverage_type ENUM('3rd_party','um','uim','dv') NOT NULL DEFAULT '3rd_party',
+    insurance_company VARCHAR(255) NULL,
+    round_number INT NOT NULL DEFAULT 1,
+    demand_date DATE NULL,
+    demand_amount DECIMAL(12,2) DEFAULT 0,
+    offer_date DATE NULL,
+    offer_amount DECIMAL(12,2) DEFAULT 0,
+    party VARCHAR(255) NULL COMMENT 'Adjuster/insurance company name',
+    adjuster_phone VARCHAR(50) NULL,
+    adjuster_fax VARCHAR(50) NULL,
+    adjuster_email VARCHAR(255) NULL,
+    claim_number VARCHAR(100) NULL,
+    status ENUM('pending','countered','accepted','rejected') DEFAULT 'pending',
+    notes TEXT NULL,
+    created_by INT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_case_neg_case ON case_negotiations(case_id);
+CREATE INDEX idx_case_neg_coverage ON case_negotiations(coverage_type);
+
+-- Provider Negotiations (Provider-level lien negotiations)
+CREATE TABLE IF NOT EXISTS provider_negotiations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    case_id INT NOT NULL,
+    case_provider_id INT NULL,
+    mbds_line_id INT NULL COMMENT 'Links to mbds_lines for balance reference',
+    provider_name VARCHAR(255) NOT NULL,
+    original_balance DECIMAL(12,2) DEFAULT 0,
+    requested_reduction DECIMAL(12,2) DEFAULT 0,
+    accepted_amount DECIMAL(12,2) DEFAULT 0 COMMENT 'Final agreed amount after reduction',
+    reduction_percent DECIMAL(5,2) DEFAULT 0,
+    status ENUM('pending','negotiating','accepted','rejected','waived') DEFAULT 'pending',
+    contact_name VARCHAR(255) NULL,
+    contact_info VARCHAR(255) NULL,
+    notes TEXT NULL,
+    created_by INT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE,
+    FOREIGN KEY (case_provider_id) REFERENCES case_providers(id) ON DELETE SET NULL,
+    FOREIGN KEY (mbds_line_id) REFERENCES mbds_lines(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_prov_neg_case ON provider_negotiations(case_id);

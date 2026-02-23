@@ -8,12 +8,13 @@ if (!$caseId) {
 }
 
 $input = getInput();
-$errors = validateRequired($input, ['new_status']);
+$errors = validateRequired($input, ['new_status', 'note']);
 if (!empty($errors)) {
     errorResponse(implode(', ', $errors));
 }
 
 $newStatus = $input['new_status'];
+$note = sanitizeString($input['note']);
 
 $case = dbFetchOne("SELECT * FROM cases WHERE id = ?", [$caseId]);
 if (!$case) {
@@ -63,7 +64,7 @@ if ($newOwner) {
     dbInsert('notifications', [
         'user_id' => $newOwner,
         'type' => 'status_changed',
-        'message' => "Case {$case['case_number']} moved to {$statusLabels[$newStatus]} — assigned to you",
+        'message' => "Case {$case['case_number']} moved to {$statusLabels[$newStatus]} — assigned to you. Note: {$note}",
         'due_date' => date('Y-m-d')
     ]);
 }
@@ -72,7 +73,8 @@ logActivity($userId, 'status_changed', 'case', $caseId, [
     'case_number' => $case['case_number'],
     'from_status' => $currentStatus,
     'to_status' => $newStatus,
-    'assigned_to' => $newOwner
+    'assigned_to' => $newOwner,
+    'note' => $note
 ]);
 
 $updatedCase = dbFetchOne(

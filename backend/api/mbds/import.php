@@ -101,8 +101,8 @@ foreach ($lines as $lineIdx => $line) {
     $visits = trim($cols[15] ?? '');
     $note = trim($cols[16] ?? '');
 
-    // Skip rows with all zeros (empty template rows)
-    if ($charges == 0 && $pip1 == 0 && $pip2 == 0 && $health1 == 0 && $health2 == 0
+    // Skip rows with all zeros only if no provider name (empty template rows)
+    if ($providerName === '' && $charges == 0 && $pip1 == 0 && $pip2 == 0 && $health1 == 0 && $health2 == 0
         && $discount == 0 && $officePaid == 0 && $clientPaid == 0
         && $treatmentDates === '' && $note === '') continue;
 
@@ -164,7 +164,7 @@ foreach ($lines as $lineIdx => $line) {
 }
 
 if (empty($parsedLines)) {
-    errorResponse('No MBDS entries found in the CSV. Make sure the file matches the expected Excel format.');
+    errorResponse('No Medical Balance entries found in the CSV. Make sure the file matches the expected Excel format.');
 }
 
 // Preview mode
@@ -257,7 +257,7 @@ jsonResponse([
     'imported' => $imported,
     'total_rows' => count($parsedLines),
     'errors' => $errors,
-    'message' => "Imported {$imported} MBDS lines",
+    'message' => "Imported {$imported} Medical Balance lines",
 ]);
 
 // --- Helper functions ---

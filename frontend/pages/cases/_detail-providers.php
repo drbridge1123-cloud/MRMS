@@ -1,11 +1,11 @@
             <!-- Provider List -->
-            <div class="bg-white rounded-xl shadow-sm border border-v2-card-border mb-6">
-                <div class="px-6 py-3 flex items-center justify-between cursor-pointer" @click="showProviders = !showProviders">
-                    <div class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="showProviders ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="bg-white mb-4" data-panel :class="{'panel-open': showProviders}" style="border:1px solid #e8e4dc; border-left:3px solid var(--gold); border-radius:10px; box-shadow:0 1px 4px rgba(15,27,45,0.04); overflow:hidden;">
+                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer" @click="showProviders = !showProviders; if(showProviders) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+                    <div class="flex items-center gap-2.5">
+                        <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="showProviders ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <h3 class="font-semibold text-v2-text text-sm">Providers</h3>
+                        <h3 class="font-semibold text-v2-text" style="font-size:14px;">Providers</h3>
                         <span class="text-xs text-v2-text-light" x-text="'(' + providers.length + ')'"></span>
                     </div>
                     <button @click.stop="showAddProviderModal = true"
@@ -94,9 +94,12 @@
                             </tr>
                         </tbody>
                         <template x-for="p in providers" :key="p.id">
-                            <tbody>
-                                <tr @click="toggleRequestHistory(p.id)" class="cursor-pointer hover:bg-v2-bg/50"
-                                    :class="expandedProvider === p.id ? 'provider-expanded-row' : ''">
+                            <tbody :class="{
+                                'provider-selected': expandedProvider === p.id,
+                                'provider-dimmed': expandedProvider !== null && expandedProvider !== p.id
+                            }">
+                                <tr @click="toggleRequestHistory(p.id)" class="cursor-pointer"
+                                    :class="expandedProvider === p.id ? 'provider-expanded-row' : 'hover:bg-v2-bg/50'">
                                     <td class="font-medium">
                                         <div class="flex items-center gap-1">
                                             <svg class="w-3 h-3 text-v2-text-light transition-transform"
@@ -150,14 +153,8 @@
                                             <span
                                                 :class="p.days_until_deadline < 0 ? 'text-red-600 font-semibold' : (p.days_until_deadline <= 7 ? 'text-yellow-600' : '')"
                                                 x-text="formatDate(p.deadline) || '-'"></span>
-                                            <button @click.stop="openDeadlineModal(p)" title="Change Deadline"
-                                                class="p-0.5 text-v2-text-light hover:text-gold rounded">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                                </svg>
+                                            <button @click.stop="openDeadlineModal(p)" title="Change Deadline" class="icon-btn icon-btn-sm" style="width:22px;height:22px;">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                             </button>
                                             <template x-if="p.escalation_tier && p.escalation_tier !== 'normal'">
                                                 <span class="escalation-badge"
@@ -169,31 +166,14 @@
                                     <td x-text="p.assigned_name || '-'"></td>
                                     <td>
                                         <div class="flex gap-1" @click.stop>
-                                            <button @click="openRequestModal(p)" title="New Request"
-                                                class="p-1.5 text-gold hover:bg-v2-bg rounded">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                                </svg>
+                                            <button @click="openRequestModal(p)" title="New Request" class="icon-btn icon-btn-sm">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                                             </button>
-                                            <button @click="openReceiptModal(p)" title="Log Receipt"
-                                                class="p-1.5 text-green-600 hover:bg-green-50 rounded">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
+                                            <button @click="openReceiptModal(p)" title="Log Receipt" class="icon-btn icon-btn-sm" style="color:#16a34a;">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                             </button>
-                                            <button @click="deleteProvider(p.id)" title="Remove"
-                                                class="p-1.5 text-red-400 hover:bg-red-50 rounded">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
+                                            <button @click="deleteProvider(p.id)" title="Remove" class="icon-btn icon-btn-danger icon-btn-sm">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </div>
                                     </td>
@@ -261,27 +241,13 @@
                                                             <div class="flex items-center gap-1">
                                                                 <template
                                                                     x-if="['email','fax'].includes(req.request_method) && req.send_status !== 'sent'">
-                                                                    <button @click.stop="openPreviewModal(req)"
-                                                                        title="Preview & Send"
-                                                                        class="p-1 rounded text-gold hover:bg-gold/10">
-                                                                        <svg class="w-4 h-4" fill="none"
-                                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                                                        </svg>
+                                                                    <button @click.stop="openPreviewModal(req)" title="Preview & Send" class="icon-btn icon-btn-sm">
+                                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                                                                     </button>
                                                                 </template>
                                                                 <template x-if="['draft', 'failed'].includes(req.send_status)">
-                                                                    <button @click.stop="deleteRequest(req)"
-                                                                        title="Delete draft request"
-                                                                        class="p-1 rounded text-red-600 hover:bg-red-50">
-                                                                        <svg class="w-4 h-4" fill="none"
-                                                                            stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round"
-                                                                                stroke-linejoin="round" stroke-width="2"
-                                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                        </svg>
+                                                                    <button @click.stop="deleteRequest(req)" title="Delete draft request" class="icon-btn icon-btn-danger icon-btn-sm">
+                                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                                     </button>
                                                                 </template>
                                                                 <template x-if="req.send_status === 'sent'">
@@ -311,3 +277,40 @@
                     </table>
                 </div>
             </div>
+
+            <style>
+                /* ── Provider Selection ── */
+                tbody.provider-dimmed {
+                    opacity: 0.45;
+                    transition: opacity 0.2s;
+                }
+                tbody.provider-selected {
+                    filter: drop-shadow(0 2px 8px rgba(201,168,76,0.18));
+                    transition: filter 0.2s;
+                }
+
+                /* Gold border via td borders */
+                tbody.provider-selected > tr:first-child > td {
+                    border-top: 2px solid var(--gold, #C9A84C);
+                }
+                tbody.provider-selected > tr > td:first-child {
+                    border-left: 2px solid var(--gold, #C9A84C);
+                }
+                tbody.provider-selected > tr > td:last-child {
+                    border-right: 2px solid var(--gold, #C9A84C);
+                }
+                tbody.provider-selected > tr:nth-child(2) > td {
+                    border-bottom: 2px solid var(--gold, #C9A84C);
+                }
+
+                /* Rounded corners */
+                tbody.provider-selected > tr:first-child > td:first-child { border-top-left-radius: 8px; }
+                tbody.provider-selected > tr:first-child > td:last-child { border-top-right-radius: 8px; }
+                tbody.provider-selected > tr:nth-child(2) > td:first-child { border-bottom-left-radius: 8px; }
+                tbody.provider-selected > tr:nth-child(2) > td:last-child { border-bottom-right-radius: 8px; }
+
+                /* Selected row background */
+                tbody.provider-selected > tr > td {
+                    background: #fff;
+                }
+            </style>

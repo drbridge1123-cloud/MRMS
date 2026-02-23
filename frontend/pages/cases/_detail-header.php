@@ -1,45 +1,53 @@
-            <!-- Top bar -->
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center gap-4">
-                    <a href="/MRMS/frontend/pages/cases/index.php" class="text-v2-text-light hover:text-v2-text-mid">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </a>
-                    <div>
-                        <div class="flex items-center gap-3">
-                            <h2 class="text-2xl font-bold text-v2-text" x-text="caseData.case_number"></h2>
-                            <span class="status-badge text-xs px-2.5 py-1" :class="'status-' + caseData.status"
+            <!-- Navy Hero Section -->
+            <div class="case-hero">
+                <!-- Top row: case info + buttons -->
+                <div class="hero-top">
+                    <div class="hero-left">
+                        <div class="hero-id-row">
+                            <span class="hero-case-num" x-text="caseData.case_number"></span>
+                            <span class="hero-badge"
                                 x-text="getStatusLabel(caseData.status)"></span>
                         </div>
-                        <p class="text-v2-text-light text-sm" x-text="caseData.client_name"></p>
+                        <div class="hero-client" x-text="caseData.client_name"></div>
+                    </div>
+                    <div class="hero-actions">
+                        <button @click="showEditModal = true" class="hero-btn hero-btn-ghost">Edit</button>
+                        <button x-show="caseData && FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0"
+                            @click="openMoveForwardModal()"
+                            class="hero-btn hero-btn-gold">
+                            Move to <span x-text="getStatusLabel(FORWARD_TRANSITIONS[caseData.status][0])"></span> &rarr;
+                        </button>
+                        <button x-show="caseData && BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0"
+                            @click="openSendBackModal()"
+                            class="hero-btn hero-btn-gold-outline">Send Back</button>
                     </div>
                 </div>
-                <div class="flex gap-2 items-center">
-                    <button @click="showEditModal = true"
-                        class="px-3 py-1.5 text-sm text-v2-text-mid hover:text-v2-text border border-v2-card-border rounded-lg hover:bg-v2-bg">
-                        Edit
-                    </button>
-                    <div class="w-px h-6 bg-v2-card-border mx-1"
-                         x-show="caseData && ((FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0) || (BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0))"></div>
-                    <select x-model="nextStatus" @change="changeStatus()"
-                        class="border border-v2-card-border rounded-lg px-3 py-1.5 text-sm"
-                        x-show="caseData && FORWARD_TRANSITIONS[caseData.status] && FORWARD_TRANSITIONS[caseData.status].length > 0">
-                        <option value="">Move to...</option>
-                        <template x-for="s in (caseData && FORWARD_TRANSITIONS[caseData.status] || [])" :key="s">
-                            <option :value="s" x-text="getStatusLabel(s)"></option>
-                        </template>
-                    </select>
-                    <button x-show="caseData && BACKWARD_TRANSITIONS[caseData.status] && BACKWARD_TRANSITIONS[caseData.status].length > 0"
-                        @click="openSendBackModal()"
-                        class="px-3 py-1.5 text-sm text-orange-600 border border-orange-200 rounded-lg hover:bg-orange-50">
-                        Send Back
-                    </button>
+
+                <!-- Stage Pipeline -->
+                <div class="pipeline" :data-count="workflowSteps.length">
+                    <template x-for="(step, idx) in workflowSteps" :key="step.key">
+                        <div class="stage" :class="{
+                            'stage-done': getStepState(step.key) === 'completed',
+                            'stage-cur': getStepState(step.key) === 'active',
+                            'stage-first': idx === 0,
+                            'stage-last': idx === workflowSteps.length - 1,
+                        }">
+                            <div class="stage-circle">
+                                <template x-if="getStepState(step.key) === 'completed'">
+                                    <span>&#10003;</span>
+                                </template>
+                                <template x-if="getStepState(step.key) !== 'completed'">
+                                    <span x-text="idx + 1"></span>
+                                </template>
+                            </div>
+                            <div class="stage-label" x-text="step.label"></div>
+                        </div>
+                    </template>
                 </div>
             </div>
 
-            <!-- Client info cards -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <!-- Client info cards (light bg) -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" style="margin-top: 16px;">
                 <div class="info-card bg-white rounded-lg border border-v2-card-border p-4">
                     <p class="text-xs text-v2-text-light mb-1">Date of Birth</p>
                     <p class="text-sm font-medium" x-text="formatDate(caseData.client_dob) || '-'"></p>
@@ -61,3 +69,196 @@
                     <p class="text-sm font-medium" x-text="caseData.ini_completed ? 'Yes' : 'No'"></p>
                 </div>
             </div>
+
+            <style>
+                /* ── Hero Section ── */
+                .case-hero {
+                    background: #FFFFFF;
+                    margin: -24px -24px 0;
+                    padding: 24px 28px 0;
+                    border-bottom: 3px solid var(--gold, #C9A84C);
+                }
+                .hero-top {
+                    display: flex;
+                    align-items: flex-start;
+                    justify-content: space-between;
+                    margin-bottom: 24px;
+                }
+                .hero-left {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 5px;
+                }
+                .hero-id-row {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .hero-case-num {
+                    font-size: 28px;
+                    font-weight: 600;
+                    color: #1a2535;
+                    font-family: 'IBM Plex Mono', 'Libre Franklin', monospace;
+                    letter-spacing: -0.02em;
+                    line-height: 1;
+                }
+                .hero-badge {
+                    font-size: 10px;
+                    font-weight: 700;
+                    padding: 3px 10px;
+                    border-radius: 3px;
+                    letter-spacing: 0.07em;
+                    text-transform: uppercase;
+                    background: rgba(201,168,76,0.15);
+                    color: #B8973F;
+                    border: 1px solid rgba(201,168,76,0.35);
+                }
+                .hero-client {
+                    font-size: 14px;
+                    color: #8a8a82;
+                }
+                .hero-actions {
+                    display: flex;
+                    gap: 8px;
+                    align-items: center;
+                }
+                .hero-btn {
+                    padding: 7px 16px;
+                    border-radius: 5px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    font-family: inherit;
+                    transition: all 0.12s;
+                    letter-spacing: 0.02em;
+                }
+                .hero-btn-ghost {
+                    background: #fff;
+                    border: 1px solid #d0cdc6;
+                    color: #6b6b63;
+                }
+                .hero-btn-ghost:hover {
+                    border-color: #b0ada6;
+                    color: #1a2535;
+                }
+                .hero-btn-gold {
+                    background: var(--gold, #C9A84C);
+                    border: 1px solid var(--gold, #C9A84C);
+                    color: #fff;
+                }
+                .hero-btn-gold:hover {
+                    background: var(--gold-hover, #B8973F);
+                    border-color: var(--gold-hover, #B8973F);
+                }
+                .hero-btn-gold-outline {
+                    background: #fff;
+                    border: 1px solid #d0cdc6;
+                    color: #6b6b63;
+                }
+                .hero-btn-gold-outline:hover {
+                    border-color: #b0ada6;
+                    color: #1a2535;
+                }
+
+                /* ── Stage Pipeline ── */
+                .pipeline {
+                    display: flex;
+                    gap: 0;
+                    margin: 0 -28px;
+                    border-top: 1px solid #e8e4dc;
+                }
+                .stage {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    padding: 10px 6px 0;
+                    position: relative;
+                    border-bottom: 3px solid transparent;
+                    transition: all 0.15s;
+                }
+                .stage:hover {
+                    background: rgba(201,168,76,0.03);
+                }
+                .stage-done {
+                    border-bottom-color: rgba(201,168,76,0.3);
+                }
+                .stage-cur {
+                    border-bottom-color: var(--gold, #C9A84C);
+                }
+
+                /* Connector lines */
+                .stage::before {
+                    content: '';
+                    position: absolute;
+                    top: 23px;
+                    left: 0;
+                    right: 50%;
+                    height: 1px;
+                    background: #e8e4dc;
+                }
+                .stage::after {
+                    content: '';
+                    position: absolute;
+                    top: 23px;
+                    left: 50%;
+                    right: 0;
+                    height: 1px;
+                    background: #e8e4dc;
+                }
+                .stage-first::before { display: none; }
+                .stage-last::after { display: none; }
+                .stage-done::before,
+                .stage-done::after {
+                    background: rgba(201,168,76,0.35);
+                }
+                .stage-cur::before {
+                    background: rgba(201,168,76,0.35);
+                }
+
+                .stage-circle {
+                    width: 28px;
+                    height: 28px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: 700;
+                    flex-shrink: 0;
+                    z-index: 1;
+                    position: relative;
+                    margin-bottom: 6px;
+                    transition: all 0.15s;
+                    /* Default (future/pending) */
+                    background: #f0eee8;
+                    color: #bbb;
+                    border: 1.5px solid #e0ddd6;
+                }
+                .stage-done .stage-circle {
+                    background: rgba(201,168,76,0.15);
+                    color: #B8973F;
+                    border-color: rgba(201,168,76,0.35);
+                }
+                .stage-cur .stage-circle {
+                    background: var(--gold, #C9A84C);
+                    color: #fff;
+                    border-color: var(--gold, #C9A84C);
+                }
+                .stage-label {
+                    font-size: 9px;
+                    font-weight: 700;
+                    letter-spacing: 0.1em;
+                    text-transform: uppercase;
+                    text-align: center;
+                    padding-bottom: 10px;
+                    /* Default (future/pending) */
+                    color: #bbb;
+                }
+                .stage-done .stage-label {
+                    color: #B8973F;
+                }
+                .stage-cur .stage-label {
+                    color: var(--gold, #C9A84C);
+                }
+            </style>

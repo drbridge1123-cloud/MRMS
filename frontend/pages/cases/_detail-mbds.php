@@ -3,16 +3,15 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
 
 .mbds-panel {
-    --navy: #0F1B2D;
-    --navy-light: #1A2A40;
-    --navy-border: #243347;
+    --navy: var(--sidebar, #0F1B2D);
+    --navy-light: var(--sidebar-light, #1A2A40);
+    --navy-border: var(--sidebar-border, #243347);
     --gold: #C9A84C;
     --gold-hover: #B8973F;
-    --linen: #E5E5E0;
-    --linen-dark: #C8C8C2;
-    --linen-text: #5a5a54;
-    --mbds-bg: #f2f2ee;
-    --mbds-border: #ddddd8;
+    --gold-light: #E8D5A0;
+    --off-white: #fdfdfb;
+    --border: #e8e4dc;
+    --border-soft: #f0ede6;
     --mbds-muted: #8a8a82;
     --mbds-text: #1a2535;
     --mbds-red: #b83232;
@@ -21,9 +20,10 @@
     font-family: 'IBM Plex Sans', sans-serif;
     font-size: 13px;
     color: var(--mbds-text);
-    border: 1px solid var(--mbds-border);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
     border-radius: 10px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 4px rgba(15,27,45,0.04);
     overflow: hidden;
     margin-bottom: 24px;
     background: #fff;
@@ -31,8 +31,8 @@
 
 /* Report Header Bar */
 .mbds-header {
-    background: var(--navy);
-    border-bottom: 2px solid var(--gold);
+    background: #fff;
+    border-bottom: 1px solid var(--border);
     padding: 14px 20px;
     display: flex;
     align-items: center;
@@ -40,7 +40,7 @@
     cursor: pointer;
     user-select: none;
 }
-.mbds-header:hover { background: var(--navy-light); }
+.mbds-header:hover { background: var(--off-white); }
 
 .mbds-header-left {
     display: flex;
@@ -49,18 +49,17 @@
 }
 
 .mbds-collapse-chevron {
-    color: rgba(255,255,255,0.5);
+    color: var(--mbds-muted);
     transition: transform 0.2s ease;
     width: 14px;
     height: 14px;
 }
-.mbds-collapse-chevron:hover { color: rgba(255,255,255,0.9); }
 .mbds-collapse-chevron.open { transform: rotate(90deg); }
 
 .mbds-title {
     font-size: 15px;
     font-weight: 600;
-    color: #fff;
+    color: var(--mbds-text);
 }
 
 .mbds-badge {
@@ -72,9 +71,9 @@
     text-transform: uppercase;
 }
 .mbds-badge-draft {
-    background: rgba(201,168,76,0.2);
-    color: var(--gold);
-    border: 1px solid rgba(201,168,76,0.35);
+    background: rgba(201,168,76,0.10);
+    color: var(--gold-hover);
+    border: 1px solid rgba(201,168,76,0.28);
 }
 .mbds-badge-completed {
     background: #E5E5E0;
@@ -88,8 +87,8 @@
 }
 
 .mbds-print-btn {
-    border: 1px solid rgba(255,255,255,0.25);
-    color: var(--gold);
+    border: 1px solid var(--border);
+    color: var(--mbds-text);
     padding: 6px 14px;
     border-radius: 5px;
     font-size: 12px;
@@ -97,26 +96,26 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    background: transparent;
+    background: #fff;
     cursor: pointer;
     transition: all 0.15s;
 }
 .mbds-print-btn:hover {
-    color: var(--gold-hover);
-    border-color: rgba(255,255,255,0.35);
+    border-color: var(--gold);
+    color: var(--gold);
 }
 
 /* Section Label Bar */
 .mbds-section-label {
-    background: var(--linen);
-    border-bottom: 1px solid var(--linen-dark);
+    background: var(--off-white);
+    border-bottom: 1px solid var(--border);
     padding: 9px 20px;
     display: flex;
     align-items: center;
     gap: 8px;
 }
 .mbds-section-label svg {
-    color: var(--linen-text);
+    color: var(--mbds-muted);
     opacity: 0.7;
     width: 14px;
     height: 14px;
@@ -126,7 +125,7 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--linen-text);
+    color: var(--mbds-muted);
 }
 
 /* Insurance Settings */
@@ -151,10 +150,10 @@
 }
 .mbds-field-input {
     width: 100%;
-    border: 1px solid var(--mbds-border);
+    border: 1px solid var(--border);
     border-radius: 5px;
     padding: 7px 10px;
-    background: var(--mbds-bg);
+    background: var(--off-white);
     font-size: 13px;
     font-family: 'IBM Plex Sans', sans-serif;
     color: var(--mbds-text);
@@ -193,7 +192,7 @@
 .mbds-checkbox {
     width: 15px;
     height: 15px;
-    border: 1.5px solid var(--mbds-border);
+    border: 1.5px solid var(--border);
     border-radius: 3px;
     background: #fff;
     appearance: none;
@@ -231,44 +230,55 @@
 
 /* Column header row */
 .mbds-table .mbds-col-head th {
-    background: var(--linen);
+    background: #b5a070;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     color: var(--navy);
-    padding: 8px 14px;
-    border-bottom: 2px solid var(--linen-dark);
+    padding: 9px 10px;
+    border-bottom: 2px solid var(--border);
+    border-right: 1px solid rgba(255,255,255,0.25);
     white-space: nowrap;
 }
+.mbds-table .mbds-col-head th:last-child { border-right: none; }
 .mbds-table .mbds-col-head th.mbds-th-r { text-align: right; }
 .mbds-table .mbds-col-head th.mbds-th-c { text-align: center; }
 .mbds-table .mbds-col-head th.mbds-th-balance {
-    color: var(--gold);
+    color: var(--navy);
+    font-weight: 800;
     text-align: right;
 }
 
 /* Section separator row (TREATMENT PROVIDERS, etc.) */
 .mbds-table .mbds-sec-row td {
-    background: var(--linen);
-    color: var(--linen-text);
+    background: #f0ede6;
+    color: var(--gold);
     font-size: 9px;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    padding: 5px 14px;
-    border-top: 1px solid var(--linen-dark);
-    border-bottom: 1px solid var(--linen-dark);
+    padding: 5px 10px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 }
 
 /* Data rows */
 .mbds-table .mbds-data-row td {
-    padding: 10px 14px;
-    border-bottom: 1px solid #e8e8e3;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border-soft);
     vertical-align: middle;
 }
+.mbds-table .mbds-data-row td:last-child { border-right: none; }
 .mbds-table .mbds-data-row:hover td {
-    background: #eaeae5;
+    background: #f8f7f3;
+}
+.mbds-table .mbds-data-row:nth-child(even) td {
+    background: #fcfcfa;
+}
+.mbds-table .mbds-data-row:nth-child(even):hover td {
+    background: #f8f7f3;
 }
 .mbds-table .mbds-data-row .mbds-provider-name {
     font-weight: 500;
@@ -278,7 +288,7 @@
 /* Cell input (for editable values) */
 .mbds-cell-input {
     width: 100%;
-    padding: 4px 8px;
+    padding: 3px 6px;
     border: 1px solid transparent;
     border-radius: 3px;
     font-family: 'IBM Plex Mono', monospace;
@@ -290,7 +300,7 @@
     transition: all 0.15s;
 }
 .mbds-cell-input:hover:not(:disabled) {
-    border-color: var(--mbds-border);
+    border-color: var(--border);
 }
 .mbds-cell-input:focus {
     border-color: var(--navy-border);
@@ -301,7 +311,7 @@
     cursor: default;
 }
 .mbds-cell-input.mbds-zero-val {
-    color: var(--mbds-zero);
+    color: transparent;
 }
 
 /* Balance cell */
@@ -329,7 +339,7 @@
     outline: none;
     transition: all 0.15s;
 }
-.mbds-date-input:hover:not(:disabled) { border-color: var(--mbds-border); }
+.mbds-date-input:hover:not(:disabled) { border-color: var(--border); }
 .mbds-date-input:focus { border-color: var(--navy-border); background: #fff; }
 .mbds-date-input:disabled { cursor: default; }
 
@@ -346,7 +356,7 @@
     outline: none;
     transition: all 0.15s;
 }
-.mbds-visits-input:hover:not(:disabled) { border-color: var(--mbds-border); }
+.mbds-visits-input:hover:not(:disabled) { border-color: var(--border); }
 .mbds-visits-input:focus { border-color: var(--navy-border); background: #fff; }
 .mbds-visits-input:disabled { cursor: default; }
 
@@ -387,12 +397,15 @@
 .mbds-table .mbds-total-row td {
     background: var(--navy);
     color: rgba(255,255,255,0.7);
-    padding: 12px 14px;
+    padding: 10px 10px;
     font-weight: 600;
     font-family: 'IBM Plex Mono', monospace;
     font-size: 13px;
     border: none;
+    border-right: 1px solid var(--navy-border);
+    border-top: 2px solid var(--gold);
 }
+.mbds-table .mbds-total-row td:last-child { border-right: none; }
 .mbds-table .mbds-total-row td.mbds-total-label {
     font-family: 'IBM Plex Sans', sans-serif;
     color: rgba(255,255,255,0.35);
@@ -413,8 +426,8 @@
 
 /* Bottom Bar */
 .mbds-bottom-bar {
-    background: var(--linen);
-    border-top: 1px solid var(--linen-dark);
+    background: var(--off-white);
+    border-top: 1px solid var(--border);
     padding: 16px 20px;
     display: flex;
     gap: 16px;
@@ -425,11 +438,11 @@
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--linen-text);
+    color: var(--mbds-muted);
     margin-bottom: 6px;
 }
 .mbds-notes-textarea {
-    border: 1px solid var(--linen-dark);
+    border: 1px solid var(--border);
     border-radius: 5px;
     padding: 8px 12px;
     background: #fff;
@@ -462,13 +475,13 @@
     font-weight: 600;
     font-family: 'IBM Plex Sans', sans-serif;
     background: transparent;
-    border: 1px solid var(--linen-dark);
-    color: var(--linen-text);
+    border: 1px solid var(--border);
+    color: var(--mbds-muted);
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
 }
-.mbds-btn-ghost:hover { background: var(--linen-dark); }
+.mbds-btn-ghost:hover { background: var(--border); }
 
 .mbds-btn-navy {
     padding: 8px 16px;
@@ -507,7 +520,7 @@
     font-weight: 600;
     font-family: 'IBM Plex Sans', sans-serif;
     background: transparent;
-    border: 1px solid var(--linen-dark);
+    border: 1px solid var(--border);
     color: var(--mbds-red);
     cursor: pointer;
     transition: all 0.15s;
@@ -536,15 +549,15 @@
     z-index: 50;
     width: 320px;
     background: #fff;
-    border: 1px solid var(--mbds-border);
+    border: 1px solid var(--border);
     box-shadow: 0 8px 30px rgba(0,0,0,0.12);
     border-radius: 8px;
     overflow: hidden;
     font-family: 'IBM Plex Sans', sans-serif;
 }
 .mbds-note-popover-header {
-    background: var(--linen);
-    border-bottom: 1px solid var(--linen-dark);
+    background: var(--off-white);
+    border-bottom: 1px solid var(--border);
     padding: 8px 12px;
     display: flex;
     align-items: center;
@@ -555,11 +568,11 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--linen-text);
+    color: var(--mbds-muted);
 }
 .mbds-note-popover textarea {
     width: 100%;
-    border: 1px solid var(--linen-dark);
+    border: 1px solid var(--border);
     border-radius: 5px;
     padding: 8px;
     font-size: 13px;
@@ -611,15 +624,15 @@
 </style>
 
             <!-- MBDS Report Section -->
-            <div class="mbds-panel" x-data="mbdsPanel(caseId)" x-init="init()">
+            <div class="mbds-panel" data-panel :class="{'panel-open': mbdsOpen}" x-data="mbdsPanel(caseId)" x-init="init()">
 
                 <!-- Report Header Bar -->
-                <div class="mbds-header" @click="mbdsOpen = !mbdsOpen">
+                <div class="mbds-header" @click="mbdsOpen = !mbdsOpen; if(mbdsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
                     <div class="mbds-header-left">
                         <svg class="mbds-collapse-chevron" :class="mbdsOpen ? 'open' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
                         </svg>
-                        <span class="mbds-title">MBDS Report</span>
+                        <span class="mbds-title">Medical Balance Report</span>
                         <template x-if="report">
                             <span class="mbds-badge"
                                 :class="'mbds-badge-' + report.status"
@@ -908,10 +921,8 @@
 
                                                 <!-- Delete -->
                                                 <td x-show="row._type === 'line' && report?.status === 'draft'" style="padding:4px;text-align:center">
-                                                    <button @click="deleteLine(row._lineRef)" class="mbds-delete-btn">
-                                                        <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                                        </svg>
+                                                    <button @click="deleteLine(row._lineRef)" class="icon-btn icon-btn-danger icon-btn-sm">
+                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                     </button>
                                                 </td>
                                             </tr>
@@ -1005,7 +1016,7 @@
 
                     <!-- No report fallback -->
                     <template x-if="!loading && !report">
-                        <div style="text-align:center;color:var(--mbds-muted);padding:32px 0;font-size:13px">Failed to load MBDS report</div>
+                        <div style="text-align:center;color:var(--mbds-muted);padding:32px 0;font-size:13px">Failed to load Medical Balance report</div>
                     </template>
                 </div>
 
@@ -1014,7 +1025,7 @@
                     <div class="modal-v2-backdrop fixed inset-0" @click="showMbdsImportModal = false"></div>
                     <div class="modal-v2 relative w-full max-w-4xl z-10" @click.stop>
                         <div class="modal-v2-header">
-                            <h3 class="modal-v2-title">Import MBDS Preview</h3>
+                            <h3 class="modal-v2-title">Import Medical Balance Preview</h3>
                             <button type="button" class="modal-v2-close" @click="showMbdsImportModal = false">
                                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -1044,7 +1055,7 @@
 
                             <template x-if="lines.length > 0">
                                 <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-4 text-sm text-amber-800">
-                                    <strong>Warning:</strong> This will replace all <span x-text="lines.length"></span> existing MBDS lines with the imported data.
+                                    <strong>Warning:</strong> This will replace all <span x-text="lines.length"></span> existing Medical Balance lines with the imported data.
                                 </div>
                             </template>
 

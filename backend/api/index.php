@@ -354,7 +354,7 @@ switch ($resource) {
             $_GET['id'] = $id;
             require __DIR__ . '/mbds/update.php';
         } else {
-            errorResponse('MBDS endpoint not found', 404);
+            errorResponse('Medical Balance endpoint not found', 404);
         }
         break;
 
@@ -366,7 +366,52 @@ switch ($resource) {
             $_GET['id'] = $id;
             require __DIR__ . '/mbds/delete-line.php';
         } else {
-            errorResponse('MBDS lines endpoint not found', 404);
+            errorResponse('Medical Balance lines endpoint not found', 404);
+        }
+        break;
+
+    case 'negotiations':
+        if ($method === 'GET' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/negotiations/get.php';
+        } elseif ($method === 'POST' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/negotiations/save.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/negotiations/delete.php';
+        } else {
+            errorResponse('Negotiations endpoint not found', 404);
+        }
+        break;
+
+    case 'provider-negotiations':
+        if ($method === 'GET' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/provider-negotiations/get.php';
+        } elseif ($method === 'POST' && $id && $action === 'populate') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/provider-negotiations/auto-populate.php';
+        } elseif ($method === 'POST' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/provider-negotiations/save.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/provider-negotiations/delete.php';
+        } else {
+            errorResponse('Provider negotiations endpoint not found', 404);
+        }
+        break;
+
+    case 'settlement':
+        if ($method === 'GET' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/settlement/get.php';
+        } elseif ($method === 'PUT' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/settlement/save.php';
+        } else {
+            errorResponse('Settlement endpoint not found', 404);
         }
         break;
 

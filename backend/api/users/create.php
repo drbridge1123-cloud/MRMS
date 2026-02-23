@@ -27,6 +27,7 @@ $data = [
     'full_name' => sanitizeString($input['full_name']),
     'title' => isset($input['title']) && $input['title'] ? sanitizeString($input['title']) : null,
     'role' => isset($input['role']) && validateEnum($input['role'], ['admin', 'manager', 'accounting', 'staff']) ? $input['role'] : 'staff',
+    'card_last4' => isset($input['card_last4']) && $input['card_last4'] ? substr(preg_replace('/[^0-9]/', '', $input['card_last4']), 0, 4) : null,
     'is_active' => 1
 ];
 

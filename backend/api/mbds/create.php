@@ -22,7 +22,7 @@ if ($existing) {
     );
     $lines = dbFetchAll("SELECT * FROM mbds_lines WHERE report_id = ? ORDER BY sort_order, id", [$existing['id']]);
     $report['lines'] = $lines;
-    successResponse($report, 'MBDS report already exists');
+    successResponse($report, 'Medical Balance report already exists');
 }
 
 // Create the report
@@ -70,4 +70,4 @@ $report = dbFetchOne("SELECT * FROM mbds_reports WHERE id = ?", [$reportId]);
 $lines = dbFetchAll("SELECT * FROM mbds_lines WHERE report_id = ? ORDER BY sort_order, id", [$reportId]);
 $report['lines'] = $lines;
 
-successResponse($report, 'MBDS report created');
+successResponse($report, 'Medical Balance report created');

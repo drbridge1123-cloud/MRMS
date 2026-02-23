@@ -19,7 +19,7 @@ function usersPage() {
         showModal: false,
         isEditing: false,
         editingId: null,
-        form: { username: '', full_name: '', title: '', password: '', role: 'staff', permissions: [] },
+        form: { username: '', full_name: '', title: '', password: '', role: 'staff', card_last4: '', permissions: [] },
 
         allPages: [
             { key: 'dashboard', label: 'Dashboard' },
@@ -57,7 +57,7 @@ function usersPage() {
         openCreateModal() {
             this.isEditing = false;
             this.editingId = null;
-            this.form = { username: '', full_name: '', title: '', password: '', role: 'staff', permissions: [...this.roleDefaults.staff] };
+            this.form = { username: '', full_name: '', title: '', password: '', role: 'staff', card_last4: '', permissions: [...this.roleDefaults.staff] };
             this.showModal = true;
         },
 
@@ -66,7 +66,7 @@ function usersPage() {
             this.editingId = u.id;
             this.form = {
                 username: u.username, full_name: u.full_name, title: u.title || '',
-                role: u.role, smtp_email: u.smtp_email || '', smtp_app_password: '',
+                role: u.role, card_last4: u.card_last4 || '', smtp_email: u.smtp_email || '', smtp_app_password: '',
                 permissions: u.permissions || [...(this.roleDefaults[u.role] || this.roleDefaults.staff)]
             };
             this.showModal = true;
@@ -94,6 +94,7 @@ function usersPage() {
                         full_name: this.form.full_name,
                         title: this.form.title || null,
                         role: this.form.role,
+                        card_last4: this.form.card_last4 || null,
                         permissions: this.form.permissions,
                         smtp_email: this.form.smtp_email || null
                     };

@@ -138,6 +138,15 @@ function providersListPage() {
             this.saving = false;
         },
 
+        exportCSV() {
+            const params = new URLSearchParams();
+            if (this.typeFilter) params.set('type', this.typeFilter);
+            if (this.difficultyFilter) params.set('difficulty_level', this.difficultyFilter);
+            if (this.search) params.set('search', this.search);
+            const qs = params.toString();
+            window.location.href = '/MRMS/backend/api/providers/export' + (qs ? '?' + qs : '');
+        },
+
         async updateProvider() {
             if (!this.editProvider.id) return;
             this.saving = true;

@@ -86,19 +86,17 @@ ob_start();
                             <td class="text-v2-text-light" x-text="formatDate(u.created_at)"></td>
                             <td>
                                 <div class="flex gap-1">
-                                    <button @click="openEditModal(u)" title="Edit"
-                                            class="p-1.5 text-gold hover:bg-v2-bg rounded">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    <button @click="openEditModal(u)" title="Edit" class="icon-btn icon-btn-sm">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                     </button>
-                                    <button @click="openResetPasswordModal(u)" title="Reset Password"
-                                            class="p-1.5 text-yellow-600 hover:bg-yellow-50 rounded">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                                    <button @click="openResetPasswordModal(u)" title="Reset Password" class="icon-btn icon-btn-sm">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
                                     </button>
                                     <button @click="toggleActive(u)" :title="u.is_active ? 'Deactivate' : 'Activate'"
-                                            class="p-1.5 rounded"
-                                            :class="u.is_active ? 'text-red-500 hover:bg-red-50' : 'text-green-500 hover:bg-green-50'">
-                                        <svg x-show="u.is_active" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                                        <svg x-show="!u.is_active" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            class="icon-btn icon-btn-sm"
+                                            :class="u.is_active ? 'icon-btn-danger' : ''" :style="!u.is_active ? 'color:#16a34a' : ''">
+                                        <svg x-show="u.is_active" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                        <svg x-show="!u.is_active" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
                                 </div>
                             </td>
@@ -154,6 +152,12 @@ ob_start();
                                 <option value="manager">Manager</option>
                                 <option value="admin">Admin</option>
                             </select>
+                        </div>
+                        <div>
+                            <label class="form-v2-label">Card Last 4 Digits</label>
+                            <input type="text" x-model="form.card_last4" maxlength="4" placeholder="e.g., 1234" class="form-v2-input"
+                                   inputmode="numeric" pattern="[0-9]*"
+                                   @input="$nextTick(() => form.card_last4 = form.card_last4.replace(/[^0-9]/g, ''))">
                         </div>
                     </div>
 

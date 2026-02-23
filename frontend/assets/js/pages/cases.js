@@ -1,7 +1,7 @@
 function casesListPage() {
     return {
         ...listPageBase('cases', {
-            defaultSort: '',
+            defaultSort: 'case_number',
             defaultDir: 'desc',
             perPage: 9999,
             filtersToParams() {
