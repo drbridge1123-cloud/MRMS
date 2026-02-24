@@ -40,27 +40,24 @@
                                     <div class="doc-selected-label">Selected File</div>
                                     <div class="doc-selected-label" style="text-align:right;">Notes</div>
                                 </div>
-                                <div class="doc-selected-body" style="display:flex; gap:12px; align-items:center; border-bottom:1px solid #e8e4dc;">
+                                <div class="doc-selected-body" style="display:flex; gap:12px; align-items:center; border-bottom:1px solid #d0cdc5;">
                                     <div class="doc-icon" x-text="selectedFile.name.split('.').pop()"></div>
                                     <div style="flex:1; min-width:0;">
                                         <p style="font-size:13px; font-weight:500; color:#1a2535; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" x-text="selectedFile.name"></p>
                                         <p style="font-size:11px; color:#8a8a82;" x-text="(selectedFile.size / 1024 / 1024).toFixed(2) + ' MB'"></p>
                                     </div>
                                     <button type="button" @click="selectedFile = null"
-                                        class="icon-btn icon-btn-danger icon-btn-sm flex-shrink-0" title="Remove">
-                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
+                                        class="icon-btn icon-btn-sm flex-shrink-0" title="Remove">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                     </button>
                                 </div>
-                                <div style="padding:10px 16px; display:flex; gap:10px; align-items:center; border-bottom:1px solid #e8e4dc;">
+                                <div style="padding:10px 16px; display:flex; gap:10px; align-items:center; border-bottom:1px solid #d0cdc5;">
                                     <input type="text" x-model="uploadForm.notes" placeholder="Add notes (optional)..."
                                         class="doc-form-input" style="flex:1;">
                                 </div>
 
                                 <!-- Provider Template Mode -->
-                                <div style="padding:10px 16px; border-bottom:1px solid #e8e4dc;">
+                                <div style="padding:10px 16px; border-bottom:1px solid #d0cdc5;">
                                     <label class="flex items-center gap-2 cursor-pointer">
                                         <input type="checkbox" x-model="uploadForm.is_provider_template"
                                             class="rounded border-gray-300 text-gold focus:ring-gold">
@@ -259,7 +256,7 @@
                                 <!-- Progress Bar -->
                                 <template x-if="uploading">
                                     <div style="padding:0 16px 10px;">
-                                        <div style="width:100%; background:#e8e4dc; border-radius:4px; height:6px; margin-bottom:6px;">
+                                        <div style="width:100%; background:#d0cdc5; border-radius:4px; height:6px; margin-bottom:6px;">
                                             <div style="height:6px; border-radius:4px; background:#C9A84C; transition:width 0.3s;"
                                                 :style="'width:' + uploadProgress + '%'"></div>
                                         </div>

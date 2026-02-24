@@ -10,7 +10,7 @@ if ($query === '') {
 }
 
 $results = dbFetchAll(
-    "SELECT id, name, type
+    "SELECT id, name, type, charges_record_fee
      FROM providers
      WHERE name LIKE ?
      ORDER BY name ASC

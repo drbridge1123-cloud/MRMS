@@ -94,7 +94,8 @@ ob_start();
                                     </button>
                                     <button @click="toggleActive(u)" :title="u.is_active ? 'Deactivate' : 'Activate'"
                                             class="icon-btn icon-btn-sm"
-                                            :class="u.is_active ? 'icon-btn-danger' : ''" :style="!u.is_active ? 'color:#16a34a' : ''">
+                                            :class="u.is_active ? 'icon-btn-danger' : ''"
+                                            :style="!u.is_active ? 'color:#16a34a' : ''">
                                         <svg x-show="u.is_active" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                                         <svg x-show="!u.is_active" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
@@ -108,45 +109,46 @@ ob_start();
     </div>
 
     <!-- Create/Edit User Modal -->
-    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-v2-backdrop fixed inset-0" @click="showModal = false"></div>
-        <div class="modal-v2 modal-v2-dark relative w-full max-w-md z-10 max-h-[90vh] flex flex-col" @click.stop>
-            <form @submit.prevent="saveUser()" class="flex flex-col max-h-[90vh]">
-                <div class="modal-v2-header flex-shrink-0">
+    <div x-show="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;"
+         @keydown.escape.window="showModal && (showModal = false)">
+        <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showModal = false"></div>
+        <div class="usm-modal relative z-10" style="width:480px;max-height:90vh;display:flex;flex-direction:column;" @click.stop>
+            <form @submit.prevent="saveUser()" class="flex flex-col" style="max-height:90vh;">
+                <div class="usm-header" style="flex-shrink:0;">
                     <div>
-                        <div class="modal-v2-title" x-text="isEditing ? 'Edit User' : 'New User'"></div>
-                        <div class="modal-v2-subtitle" x-show="isEditing" x-text="form.username"></div>
+                        <div class="usm-title" x-text="isEditing ? 'Edit User' : 'New User'"></div>
+                        <div class="usm-subtitle" x-show="isEditing" x-text="form.username"></div>
                     </div>
-                    <button type="button" class="modal-v2-close" @click="showModal = false">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button type="button" class="usm-close" @click="showModal = false">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <div class="modal-v2-body overflow-y-auto flex-1">
+                <div class="usm-body" style="overflow-y:auto;flex:1;">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="form-v2-label">Username *</label>
-                            <input type="text" x-model="form.username" required class="form-v2-input">
+                            <label class="usm-label">Username <span class="usm-req">*</span></label>
+                            <input type="text" x-model="form.username" required class="usm-input">
                         </div>
                         <div>
-                            <label class="form-v2-label">Full Name *</label>
-                            <input type="text" x-model="form.full_name" required class="form-v2-input">
+                            <label class="usm-label">Full Name <span class="usm-req">*</span></label>
+                            <input type="text" x-model="form.full_name" required class="usm-input">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="form-v2-label">Job Title</label>
-                            <input type="text" x-model="form.title" placeholder="e.g., Paralegal" class="form-v2-input">
+                            <label class="usm-label">Job Title</label>
+                            <input type="text" x-model="form.title" placeholder="e.g., Paralegal" class="usm-input">
                         </div>
                         <template x-if="!isEditing">
                             <div>
-                                <label class="form-v2-label">Password *</label>
+                                <label class="usm-label">Password <span class="usm-req">*</span></label>
                                 <input type="password" x-model="form.password" :required="!isEditing" minlength="6"
-                                       class="form-v2-input" placeholder="Min 6 characters">
+                                       class="usm-input" placeholder="Min 6 characters">
                             </div>
                         </template>
                         <div>
-                            <label class="form-v2-label">Role</label>
-                            <select x-model="form.role" @change="onRoleChange()" class="form-v2-select">
+                            <label class="usm-label">Role</label>
+                            <select x-model="form.role" @change="onRoleChange()" class="usm-select">
                                 <option value="staff">Staff</option>
                                 <option value="accounting">Accounting</option>
                                 <option value="manager">Manager</option>
@@ -154,58 +156,62 @@ ob_start();
                             </select>
                         </div>
                         <div>
-                            <label class="form-v2-label">Card Last 4 Digits</label>
-                            <input type="text" x-model="form.card_last4" maxlength="4" placeholder="e.g., 1234" class="form-v2-input"
+                            <label class="usm-label">Card Last 4 Digits</label>
+                            <input type="text" x-model="form.card_last4" maxlength="4" placeholder="e.g., 1234" class="usm-input"
                                    inputmode="numeric" pattern="[0-9]*"
                                    @input="$nextTick(() => form.card_last4 = form.card_last4.replace(/[^0-9]/g, ''))">
                         </div>
                     </div>
 
                     <!-- Page Access Permissions -->
-                    <div class="dark-divider border-t pt-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <p class="dark-section-title text-xs font-semibold uppercase tracking-wider">Page Access</p>
-                            <button type="button" @click="onRoleChange()" class="dark-link text-xs hover:underline">Reset to defaults</button>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1.5">
-                            <template x-for="page in allPages" :key="page.key">
-                                <label class="perm-item flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm"
-                                       :class="form.permissions.includes(page.key) ? 'perm-active' : ''">
-                                    <input type="checkbox"
-                                           :checked="form.permissions.includes(page.key)"
-                                           @change="togglePermission(page.key)"
-                                           class="rounded">
-                                    <span x-text="page.label"></span>
-                                </label>
-                            </template>
-                        </div>
+                    <div class="usm-divider">
+                        <span>Page Access</span>
+                    </div>
+                    <div class="flex items-center justify-end" style="margin-top:-8px;margin-bottom:6px;">
+                        <button type="button" @click="onRoleChange()" class="text-xs hover:underline" style="color:var(--gold);">Reset to defaults</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5">
+                        <template x-for="page in allPages" :key="page.key">
+                            <label class="perm-item flex items-center gap-2.5 px-3 py-2 cursor-pointer text-sm"
+                                   :class="form.permissions.includes(page.key) ? 'perm-active' : ''">
+                                <input type="checkbox"
+                                       :checked="form.permissions.includes(page.key)"
+                                       @change="togglePermission(page.key)"
+                                       class="rounded">
+                                <span x-text="page.label"></span>
+                            </label>
+                        </template>
                     </div>
 
                     <!-- Email / SMTP Settings (edit mode only) -->
                     <template x-if="isEditing">
-                        <div class="dark-divider border-t pt-4 space-y-3">
-                            <p class="dark-section-title text-xs font-semibold uppercase tracking-wider">Email Settings</p>
-                            <div>
-                                <label class="form-v2-label">Gmail Address</label>
-                                <input type="email" x-model="form.smtp_email" placeholder="user@gmail.com" class="form-v2-input">
+                        <div>
+                            <div class="usm-divider">
+                                <span>Email Settings</span>
                             </div>
-                            <div>
-                                <label class="form-v2-label">Gmail App Password</label>
-                                <input type="password" x-model="form.smtp_app_password" placeholder="Leave blank to keep current" class="form-v2-input">
-                                <p class="dark-text-hint text-xs mt-1">Google Account &rarr; Security &rarr; App passwords</p>
+                            <div style="display:flex;flex-direction:column;gap:12px;">
+                                <div>
+                                    <label class="usm-label">Gmail Address</label>
+                                    <input type="email" x-model="form.smtp_email" placeholder="user@gmail.com" class="usm-input">
+                                </div>
+                                <div>
+                                    <label class="usm-label">Gmail App Password</label>
+                                    <input type="password" x-model="form.smtp_app_password" placeholder="Leave blank to keep current" class="usm-input">
+                                    <p style="font-size:11px;color:var(--muted);margin-top:4px;">Google Account &rarr; Security &rarr; App passwords</p>
+                                </div>
+                                <template x-if="form.smtp_email">
+                                    <p style="font-size:11px;color:#16a34a;">Emails will be sent from this user's Gmail</p>
+                                </template>
+                                <template x-if="!form.smtp_email">
+                                    <p style="font-size:11px;color:var(--muted);">No personal email — uses firm default</p>
+                                </template>
                             </div>
-                            <template x-if="form.smtp_email">
-                                <p class="dark-text-success text-xs">Emails will be sent from this user's Gmail</p>
-                            </template>
-                            <template x-if="!form.smtp_email">
-                                <p class="dark-text-hint text-xs">No personal email — uses firm default</p>
-                            </template>
                         </div>
                     </template>
                 </div>
-                <div class="modal-v2-footer flex-shrink-0">
-                    <button type="button" @click="showModal = false" class="btn-v2-cancel">Cancel</button>
-                    <button type="submit" :disabled="saving" class="btn-v2-primary">
+                <div class="usm-footer" style="flex-shrink:0;">
+                    <button type="button" @click="showModal = false" class="usm-btn-cancel">Cancel</button>
+                    <button type="submit" :disabled="saving" class="usm-btn-submit">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -217,29 +223,30 @@ ob_start();
     </div>
 
     <!-- Reset Password Modal -->
-    <div x-show="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-v2-backdrop fixed inset-0" @click="showResetModal = false"></div>
-        <div class="modal-v2 modal-v2-dark relative w-full max-w-sm z-10" @click.stop>
+    <div x-show="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;"
+         @keydown.escape.window="showResetModal && (showResetModal = false)">
+        <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showResetModal = false"></div>
+        <div class="usm-modal relative z-10" style="width:400px;" @click.stop>
             <form @submit.prevent="resetPassword()">
-                <div class="modal-v2-header">
+                <div class="usm-header">
                     <div>
-                        <div class="modal-v2-title">Reset Password</div>
-                        <div class="modal-v2-subtitle" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></div>
+                        <div class="usm-title">Reset Password</div>
+                        <div class="usm-subtitle" x-text="resetUser?.full_name + ' (' + resetUser?.username + ')'"></div>
                     </div>
-                    <button type="button" class="modal-v2-close" @click="showResetModal = false">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button type="button" class="usm-close" @click="showResetModal = false">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                <div class="modal-v2-body">
+                <div class="usm-body">
                     <div>
-                        <label class="form-v2-label">New Password *</label>
+                        <label class="usm-label">New Password <span class="usm-req">*</span></label>
                         <input type="password" x-model="newPassword" required minlength="6"
-                               class="form-v2-input" placeholder="Min 6 characters">
+                               class="usm-input" placeholder="Min 6 characters">
                     </div>
                 </div>
-                <div class="modal-v2-footer">
-                    <button type="button" @click="showResetModal = false" class="btn-v2-cancel">Cancel</button>
-                    <button type="submit" :disabled="saving" class="btn-v2-primary">
+                <div class="usm-footer">
+                    <button type="button" @click="showResetModal = false" class="usm-btn-cancel">Cancel</button>
+                    <button type="submit" :disabled="saving" class="usm-btn-submit">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
@@ -250,6 +257,31 @@ ob_start();
         </div>
     </div>
 </div>
+
+<style>
+.usm-modal{border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.24);overflow:hidden;background:#fff}
+.usm-header{background:#0F1B2D;padding:18px 24px;display:flex;align-items:center;justify-content:space-between}
+.usm-title{font-size:15px;font-weight:700;color:#fff}
+.usm-subtitle{font-size:12px;font-weight:500;color:var(--gold);margin-top:2px}
+.usm-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:rgba(255,255,255,.35);transition:color .15s}
+.usm-close:hover{color:rgba(255,255,255,.75)}
+.usm-close svg{width:16px;height:16px}
+.usm-body{padding:24px;display:flex;flex-direction:column;gap:16px}
+.usm-label{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.usm-req{color:var(--gold)}
+.usm-input{width:100%;background:#fafafa;border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s}
+.usm-input:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+.usm-select{width:100%;background:#fafafa;border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;outline:none;appearance:none;padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;transition:border-color .15s,background .15s,box-shadow .15s}
+.usm-select:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+.usm-divider{display:flex;align-items:center;gap:10px}
+.usm-divider::before,.usm-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.usm-divider span{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.usm-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.usm-btn-cancel{background:#fff;border:1.5px solid var(--border);border-radius:7px;padding:9px 18px;font-size:13px;font-weight:500;color:#5A6B82;cursor:pointer;transition:border-color .15s,color .15s}
+.usm-btn-cancel:hover{border-color:#94a3b8;color:#374151}
+.usm-btn-submit{background:var(--gold);color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(201,168,76,.35);display:flex;align-items:center;gap:6px;transition:opacity .15s}
+.usm-btn-submit:hover{opacity:.92}
+</style>
 
 <?php
 $content = ob_get_clean();

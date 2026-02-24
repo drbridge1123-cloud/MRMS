@@ -246,19 +246,23 @@ ob_start();
     </div>
 
     <!-- Import Modal -->
-    <div x-show="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-v2-backdrop fixed inset-0" @click="showImportModal = false"></div>
-        <div class="modal-v2 relative w-full max-w-lg z-10" @click.stop>
-            <div class="modal-v2-header">
-                <div class="modal-v2-title">Import Bank Statement</div>
-                <button type="button" class="modal-v2-close" @click="showImportModal = false">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div x-show="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;"
+         @keydown.escape.window="showImportModal && (showImportModal = false)">
+        <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showImportModal = false"></div>
+        <div class="brm-modal relative z-10" style="width:520px;" @click.stop>
+            <div class="brm-header">
+                <div>
+                    <div class="brm-title">Import Bank Statement</div>
+                    <div class="brm-subtitle">Upload CSV file from bank</div>
+                </div>
+                <button type="button" class="brm-close" @click="showImportModal = false">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="modal-v2-body">
-                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
+            <div class="brm-body">
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                     <p class="font-medium text-blue-800 mb-2">CSV Format Requirements:</p>
                     <ul class="text-blue-700 space-y-1 text-xs">
                         <li><strong>Required:</strong> date, amount</li>
@@ -267,10 +271,10 @@ ob_start();
                         <li>Amount: numeric ($ and commas OK)</li>
                     </ul>
                 </div>
-                <div class="mb-4">
-                    <label class="form-v2-label">CSV File</label>
+                <div>
+                    <label class="brm-label">CSV File <span class="brm-req">*</span></label>
                     <input type="file" accept=".csv" @change="importFile = $event.target.files[0]"
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm">
+                           class="brm-input" style="padding:8px 12px;">
                 </div>
                 <template x-if="importResult">
                     <div class="p-4 rounded-lg text-sm"
@@ -290,9 +294,9 @@ ob_start();
                     </div>
                 </template>
             </div>
-            <div class="modal-v2-footer">
-                <button @click="showImportModal = false; importResult = null;" class="btn-v2-cancel">Close</button>
-                <button @click="doImport()" :disabled="!importFile || importing" class="btn-v2-primary">
+            <div class="brm-footer">
+                <button @click="showImportModal = false; importResult = null;" class="brm-btn-cancel">Close</button>
+                <button @click="doImport()" :disabled="!importFile || importing" class="brm-btn-submit">
                     <template x-if="importing"><span class="spinner-sm mr-2"></span></template>
                     Import
                 </button>
@@ -301,14 +305,15 @@ ob_start();
     </div>
 
     <!-- Match Modal -->
-    <div x-show="showMatchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-        <div class="modal-v2-backdrop fixed inset-0" @click="showMatchModal = false"></div>
-        <div class="modal-v2 relative w-full max-w-2xl z-10 max-h-[80vh] flex flex-col" @click.stop>
-            <div class="modal-v2-header">
+    <div x-show="showMatchModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;"
+         @keydown.escape.window="showMatchModal && (showMatchModal = false)">
+        <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showMatchModal = false"></div>
+        <div class="brm-modal relative z-10" style="width:680px;max-height:80vh;display:flex;flex-direction:column;" @click.stop>
+            <div class="brm-header">
                 <div>
-                    <div class="modal-v2-title">Match Bank Entry</div>
+                    <div class="brm-title">Match Bank Entry</div>
                     <template x-if="matchingEntry">
-                        <div class="modal-v2-subtitle">
+                        <div class="brm-subtitle">
                             <span x-text="formatDate(matchingEntry.transaction_date)"></span> &mdash;
                             <span class="font-mono" x-text="formatCurrency(matchingEntry.amount)"></span>
                             <template x-if="matchingEntry.check_number">
@@ -317,17 +322,17 @@ ob_start();
                         </div>
                     </template>
                 </div>
-                <button type="button" class="modal-v2-close" @click="showMatchModal = false">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button type="button" class="brm-close" @click="showMatchModal = false">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
-            <div class="modal-v2-body" style="flex:1;overflow-y:auto;">
-                <div class="mb-4">
+            <div class="brm-body" style="flex:1;overflow-y:auto;">
+                <div>
                     <input type="text" x-model="matchSearch" @input.debounce.300ms="searchPayments()"
                            placeholder="Search by case #, provider, check #, description..."
-                           class="w-full px-3 py-2 border border-v2-card-border rounded-lg text-sm focus:ring-2 focus:ring-gold outline-none">
+                           class="brm-input">
                 </div>
                 <template x-if="matchSearching">
                     <div class="flex justify-center py-8"><div class="spinner"></div></div>
@@ -369,12 +374,32 @@ ob_start();
                     </div>
                 </template>
             </div>
-            <div class="modal-v2-footer">
-                <button @click="showMatchModal = false" class="btn-v2-cancel">Cancel</button>
+            <div class="brm-footer">
+                <button @click="showMatchModal = false" class="brm-btn-cancel">Cancel</button>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+.brm-modal{border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,.24);overflow:hidden;background:#fff}
+.brm-header{background:#0F1B2D;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.brm-title{font-size:15px;font-weight:700;color:#fff}
+.brm-subtitle{font-size:12px;font-weight:500;color:var(--gold);margin-top:2px}
+.brm-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:rgba(255,255,255,.35);transition:color .15s}
+.brm-close:hover{color:rgba(255,255,255,.75)}
+.brm-close svg{width:16px;height:16px}
+.brm-body{padding:24px;display:flex;flex-direction:column;gap:16px}
+.brm-label{display:block;font-size:9.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.brm-req{color:var(--gold)}
+.brm-input{width:100%;background:#fafafa;border:1.5px solid var(--border);border-radius:7px;padding:9px 12px;font-size:13px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s}
+.brm-input:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(201,168,76,.1)}
+.brm-footer{padding:14px 24px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0}
+.brm-btn-cancel{background:#fff;border:1.5px solid var(--border);border-radius:7px;padding:9px 18px;font-size:13px;font-weight:500;color:#5A6B82;cursor:pointer;transition:border-color .15s,color .15s}
+.brm-btn-cancel:hover{border-color:#94a3b8;color:#374151}
+.brm-btn-submit{background:var(--gold);color:#fff;border:none;border-radius:7px;padding:9px 22px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(201,168,76,.35);display:flex;align-items:center;gap:6px;transition:opacity .15s}
+.brm-btn-submit:hover{opacity:.92}
+</style>
 
 <?php
 $content = ob_get_clean();

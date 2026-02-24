@@ -17,6 +17,252 @@ ob_start();
 .prov-row:hover, .prov-row-active { background: rgba(201,168,76,.05) !important; border-left-color: #C9A84C; }
 .db-row { border-left: 3px solid transparent; cursor: pointer; transition: all .1s; }
 .db-row:hover, .db-row-active { background: rgba(201,168,76,.05) !important; border-left-color: #C9A84C; }
+/* Providers table: offset thead below sticky stats bar */
+#providers-tab .data-table thead th { top: 56px; }
+
+/* ── Edit Provider Modal ── */
+.epm { width: 600px; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,.22); overflow: hidden; background: #fff; }
+.epm-header { background: #0F1B2D; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
+.epm-header h3 { font-size: 15px; font-weight: 600; color: #fff; margin: 0; }
+.epm-close { background: none; border: none; color: rgba(255,255,255,.4); cursor: pointer; padding: 4px; transition: color .15s; }
+.epm-close:hover { color: rgba(255,255,255,.8); }
+.epm-body { padding: 24px; display: flex; flex-direction: column; gap: 20px; max-height: 70vh; overflow-y: auto; }
+.epm-body::-webkit-scrollbar { width: 4px; }
+.epm-body::-webkit-scrollbar-track { background: transparent; }
+.epm-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+.epm-section { display: flex; align-items: center; gap: 10px; margin: 0; }
+.epm-section::before, .epm-section::after { content: ''; flex: 1; height: 1px; background: var(--border, #d0cdc5); }
+.epm-section span { font-size: 9px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+.epm-label { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.epm-req { color: var(--gold, #C9A84C); }
+.epm-input, .epm-select, .epm-textarea {
+    width: 100%; background: #fafafa; border: 1.5px solid var(--border, #d0cdc5); border-radius: 6px;
+    padding: 8px 11px; font-size: 13px; color: #1a2535; transition: all .15s; outline: none; font-family: inherit;
+}
+.epm-input:focus, .epm-select:focus, .epm-textarea:focus {
+    border-color: var(--gold, #C9A84C); background: #fff;
+    box-shadow: 0 0 0 3px rgba(201,168,76,.1);
+}
+.epm-select {
+    appearance: none; cursor: pointer; padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+}
+.epm-textarea { resize: vertical; min-height: 80px; }
+.epm-check-card {
+    flex: 1; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    border: 1.5px solid var(--border, #d0cdc5); border-radius: 6px; padding: 9px 12px;
+    background: #fafafa; font-size: 13px; color: #3D4F63; transition: border-color .15s;
+}
+.epm-check-card:hover { border-color: var(--gold, #C9A84C); }
+.epm-check-card input[type="checkbox"] { accent-color: var(--gold, #C9A84C); width: 15px; height: 15px; cursor: pointer; }
+.epm-contact-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    padding: 8px 10px; border-radius: 6px; background: #fafaf8; border: 1px solid var(--border, #d0cdc5);
+}
+.epm-contact-row .epm-input, .epm-contact-row .epm-select { background: #fff; padding: 6px 9px; font-size: 12px; }
+.epm-contact-row .epm-select { padding-right: 26px; }
+.epm-empty-contacts {
+    border: 1.5px dashed var(--border, #d0cdc5); border-radius: 8px; padding: 16px;
+    text-align: center; font-size: 12px; color: var(--muted, #8a8a82);
+}
+.epm-primary-btn {
+    font-size: 10px; padding: 3px 8px; border-radius: 4px; font-weight: 700;
+    border: none; cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.epm-primary-btn.active { background: #FEF3C7; color: #B45309; }
+.epm-primary-btn.inactive { background: #f3f3f0; color: #8a8a82; }
+.epm-primary-btn.inactive:hover { background: #e8e8e4; }
+.epm-remove-btn { background: none; border: none; color: #ccc; cursor: pointer; padding: 2px; transition: color .15s; }
+.epm-remove-btn:hover { color: #ef4444; }
+.epm-footer { padding: 16px 24px; border-top: 1px solid var(--border, #d0cdc5); display: flex; justify-content: flex-end; gap: 10px; }
+.epm-btn-cancel {
+    background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 500; color: #5A6B82; cursor: pointer; transition: all .15s;
+}
+.epm-btn-cancel:hover { background: #f8f7f4; border-color: #ccc; }
+.epm-btn-submit {
+    background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.epm-btn-submit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.epm-btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+.epm-add-contact {
+    background: none; border: none; font-size: 11px; font-weight: 700;
+    color: var(--gold, #C9A84C); cursor: pointer; padding: 0; transition: opacity .15s;
+}
+.epm-add-contact:hover { opacity: .7; }
+
+/* ── Provider Detail Modal ── */
+.pdm { width: 640px; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,.24); overflow: hidden; background: #fff; }
+.pdm-header { background: #0F1B2D; padding: 18px 24px; display: flex; align-items: flex-start; justify-content: space-between; }
+.pdm-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+.pdm-subtitle { font-size: 12px; font-weight: 500; color: var(--gold, #C9A84C); }
+.pdm-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.pdm-close { background: none; border: none; color: rgba(255,255,255,.35); cursor: pointer; padding: 4px; transition: color .15s; }
+.pdm-close:hover { color: rgba(255,255,255,.75); }
+.pdm-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 70vh; overflow-y: auto; }
+.pdm-body::-webkit-scrollbar { width: 4px; }
+.pdm-body::-webkit-scrollbar-track { background: transparent; }
+.pdm-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+.pdm-section { display: flex; align-items: center; gap: 10px; margin: 0; }
+.pdm-section::before, .pdm-section::after { content: ''; flex: 1; height: 1px; background: var(--border, #d0cdc5); }
+.pdm-section span { font-size: 9px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+.pdm-label { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.pdm-value { font-size: 13px; color: #1a2535; line-height: 1.4; }
+.pdm-value.empty { color: var(--muted, #8a8a82); }
+.pdm-card { background: #fafafa; border: 1px solid var(--border, #d0cdc5); border-radius: 7px; padding: 10px 12px; }
+.pdm-card-lg .pdm-value { font-size: 18px; font-weight: 700; font-family: 'IBM Plex Mono', monospace; }
+.pdm-contact-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    border-radius: 6px; background: #fafaf8; border: 1px solid var(--border, #d0cdc5); margin-bottom: 4px;
+}
+.pdm-footer { padding: 14px 24px; border-top: 1px solid var(--border, #d0cdc5); display: flex; justify-content: flex-end; gap: 10px; }
+.pdm-btn-edit {
+    background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s; flex: 1;
+    justify-content: center;
+}
+.pdm-btn-edit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.pdm-btn-delete {
+    background: #dc2626; color: #fff; border: none; border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(220,38,38,.3); display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.pdm-btn-delete:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(220,38,38,.4); }
+
+/* ── Insurance Company Modal ── */
+.icm { width: 560px; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,.24); overflow: hidden; background: #fff; }
+.icm-header { background: #0F1B2D; padding: 18px 24px; display: flex; align-items: flex-start; justify-content: space-between; }
+.icm-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+.icm-subtitle { font-size: 12px; font-weight: 500; color: var(--gold, #C9A84C); }
+.icm-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.icm-close { background: none; border: none; color: rgba(255,255,255,.35); cursor: pointer; padding: 4px; transition: color .15s; }
+.icm-close:hover { color: rgba(255,255,255,.75); }
+.icm-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 70vh; overflow-y: auto; }
+.icm-body::-webkit-scrollbar { width: 4px; }
+.icm-body::-webkit-scrollbar-track { background: transparent; }
+.icm-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+.icm-section { display: flex; align-items: center; gap: 10px; margin: 0; }
+.icm-section::before, .icm-section::after { content: ''; flex: 1; height: 1px; background: var(--border, #d0cdc5); }
+.icm-section span { font-size: 9px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+.icm-label { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.icm-req { color: var(--gold, #C9A84C); }
+.icm-value { font-size: 13px; color: #1a2535; line-height: 1.4; }
+.icm-value.empty { color: var(--muted, #8a8a82); }
+.icm-card { background: #fafafa; border: 1px solid var(--border, #d0cdc5); border-radius: 7px; padding: 10px 12px; }
+.icm-input, .icm-select, .icm-textarea {
+    width: 100%; background: #fafafa; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+    padding: 9px 12px; font-size: 13px; color: #1a2535; transition: all .15s; outline: none; font-family: inherit;
+}
+.icm-input:focus, .icm-select:focus, .icm-textarea:focus {
+    border-color: var(--gold, #C9A84C); background: #fff;
+    box-shadow: 0 0 0 3px rgba(201,168,76,.1);
+}
+.icm-select {
+    appearance: none; cursor: pointer; padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+}
+.icm-textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.icm-adjuster-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-radius: 6px; background: #fafaf8; border: 1px solid var(--border, #d0cdc5); margin-bottom: 4px;
+}
+.icm-footer { padding: 14px 24px; border-top: 1px solid var(--border, #d0cdc5); display: flex; justify-content: flex-end; gap: 10px; }
+.icm-btn-cancel {
+    background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 500; color: #5A6B82; cursor: pointer; transition: all .15s;
+}
+.icm-btn-cancel:hover { background: #f8f7f4; border-color: #ccc; }
+.icm-btn-submit {
+    background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.icm-btn-submit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.icm-btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+.icm-btn-edit {
+    background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s; flex: 1;
+    justify-content: center;
+}
+.icm-btn-edit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.icm-btn-delete {
+    background: #dc2626; color: #fff; border: none; border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(220,38,38,.3); display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.icm-btn-delete:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(220,38,38,.4); }
+
+/* ── Adjuster Modal ── */
+.ajm { width: 520px; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,.24); overflow: hidden; background: #fff; }
+.ajm-header { background: #0F1B2D; padding: 18px 24px; display: flex; align-items: flex-start; justify-content: space-between; }
+.ajm-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+.ajm-subtitle { font-size: 12px; font-weight: 500; color: var(--gold, #C9A84C); }
+.ajm-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: .05em; }
+.ajm-close { background: none; border: none; color: rgba(255,255,255,.35); cursor: pointer; padding: 4px; transition: color .15s; }
+.ajm-close:hover { color: rgba(255,255,255,.75); }
+.ajm-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; max-height: 70vh; overflow-y: auto; }
+.ajm-body::-webkit-scrollbar { width: 4px; }
+.ajm-body::-webkit-scrollbar-track { background: transparent; }
+.ajm-body::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+.ajm-section { display: flex; align-items: center; gap: 10px; margin: 0; }
+.ajm-section::before, .ajm-section::after { content: ''; flex: 1; height: 1px; background: var(--border, #d0cdc5); }
+.ajm-section span { font-size: 9px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .1em; white-space: nowrap; }
+.ajm-label { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+.ajm-req { color: var(--gold, #C9A84C); }
+.ajm-value { font-size: 13px; color: #1a2535; line-height: 1.4; }
+.ajm-value.empty { color: var(--muted, #8a8a82); }
+.ajm-card { background: #fafafa; border: 1px solid var(--border, #d0cdc5); border-radius: 7px; padding: 10px 12px; }
+.ajm-input, .ajm-select, .ajm-textarea {
+    width: 100%; background: #fafafa; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+    padding: 9px 12px; font-size: 13px; color: #1a2535; transition: all .15s; outline: none; font-family: inherit;
+}
+.ajm-input:focus, .ajm-select:focus, .ajm-textarea:focus {
+    border-color: var(--gold, #C9A84C); background: #fff;
+    box-shadow: 0 0 0 3px rgba(201,168,76,.1);
+}
+.ajm-select {
+    appearance: none; cursor: pointer; padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+}
+.ajm-textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.ajm-footer { padding: 14px 24px; border-top: 1px solid var(--border, #d0cdc5); display: flex; justify-content: flex-end; gap: 10px; }
+.ajm-btn-cancel {
+    background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 500; color: #5A6B82; cursor: pointer; transition: all .15s;
+}
+.ajm-btn-cancel:hover { background: #f8f7f4; border-color: #ccc; }
+.ajm-btn-submit {
+    background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.ajm-btn-submit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.ajm-btn-submit:disabled { opacity: .6; cursor: not-allowed; }
+.ajm-btn-edit {
+    background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px;
+    padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s; flex: 1;
+    justify-content: center;
+}
+.ajm-btn-edit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.ajm-btn-secondary {
+    background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 500; color: #5A6B82; cursor: pointer; transition: all .15s;
+}
+.ajm-btn-secondary:hover { background: #f8f7f4; border-color: #ccc; }
+.ajm-btn-delete {
+    background: #dc2626; color: #fff; border: none; border-radius: 7px;
+    padding: 9px 18px; font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 2px 8px rgba(220,38,38,.3); display: flex; align-items: center; gap: 6px; transition: all .15s;
+}
+.ajm-btn-delete:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(220,38,38,.4); }
 </style>
 
 <div x-data="{ activeTab: new URLSearchParams(window.location.search).get('tab') || 'providers' }">
@@ -43,7 +289,7 @@ ob_start();
     </div>
 
     <!-- ===================== PROVIDERS TAB ===================== -->
-    <div x-show="activeTab === 'providers'" x-data="providersListPage()" x-init="loadData()">
+    <div id="providers-tab" x-show="activeTab === 'providers'" x-data="providersListPage()" x-init="loadData()">
 
         <!-- Top bar -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -97,38 +343,37 @@ ob_start();
             </div>
         </div>
 
-        <!-- Stats Bar -->
-        <div style="background:#fff; border-bottom:1px solid var(--border, #e8e4dc); padding:12px 24px; display:flex; margin-bottom:0; border-radius:12px 12px 0 0; border:1px solid var(--v2-card-border, #e2e0dc); border-bottom:1px solid var(--v2-card-border, #e2e0dc);">
-            <div style="display:flex; align-items:center; padding-right:24px; border-right:1px solid var(--border, #e8e4dc);">
-                <div>
-                    <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Total Providers</div>
-                    <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#1a2535;" x-text="items.length"></div>
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; padding:0 24px; border-right:1px solid var(--border, #e8e4dc);">
-                <div>
-                    <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Chiropractors</div>
-                    <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#2E7D6B;" x-text="items.filter(p => p.type === 'chiro').length"></div>
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; padding:0 24px; border-right:1px solid var(--border, #e8e4dc);">
-                <div>
-                    <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Physicians</div>
-                    <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#3B6FD4;" x-text="items.filter(p => p.type === 'physician').length"></div>
-                </div>
-            </div>
-            <div style="display:flex; align-items:center; padding:0 24px;">
-                <div>
-                    <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Avg Response</div>
-                    <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#B8973F;" x-text="(() => { const withDays = items.filter(p => p.avg_response_days > 0); return withDays.length ? Math.round(withDays.reduce((s,p) => s + Number(p.avg_response_days), 0) / withDays.length) + 'd' : '—'; })()"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Providers Table -->
+        <!-- Providers Table (with Stats Bar inside scroll container) -->
         <div>
-            <div class="bg-white shadow-sm border border-v2-card-border" style="border-radius:0 0 12px 12px; border-top:none;"
+            <div class="bg-white shadow-sm border border-v2-card-border" style="border-radius:12px;"
                  x-init="initScrollContainer($el)">
+                <!-- Stats Bar (sticky) -->
+                <div style="background:#fff; border-bottom:1px solid var(--border, #d0cdc5); padding:12px 24px; display:flex; position:sticky; top:0; z-index:11;">
+                    <div style="display:flex; align-items:center; padding-right:24px; border-right:1px solid var(--border, #d0cdc5);">
+                        <div>
+                            <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Total Providers</div>
+                            <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#1a2535;" x-text="items.length"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:0 24px; border-right:1px solid var(--border, #d0cdc5);">
+                        <div>
+                            <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Chiropractors</div>
+                            <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#2E7D6B;" x-text="items.filter(p => p.type === 'chiro').length"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:0 24px; border-right:1px solid var(--border, #d0cdc5);">
+                        <div>
+                            <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Physicians</div>
+                            <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#3B6FD4;" x-text="items.filter(p => p.type === 'physician').length"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; align-items:center; padding:0 24px;">
+                        <div>
+                            <div style="font-size:9px; font-weight:700; color:var(--muted, #8a8a82); text-transform:uppercase; letter-spacing:.08em; margin-bottom:2px;">Avg Response</div>
+                            <div style="font-size:20px; font-weight:700; font-family:'IBM Plex Mono',monospace; color:#B8973F;" x-text="(() => { const withDays = items.filter(p => p.avg_response_days > 0); return withDays.length ? Math.round(withDays.reduce((s,p) => s + Number(p.avg_response_days), 0) / withDays.length) + 'd' : '—'; })()"></div>
+                        </div>
+                    </div>
+                </div>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -173,58 +418,95 @@ ob_start();
                     </div>
                 </div>
             </div>
-        </div>
+        </div><!-- /Providers Table -->
 
         <!-- Provider Detail Modal -->
-        <div x-show="selectedProvider" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @keydown.escape.window="selectedProvider = null" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="selectedProvider = null"></div>
-            <div x-show="selectedProvider" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" @click.stop class="modal-v2 relative w-full max-w-2xl z-10" style="max-height: 90vh;">
+        <div x-show="selectedProvider"
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             @keydown.escape.window="selectedProvider = null"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
+            <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="selectedProvider = null"></div>
+            <div x-show="selectedProvider"
+                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                 @click.stop class="pdm relative z-10">
                 <template x-if="selectedProvider">
                     <div>
-                        <div class="modal-v2-header">
-                            <div class="flex-1 pr-4">
-                                <h2 class="modal-v2-title" x-text="selectedProvider.name"></h2>
-                                <div class="flex items-center gap-2 mt-2 flex-wrap">
-                                    <span class="modal-v2-subtitle text-xs font-bold px-2.5 py-0.5 rounded uppercase tracking-wider" style="background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7);" x-text="getProviderTypeLabel(selectedProvider.type)"></span>
+                        <!-- Header -->
+                        <div class="pdm-header">
+                            <div style="flex:1; padding-right:16px;">
+                                <h3 x-text="selectedProvider.name"></h3>
+                                <div style="display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                                    <span class="pdm-badge" style="background:rgba(255,255,255,.12); color:rgba(255,255,255,.7);" x-text="getProviderTypeLabel(selectedProvider.type)"></span>
                                     <template x-if="selectedProvider.difficulty_level">
-                                        <span class="text-xs font-bold px-2.5 py-0.5 rounded uppercase tracking-wider" :style="getDifficultyStyle(selectedProvider.difficulty_level)" x-text="selectedProvider.difficulty_level"></span>
+                                        <span class="pdm-badge" :style="getDifficultyStyle(selectedProvider.difficulty_level)" x-text="selectedProvider.difficulty_level"></span>
                                     </template>
                                     <template x-if="selectedProvider.uses_third_party == 1">
-                                        <span class="text-xs font-bold px-2.5 py-0.5 rounded uppercase tracking-wider" style="background: rgba(201,168,76,0.15); color: #C9A84C;">ChartSwap</span>
+                                        <span class="pdm-badge" style="background:rgba(201,168,76,.15); color:#C9A84C;">ChartSwap</span>
                                     </template>
                                 </div>
                             </div>
-                            <button type="button" class="modal-v2-close" @click="selectedProvider = null">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            <button type="button" class="pdm-close" @click="selectedProvider = null">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                             </button>
                         </div>
-                        <div class="modal-v2-body space-y-5 overflow-y-auto" style="max-height: 60vh;">
-                            <div>
-                                <h3 class="detail-section-title">Contact Information</h3>
-                                <div class="grid grid-cols-2 gap-2.5">
-                                    <div class="detail-card-v2"><p class="detail-label-v2">Phone</p><p class="detail-value-v2" :class="!selectedProvider.phone && 'empty'" x-text="formatPhoneNumber(selectedProvider.phone)"></p></div>
-                                    <div class="detail-card-v2"><p class="detail-label-v2">Fax</p><p class="detail-value-v2" :class="!selectedProvider.fax && 'empty'" x-text="formatPhoneNumber(selectedProvider.fax)"></p></div>
-                                    <div class="detail-card-v2 col-span-2"><p class="detail-label-v2">Email</p><p class="detail-value-v2 break-all" :class="!selectedProvider.email && 'empty'" x-text="selectedProvider.email || '—'"></p></div>
-                                    <template x-if="selectedProvider.address || selectedProvider.city">
-                                        <div class="detail-card-v2 col-span-2"><p class="detail-label-v2">Address</p><div class="detail-value-v2"><p x-show="selectedProvider.address" x-text="selectedProvider.address"></p><p x-show="selectedProvider.city || selectedProvider.state || selectedProvider.zip"><span x-text="selectedProvider.city || ''"></span><span x-show="selectedProvider.city && selectedProvider.state">, </span><span x-text="selectedProvider.state || ''"></span><span x-show="selectedProvider.zip"> </span><span x-text="selectedProvider.zip || ''"></span></p></div></div>
-                                    </template>
+
+                        <!-- Body -->
+                        <div class="pdm-body">
+                            <!-- Contact Information -->
+                            <div class="pdm-section"><span>Contact Information</span></div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div class="pdm-card">
+                                    <p class="pdm-label">Phone</p>
+                                    <p class="pdm-value" :class="!selectedProvider.phone && 'empty'" x-text="formatPhoneNumber(selectedProvider.phone)"></p>
+                                </div>
+                                <div class="pdm-card">
+                                    <p class="pdm-label">Fax</p>
+                                    <p class="pdm-value" :class="!selectedProvider.fax && 'empty'" x-text="formatPhoneNumber(selectedProvider.fax)"></p>
+                                </div>
+                                <div class="pdm-card" style="grid-column:span 2;">
+                                    <p class="pdm-label">Email</p>
+                                    <p class="pdm-value" style="word-break:break-all;" :class="!selectedProvider.email && 'empty'" x-text="selectedProvider.email || '—'"></p>
+                                </div>
+                                <template x-if="selectedProvider.address || selectedProvider.city">
+                                    <div class="pdm-card" style="grid-column:span 2;">
+                                        <p class="pdm-label">Address</p>
+                                        <div class="pdm-value">
+                                            <p x-show="selectedProvider.address" x-text="selectedProvider.address"></p>
+                                            <p x-show="selectedProvider.city || selectedProvider.state || selectedProvider.zip">
+                                                <span x-text="selectedProvider.city || ''"></span><span x-show="selectedProvider.city && selectedProvider.state">, </span><span x-text="selectedProvider.state || ''"></span><span x-show="selectedProvider.zip"> </span><span x-text="selectedProvider.zip || ''"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="pdm-section"><span>Stats</span></div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div class="pdm-card pdm-card-lg">
+                                    <p class="pdm-label">Avg Response</p>
+                                    <p class="pdm-value" :style="{ color: getAvgColor(selectedProvider.avg_response_days) }" x-text="selectedProvider.avg_response_days ? selectedProvider.avg_response_days + 'd' : '—'"></p>
+                                </div>
+                                <div class="pdm-card pdm-card-lg">
+                                    <p class="pdm-label">Preferred Method</p>
+                                    <p class="pdm-value" x-text="getRequestMethodLabel(selectedProvider.preferred_method)"></p>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <div class="detail-card-v2"><p class="detail-label-v2">Avg Response</p><p class="detail-value-v2 large" :style="{ color: getAvgColor(selectedProvider.avg_response_days) }" x-text="selectedProvider.avg_response_days ? selectedProvider.avg_response_days + 'd' : '—'"></p></div>
-                                <div class="detail-card-v2"><p class="detail-label-v2">Preferred Method</p><p class="detail-value-v2 large" x-text="getRequestMethodLabel(selectedProvider.preferred_method)"></p></div>
-                            </div>
+
+                            <!-- Department Contacts -->
                             <template x-if="selectedProvider.contacts && selectedProvider.contacts.length > 0">
                                 <div>
-                                    <h3 class="detail-section-title">Department Contacts</h3>
-                                    <div class="space-y-1.5">
+                                    <div class="pdm-section"><span>Department Contacts</span></div>
+                                    <div>
                                         <template x-for="(contact, idx) in selectedProvider.contacts" :key="idx">
-                                            <div class="detail-contact-row">
-                                                <span class="font-bold flex-shrink-0" style="min-width: 100px;" x-text="contact.department"></span>
-                                                <span class="flex-shrink-0 text-xs font-bold px-1.5 py-0.5 rounded uppercase" :style="getContactTypeStyle(contact.contact_type)" x-text="contact.contact_type"></span>
-                                                <span class="truncate min-w-0" style="color: #3D4F63;" x-text="contact.contact_value"></span>
+                                            <div class="pdm-contact-row">
+                                                <span style="font-weight:700; flex-shrink:0; min-width:100px; font-size:12px;" x-text="contact.department"></span>
+                                                <span class="pdm-badge" :style="getContactTypeStyle(contact.contact_type)" x-text="contact.contact_type"></span>
+                                                <span style="color:#3D4F63; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0;" x-text="contact.contact_value"></span>
                                                 <template x-if="contact.is_primary == 1">
-                                                    <span class="flex-shrink-0 ml-auto text-xs font-bold" style="color: #C9A84C;">PRIMARY</span>
+                                                    <span style="flex-shrink:0; margin-left:auto; font-size:10px; font-weight:700; color:#C9A84C;">PRIMARY</span>
                                                 </template>
                                             </div>
                                         </template>
@@ -232,12 +514,14 @@ ob_start();
                                 </div>
                             </template>
                         </div>
-                        <div class="modal-v2-footer">
-                            <button @click="editProvider = { ...selectedProvider, contacts: selectedProvider.contacts || [] }; showProviderModal = true; selectedProvider = null" class="btn-v2-primary flex-1">
+
+                        <!-- Footer -->
+                        <div class="pdm-footer">
+                            <button @click="editProvider = { ...selectedProvider, contacts: selectedProvider.contacts || [], no_record_fee: selectedProvider.charges_record_fee == 0 }; showProviderModal = true; selectedProvider = null" class="pdm-btn-edit">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 Edit Provider
                             </button>
-                            <button @click="deleteProvider(selectedProvider.id, selectedProvider.name)" class="btn-v2-danger">
+                            <button @click="deleteProvider(selectedProvider.id, selectedProvider.name)" class="pdm-btn-delete">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                 Delete
                             </button>
@@ -250,57 +534,178 @@ ob_start();
         <!-- Create Provider Modal -->
         <template x-if="showCreateModal">
             <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="closeCreateModal()">
-                <div class="modal-v2-backdrop fixed inset-0" @click="closeCreateModal()"></div>
-                <form @submit.prevent="createProvider()" class="modal-v2 relative w-full max-w-2xl z-10" style="max-height: 90vh; display: flex; flex-direction: column;" @click.stop>
-                    <div class="modal-v2-header flex-shrink-0"><div><h3 class="modal-v2-title">New Provider</h3></div><button type="button" class="modal-v2-close" @click="closeCreateModal()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-                    <div class="modal-v2-body" style="overflow-y: auto; flex: 1; min-height: 0;">
-                        <div class="grid grid-cols-4 gap-3">
-                            <div class="col-span-2"><label class="form-v2-label">Provider Name *</label><input type="text" x-model="newProvider.name" required class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Type *</label><select x-model="newProvider.type" required class="form-v2-select"><option value="acupuncture">Acupuncture</option><option value="chiro">Chiropractor</option><option value="massage">Massage</option><option value="pain_management">Pain Mgmt</option><option value="pt">Physical Therapy</option><option value="er">Emergency Room</option><option value="hospital">Hospital</option><option value="physician">Physician</option><option value="imaging">Imaging Center</option><option value="pharmacy">Pharmacy</option><option value="surgery_center">Surgery Center</option><option value="other">Other</option></select></div>
-                            <div><label class="form-v2-label">Difficulty</label><select x-model="newProvider.difficulty_level" class="form-v2-select"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+                <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="closeCreateModal()"></div>
+                <form @submit.prevent="createProvider()" class="epm relative z-10" @click.stop>
+
+                    <!-- Header -->
+                    <div class="epm-header">
+                        <h3>New Provider</h3>
+                        <button type="button" class="epm-close" @click="closeCreateModal()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="epm-body">
+
+                        <!-- Basic Info -->
+                        <div class="epm-section"><span>Basic Info</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:3;">
+                                <label class="epm-label">Provider Name <span class="epm-req">*</span></label>
+                                <input type="text" x-model="newProvider.name" required class="epm-input">
+                            </div>
+                            <div style="flex:2;">
+                                <label class="epm-label">Type <span class="epm-req">*</span></label>
+                                <select x-model="newProvider.type" required class="epm-select">
+                                    <option value="acupuncture">Acupuncture</option>
+                                    <option value="chiro">Chiropractor</option>
+                                    <option value="massage">Massage</option>
+                                    <option value="pain_management">Pain Mgmt</option>
+                                    <option value="pt">Physical Therapy</option>
+                                    <option value="er">Emergency Room</option>
+                                    <option value="hospital">Hospital</option>
+                                    <option value="physician">Physician</option>
+                                    <option value="imaging">Imaging Center</option>
+                                    <option value="pharmacy">Pharmacy</option>
+                                    <option value="surgery_center">Surgery Center</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">Difficulty</label>
+                                <select x-model="newProvider.difficulty_level" class="epm-select">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-v2-divider"></div>
-                        <div><label class="form-v2-label">Street Address</label><input type="text" x-model="newProvider.address" class="form-v2-input"></div>
-                        <div class="grid grid-cols-6 gap-3">
-                            <div class="col-span-3"><label class="form-v2-label">City</label><input type="text" x-model="newProvider.city" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">State</label><input type="text" x-model="newProvider.state" maxlength="2" placeholder="WA" class="form-v2-input uppercase"></div>
-                            <div class="col-span-2"><label class="form-v2-label">ZIP</label><input type="text" x-model="newProvider.zip" maxlength="10" placeholder="98036" class="form-v2-input"></div>
-                        </div>
-                        <div class="form-v2-divider"></div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div><label class="form-v2-label">Phone</label><input type="text" x-model="newProvider.phone" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Fax</label><input type="text" x-model="newProvider.fax" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Email</label><input type="email" x-model="newProvider.email" class="form-v2-input"></div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div><label class="form-v2-label">Preferred Method</label><select x-model="newProvider.preferred_method" class="form-v2-select"><option value="fax">Fax</option><option value="email">Email</option><option value="portal">Portal</option><option value="phone">Phone</option><option value="mail">Mail</option></select></div>
-                            <div><label class="form-v2-label">Portal URL</label><input type="url" x-model="newProvider.portal_url" class="form-v2-input"></div>
-                            <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-sm" style="accent-color: var(--gold);"><input type="checkbox" x-model="newProvider.uses_third_party" class="rounded"> Uses third party</label></div>
-                        </div>
-                        <div x-show="newProvider.uses_third_party" class="grid grid-cols-2 gap-3" x-collapse>
-                            <div><label class="form-v2-label">Third Party Name</label><input type="text" x-model="newProvider.third_party_name" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Third Party Contact</label><input type="text" x-model="newProvider.third_party_contact" class="form-v2-input"></div>
-                        </div>
-                        <div class="form-v2-divider"></div>
+
+                        <!-- Address -->
+                        <div class="epm-section"><span>Address</span></div>
                         <div>
-                            <div class="flex items-center justify-between mb-2"><label class="form-v2-label mb-0">Department Contacts</label><button type="button" @click="addContact(newProvider)" class="text-xs text-gold hover:text-gold-hover font-semibold">+ Add Contact</button></div>
-                            <template x-for="(contact, idx) in newProvider.contacts" :key="idx">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <input type="text" x-model="contact.department" placeholder="Department name" class="form-v2-input text-sm" style="flex:2;">
-                                    <select x-model="contact.contact_type" class="form-v2-select text-sm" style="flex:1;"><option value="email">Email</option><option value="fax">Fax</option><option value="phone">Phone</option><option value="portal">Portal</option></select>
-                                    <input type="text" x-model="contact.contact_value" :placeholder="contact.contact_type === 'email' ? 'Email address' : contact.contact_type === 'fax' ? 'Fax number' : contact.contact_type === 'phone' ? 'Phone number' : 'Portal URL'" class="form-v2-input text-sm" style="flex:2;">
-                                    <button type="button" @click="setPrimary(newProvider, idx)" class="text-xs px-2 py-1 rounded font-bold flex-shrink-0" :class="contact.is_primary == 1 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'" x-text="contact.is_primary == 1 ? 'PRIMARY' : 'Set'"></button>
-                                    <button type="button" @click="removeContact(newProvider, idx)" class="text-red-400 hover:text-red-600 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-                                </div>
-                            </template>
-                            <template x-if="newProvider.contacts.length === 0"><p class="text-xs text-v2-text-light">No department contacts. Use the main phone/fax/email fields above, or add specific department contacts.</p></template>
+                            <label class="epm-label">Street Address</label>
+                            <input type="text" x-model="newProvider.address" class="epm-input">
                         </div>
-                        <div><label class="form-v2-label">Notes</label><textarea x-model="newProvider.notes" rows="2" class="form-v2-textarea" placeholder="Optional notes..."></textarea></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:3;">
+                                <label class="epm-label">City</label>
+                                <input type="text" x-model="newProvider.city" class="epm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">State</label>
+                                <input type="text" x-model="newProvider.state" maxlength="2" placeholder="WA" class="epm-input" style="text-transform:uppercase;">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">ZIP</label>
+                                <input type="text" x-model="newProvider.zip" maxlength="10" placeholder="98036" class="epm-input">
+                            </div>
+                        </div>
+
+                        <!-- Contact -->
+                        <div class="epm-section"><span>Contact</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="epm-label">Phone</label>
+                                <input type="text" x-model="newProvider.phone" class="epm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">Fax</label>
+                                <input type="text" x-model="newProvider.fax" class="epm-input">
+                            </div>
+                            <div style="flex:2;">
+                                <label class="epm-label">Email</label>
+                                <input type="email" x-model="newProvider.email" class="epm-input">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="epm-label">Preferred Method</label>
+                                <select x-model="newProvider.preferred_method" class="epm-select">
+                                    <option value="fax">Fax</option>
+                                    <option value="email">Email</option>
+                                    <option value="portal">Portal</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="mail">Mail</option>
+                                </select>
+                            </div>
+                            <div style="flex:2;">
+                                <label class="epm-label">Portal URL</label>
+                                <input type="url" x-model="newProvider.portal_url" class="epm-input" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <!-- Checkbox cards -->
+                        <div style="display:flex; gap:12px;">
+                            <label class="epm-check-card">
+                                <input type="checkbox" x-model="newProvider.uses_third_party">
+                                <span>Uses third party</span>
+                            </label>
+                            <label class="epm-check-card">
+                                <input type="checkbox" x-model="newProvider.no_record_fee">
+                                <span>No record fee</span>
+                            </label>
+                        </div>
+
+                        <!-- Third party (conditional) -->
+                        <template x-if="newProvider.uses_third_party">
+                            <div style="display:flex; gap:12px;">
+                                <div style="flex:1;">
+                                    <label class="epm-label">Third Party Name</label>
+                                    <input type="text" x-model="newProvider.third_party_name" class="epm-input">
+                                </div>
+                                <div style="flex:1;">
+                                    <label class="epm-label">Third Party Contact</label>
+                                    <input type="text" x-model="newProvider.third_party_contact" class="epm-input">
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Department Contacts -->
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <span class="epm-label" style="margin-bottom:0;">Department Contacts</span>
+                            <button type="button" @click="addContact(newProvider)" class="epm-add-contact">+ Add Contact</button>
+                        </div>
+                        <template x-for="(contact, idx) in newProvider.contacts" :key="idx">
+                            <div class="epm-contact-row">
+                                <input type="text" x-model="contact.department" placeholder="Department" class="epm-input" style="flex:2;">
+                                <select x-model="contact.contact_type" class="epm-select" style="flex:1;">
+                                    <option value="email">Email</option>
+                                    <option value="fax">Fax</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="portal">Portal</option>
+                                </select>
+                                <input type="text" x-model="contact.contact_value"
+                                    :placeholder="contact.contact_type === 'email' ? 'Email address' : contact.contact_type === 'fax' ? 'Fax number' : contact.contact_type === 'phone' ? 'Phone number' : 'Portal URL'"
+                                    class="epm-input" style="flex:2;">
+                                <button type="button" @click="setPrimary(newProvider, idx)"
+                                    class="epm-primary-btn" :class="contact.is_primary == 1 ? 'active' : 'inactive'"
+                                    x-text="contact.is_primary == 1 ? 'PRIMARY' : 'Set'"></button>
+                                <button type="button" @click="removeContact(newProvider, idx)" class="epm-remove-btn">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <template x-if="newProvider.contacts.length === 0">
+                            <div class="epm-empty-contacts">No department contacts added. Click "+ Add Contact" to add one.</div>
+                        </template>
+
+                        <!-- Notes -->
+                        <div class="epm-section"><span>Notes</span></div>
+                        <textarea x-model="newProvider.notes" class="epm-textarea" placeholder="Optional notes..."></textarea>
+
                     </div>
-                    <div class="modal-v2-footer flex-shrink-0">
-                        <button type="button" @click="closeCreateModal()" class="btn-v2-cancel">Cancel</button>
-                        <button type="submit" :disabled="saving" class="btn-v2-primary"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg><span x-text="saving ? 'Creating...' : 'Create Provider'"></span></button>
+
+                    <!-- Footer -->
+                    <div class="epm-footer">
+                        <button type="button" @click="closeCreateModal()" class="epm-btn-cancel">Cancel</button>
+                        <button type="submit" :disabled="saving" class="epm-btn-submit">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            <span x-text="saving ? 'Creating...' : 'Create Provider'"></span>
+                        </button>
                     </div>
+
                 </form>
             </div>
         </template>
@@ -308,57 +713,178 @@ ob_start();
         <!-- Edit Provider Modal -->
         <template x-if="showProviderModal">
             <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="closeEditModal()">
-                <div class="modal-v2-backdrop fixed inset-0" @click="closeEditModal()"></div>
-                <form @submit.prevent="updateProvider()" class="modal-v2 relative w-full max-w-2xl z-10" style="max-height: 90vh; display: flex; flex-direction: column;" @click.stop>
-                    <div class="modal-v2-header flex-shrink-0"><div><h3 class="modal-v2-title">Edit Provider</h3></div><button type="button" class="modal-v2-close" @click="closeEditModal()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button></div>
-                    <div class="modal-v2-body" style="overflow-y: auto; flex: 1; min-height: 0;">
-                        <div class="grid grid-cols-4 gap-3">
-                            <div class="col-span-2"><label class="form-v2-label">Provider Name *</label><input type="text" x-model="editProvider.name" required class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Type *</label><select x-model="editProvider.type" required class="form-v2-select"><option value="acupuncture">Acupuncture</option><option value="chiro">Chiropractor</option><option value="massage">Massage</option><option value="pain_management">Pain Mgmt</option><option value="pt">Physical Therapy</option><option value="er">Emergency Room</option><option value="hospital">Hospital</option><option value="physician">Physician</option><option value="imaging">Imaging Center</option><option value="pharmacy">Pharmacy</option><option value="surgery_center">Surgery Center</option><option value="other">Other</option></select></div>
-                            <div><label class="form-v2-label">Difficulty</label><select x-model="editProvider.difficulty_level" class="form-v2-select"><option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option></select></div>
+                <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="closeEditModal()"></div>
+                <form @submit.prevent="updateProvider()" class="epm relative z-10" @click.stop>
+
+                    <!-- Header -->
+                    <div class="epm-header">
+                        <h3>Edit Provider</h3>
+                        <button type="button" class="epm-close" @click="closeEditModal()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="epm-body">
+
+                        <!-- ── Basic Info ── -->
+                        <div class="epm-section"><span>Basic Info</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:3;">
+                                <label class="epm-label">Provider Name <span class="epm-req">*</span></label>
+                                <input type="text" x-model="editProvider.name" required class="epm-input">
+                            </div>
+                            <div style="flex:2;">
+                                <label class="epm-label">Type <span class="epm-req">*</span></label>
+                                <select x-model="editProvider.type" required class="epm-select">
+                                    <option value="acupuncture">Acupuncture</option>
+                                    <option value="chiro">Chiropractor</option>
+                                    <option value="massage">Massage</option>
+                                    <option value="pain_management">Pain Mgmt</option>
+                                    <option value="pt">Physical Therapy</option>
+                                    <option value="er">Emergency Room</option>
+                                    <option value="hospital">Hospital</option>
+                                    <option value="physician">Physician</option>
+                                    <option value="imaging">Imaging Center</option>
+                                    <option value="pharmacy">Pharmacy</option>
+                                    <option value="surgery_center">Surgery Center</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">Difficulty</label>
+                                <select x-model="editProvider.difficulty_level" class="epm-select">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-v2-divider"></div>
-                        <div><label class="form-v2-label">Street Address</label><input type="text" x-model="editProvider.address" class="form-v2-input"></div>
-                        <div class="grid grid-cols-6 gap-3">
-                            <div class="col-span-3"><label class="form-v2-label">City</label><input type="text" x-model="editProvider.city" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">State</label><input type="text" x-model="editProvider.state" maxlength="2" placeholder="WA" class="form-v2-input uppercase"></div>
-                            <div class="col-span-2"><label class="form-v2-label">ZIP</label><input type="text" x-model="editProvider.zip" maxlength="10" placeholder="98036" class="form-v2-input"></div>
-                        </div>
-                        <div class="form-v2-divider"></div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div><label class="form-v2-label">Phone</label><input type="text" x-model="editProvider.phone" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Fax</label><input type="text" x-model="editProvider.fax" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Email</label><input type="email" x-model="editProvider.email" class="form-v2-input"></div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div><label class="form-v2-label">Preferred Method</label><select x-model="editProvider.preferred_method" class="form-v2-select"><option value="fax">Fax</option><option value="email">Email</option><option value="portal">Portal</option><option value="phone">Phone</option><option value="mail">Mail</option></select></div>
-                            <div><label class="form-v2-label">Portal URL</label><input type="url" x-model="editProvider.portal_url" class="form-v2-input"></div>
-                            <div class="flex items-end pb-1"><label class="flex items-center gap-2 text-sm" style="accent-color: var(--gold);"><input type="checkbox" x-model="editProvider.uses_third_party" class="rounded"> Uses third party</label></div>
-                        </div>
-                        <div x-show="editProvider.uses_third_party" class="grid grid-cols-2 gap-3" x-collapse>
-                            <div><label class="form-v2-label">Third Party Name</label><input type="text" x-model="editProvider.third_party_name" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Third Party Contact</label><input type="text" x-model="editProvider.third_party_contact" class="form-v2-input"></div>
-                        </div>
-                        <div class="form-v2-divider"></div>
+
+                        <!-- ── Address ── -->
+                        <div class="epm-section"><span>Address</span></div>
                         <div>
-                            <div class="flex items-center justify-between mb-2"><label class="form-v2-label mb-0">Department Contacts</label><button type="button" @click="addContact(editProvider)" class="text-xs text-gold hover:text-gold-hover font-semibold">+ Add Contact</button></div>
-                            <template x-for="(contact, idx) in editProvider.contacts" :key="idx">
-                                <div class="flex items-center gap-2 mb-2">
-                                    <input type="text" x-model="contact.department" placeholder="Department name" class="form-v2-input text-sm" style="flex:2;">
-                                    <select x-model="contact.contact_type" class="form-v2-select text-sm" style="flex:1;"><option value="email">Email</option><option value="fax">Fax</option><option value="phone">Phone</option><option value="portal">Portal</option></select>
-                                    <input type="text" x-model="contact.contact_value" :placeholder="contact.contact_type === 'email' ? 'Email address' : contact.contact_type === 'fax' ? 'Fax number' : contact.contact_type === 'phone' ? 'Phone number' : 'Portal URL'" class="form-v2-input text-sm" style="flex:2;">
-                                    <button type="button" @click="setPrimary(editProvider, idx)" class="text-xs px-2 py-1 rounded font-bold flex-shrink-0" :class="contact.is_primary == 1 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'" x-text="contact.is_primary == 1 ? 'PRIMARY' : 'Set'"></button>
-                                    <button type="button" @click="removeContact(editProvider, idx)" class="text-red-400 hover:text-red-600 flex-shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-                                </div>
-                            </template>
-                            <template x-if="editProvider.contacts.length === 0"><p class="text-xs text-v2-text-light">No department contacts added.</p></template>
+                            <label class="epm-label">Street Address</label>
+                            <input type="text" x-model="editProvider.address" class="epm-input">
                         </div>
-                        <div><label class="form-v2-label">Notes</label><textarea x-model="editProvider.notes" rows="2" class="form-v2-textarea" placeholder="Optional notes..."></textarea></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:3;">
+                                <label class="epm-label">City</label>
+                                <input type="text" x-model="editProvider.city" class="epm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">State</label>
+                                <input type="text" x-model="editProvider.state" maxlength="2" placeholder="WA" class="epm-input" style="text-transform:uppercase;">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">ZIP</label>
+                                <input type="text" x-model="editProvider.zip" maxlength="10" placeholder="98036" class="epm-input">
+                            </div>
+                        </div>
+
+                        <!-- ── Contact ── -->
+                        <div class="epm-section"><span>Contact</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="epm-label">Phone</label>
+                                <input type="text" x-model="editProvider.phone" class="epm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="epm-label">Fax</label>
+                                <input type="text" x-model="editProvider.fax" class="epm-input">
+                            </div>
+                            <div style="flex:2;">
+                                <label class="epm-label">Email</label>
+                                <input type="email" x-model="editProvider.email" class="epm-input">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="epm-label">Preferred Method</label>
+                                <select x-model="editProvider.preferred_method" class="epm-select">
+                                    <option value="fax">Fax</option>
+                                    <option value="email">Email</option>
+                                    <option value="portal">Portal</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="mail">Mail</option>
+                                </select>
+                            </div>
+                            <div style="flex:2;">
+                                <label class="epm-label">Portal URL</label>
+                                <input type="url" x-model="editProvider.portal_url" class="epm-input" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <!-- Checkbox cards -->
+                        <div style="display:flex; gap:12px;">
+                            <label class="epm-check-card">
+                                <input type="checkbox" x-model="editProvider.uses_third_party">
+                                <span>Uses third party</span>
+                            </label>
+                            <label class="epm-check-card">
+                                <input type="checkbox" x-model="editProvider.no_record_fee">
+                                <span>No record fee</span>
+                            </label>
+                        </div>
+
+                        <!-- Third party (conditional) -->
+                        <template x-if="editProvider.uses_third_party">
+                            <div style="display:flex; gap:12px;">
+                                <div style="flex:1;">
+                                    <label class="epm-label">Third Party Name</label>
+                                    <input type="text" x-model="editProvider.third_party_name" class="epm-input">
+                                </div>
+                                <div style="flex:1;">
+                                    <label class="epm-label">Third Party Contact</label>
+                                    <input type="text" x-model="editProvider.third_party_contact" class="epm-input">
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Department Contacts -->
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <span class="epm-label" style="margin-bottom:0;">Department Contacts</span>
+                            <button type="button" @click="addContact(editProvider)" class="epm-add-contact">+ Add Contact</button>
+                        </div>
+                        <template x-for="(contact, idx) in editProvider.contacts" :key="idx">
+                            <div class="epm-contact-row">
+                                <input type="text" x-model="contact.department" placeholder="Department" class="epm-input" style="flex:2;">
+                                <select x-model="contact.contact_type" class="epm-select" style="flex:1;">
+                                    <option value="email">Email</option>
+                                    <option value="fax">Fax</option>
+                                    <option value="phone">Phone</option>
+                                    <option value="portal">Portal</option>
+                                </select>
+                                <input type="text" x-model="contact.contact_value"
+                                    :placeholder="contact.contact_type === 'email' ? 'Email address' : contact.contact_type === 'fax' ? 'Fax number' : contact.contact_type === 'phone' ? 'Phone number' : 'Portal URL'"
+                                    class="epm-input" style="flex:2;">
+                                <button type="button" @click="setPrimary(editProvider, idx)"
+                                    class="epm-primary-btn" :class="contact.is_primary == 1 ? 'active' : 'inactive'"
+                                    x-text="contact.is_primary == 1 ? 'PRIMARY' : 'Set'"></button>
+                                <button type="button" @click="removeContact(editProvider, idx)" class="epm-remove-btn">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <template x-if="editProvider.contacts.length === 0">
+                            <div class="epm-empty-contacts">No department contacts added. Click "+ Add Contact" to add one.</div>
+                        </template>
+
+                        <!-- ── Notes ── -->
+                        <div class="epm-section"><span>Notes</span></div>
+                        <textarea x-model="editProvider.notes" class="epm-textarea" placeholder="Optional notes..."></textarea>
+
                     </div>
-                    <div class="modal-v2-footer flex-shrink-0">
-                        <button type="button" @click="closeEditModal()" class="btn-v2-cancel">Cancel</button>
-                        <button type="submit" :disabled="saving" class="btn-v2-primary"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span x-text="saving ? 'Saving...' : 'Update Provider'"></span></button>
+
+                    <!-- Footer -->
+                    <div class="epm-footer">
+                        <button type="button" @click="closeEditModal()" class="epm-btn-cancel">Cancel</button>
+                        <button type="submit" :disabled="saving" class="epm-btn-submit">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            <span x-text="saving ? 'Saving...' : 'Update Provider'"></span>
+                        </button>
                     </div>
+
                 </form>
             </div>
         </template>
@@ -386,6 +912,7 @@ ob_start();
                     <option value="workers_comp">Worker's Comp</option>
                     <option value="liability">Liability</option>
                     <option value="um_uim">UM/UIM</option>
+                    <option value="government">Government</option>
                     <option value="other">Other</option>
                 </select>
             </div>
@@ -430,53 +957,96 @@ ob_start();
             </div>
         </div>
 
-        <!-- Detail Modal -->
+        <!-- Insurance Detail Modal -->
         <div x-show="selectedCompany" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;" @keydown.escape.window="selectedCompany = null">
-            <div class="modal-v2-backdrop fixed inset-0" @click="selectedCompany = null"></div>
-            <div @click.stop class="modal-v2 relative w-full max-w-lg z-10">
+            <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="selectedCompany = null"></div>
+            <div @click.stop class="icm relative z-10">
                 <template x-if="selectedCompany">
                     <div>
-                        <div class="modal-v2-header">
-                            <div class="flex-1 pr-4">
-                                <h2 class="modal-v2-title" x-text="selectedCompany.name"></h2>
-                                <span class="text-xs font-bold px-2 py-0.5 rounded uppercase mt-1 inline-block" style="background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);" x-text="getInsuranceTypeLabel(selectedCompany.type)"></span>
+                        <!-- Header -->
+                        <div class="icm-header">
+                            <div style="flex:1; padding-right:16px;">
+                                <h3 x-text="selectedCompany.name"></h3>
+                                <div style="margin-top:6px;">
+                                    <span class="icm-badge" style="background:rgba(255,255,255,.12); color:rgba(255,255,255,.7);" x-text="getInsuranceTypeLabel(selectedCompany.type)"></span>
+                                </div>
                             </div>
-                            <button type="button" class="modal-v2-close" @click="selectedCompany = null"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                            <button type="button" class="icm-close" @click="selectedCompany = null">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                         </div>
-                        <div class="modal-v2-body space-y-4" style="max-height:60vh; overflow-y:auto;">
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <div class="detail-card-v2"><p class="detail-label-v2">Phone</p><p class="detail-value-v2" x-text="selectedCompany.phone || '—'"></p></div>
-                                <div class="detail-card-v2"><p class="detail-label-v2">Fax</p><p class="detail-value-v2" x-text="selectedCompany.fax || '—'"></p></div>
-                                <div class="detail-card-v2 col-span-2"><p class="detail-label-v2">Email</p><p class="detail-value-v2 break-all" x-text="selectedCompany.email || '—'"></p></div>
-                                <template x-if="selectedCompany.website"><div class="detail-card-v2 col-span-2"><p class="detail-label-v2">Website</p><p class="detail-value-v2 break-all" x-text="selectedCompany.website"></p></div></template>
+
+                        <!-- Body -->
+                        <div class="icm-body">
+                            <!-- Contact -->
+                            <div class="icm-section"><span>Contact Information</span></div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div class="icm-card">
+                                    <p class="icm-label">Phone</p>
+                                    <p class="icm-value" x-text="selectedCompany.phone || '—'"></p>
+                                </div>
+                                <div class="icm-card">
+                                    <p class="icm-label">Fax</p>
+                                    <p class="icm-value" x-text="selectedCompany.fax || '—'"></p>
+                                </div>
+                                <div class="icm-card" style="grid-column:span 2;">
+                                    <p class="icm-label">Email</p>
+                                    <p class="icm-value" style="word-break:break-all;" x-text="selectedCompany.email || '—'"></p>
+                                </div>
+                                <template x-if="selectedCompany.website">
+                                    <div class="icm-card" style="grid-column:span 2;">
+                                        <p class="icm-label">Website</p>
+                                        <p class="icm-value" style="word-break:break-all;" x-text="selectedCompany.website"></p>
+                                    </div>
+                                </template>
                                 <template x-if="selectedCompany.address || selectedCompany.city">
-                                    <div class="detail-card-v2 col-span-2"><p class="detail-label-v2">Address</p><div class="detail-value-v2"><p x-text="selectedCompany.address || ''"></p><p x-text="[selectedCompany.city, selectedCompany.state].filter(Boolean).join(', ') + (selectedCompany.zip ? ' ' + selectedCompany.zip : '')"></p></div></div>
+                                    <div class="icm-card" style="grid-column:span 2;">
+                                        <p class="icm-label">Address</p>
+                                        <div class="icm-value">
+                                            <p x-text="selectedCompany.address || ''"></p>
+                                            <p x-text="[selectedCompany.city, selectedCompany.state].filter(Boolean).join(', ') + (selectedCompany.zip ? ' ' + selectedCompany.zip : '')"></p>
+                                        </div>
+                                    </div>
                                 </template>
                             </div>
+
+                            <!-- Adjusters -->
                             <template x-if="selectedCompany.adjusters && selectedCompany.adjusters.length > 0">
                                 <div>
-                                    <h3 class="detail-section-title">Adjusters</h3>
-                                    <div class="space-y-1">
+                                    <div class="icm-section"><span>Adjusters</span></div>
+                                    <div>
                                         <template x-for="adj in selectedCompany.adjusters" :key="adj.id">
-                                            <div class="flex items-center justify-between px-3 py-2 rounded-lg" style="background:#f8f7f4;">
-                                                <span class="text-sm font-medium" x-text="adj.last_name + ', ' + adj.first_name"></span>
-                                                <div class="flex items-center gap-2">
-                                                    <span class="text-xs text-v2-text-light" x-text="adj.title || ''"></span>
-                                                    <span class="text-xs px-1.5 py-0.5 rounded" :class="adj.is_active == 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'" x-text="adj.is_active == 1 ? 'Active' : 'Inactive'"></span>
+                                            <div class="icm-adjuster-row">
+                                                <span style="font-size:13px; font-weight:600; color:#1a2535;" x-text="adj.last_name + ', ' + adj.first_name"></span>
+                                                <div style="display:flex; align-items:center; gap:8px;">
+                                                    <span style="font-size:11px; color:var(--muted,#8a8a82);" x-text="adj.title || ''"></span>
+                                                    <span class="icm-badge" :style="adj.is_active == 1 ? 'background:#dcfce7; color:#15803d;' : 'background:#f3f4f6; color:#6b7280;'" x-text="adj.is_active == 1 ? 'Active' : 'Inactive'"></span>
                                                 </div>
                                             </div>
                                         </template>
                                     </div>
                                 </div>
                             </template>
-                            <template x-if="selectedCompany.notes"><div><h3 class="detail-section-title">Notes</h3><p class="text-sm text-v2-text-mid" x-text="selectedCompany.notes"></p></div></template>
+
+                            <!-- Notes -->
+                            <template x-if="selectedCompany.notes">
+                                <div>
+                                    <div class="icm-section"><span>Notes</span></div>
+                                    <p style="font-size:13px; color:#3D4F63; line-height:1.5;" x-text="selectedCompany.notes"></p>
+                                </div>
+                            </template>
                         </div>
-                        <div class="modal-v2-footer">
-                            <button @click="openEditModal()" class="btn-v2-primary flex-1">
+
+                        <!-- Footer -->
+                        <div class="icm-footer">
+                            <button @click="openEditModal()" class="icm-btn-edit">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 Edit
                             </button>
-                            <button @click="deleteCompany(selectedCompany.id, selectedCompany.name)" class="btn-v2-danger">Delete</button>
+                            <button @click="deleteCompany(selectedCompany.id, selectedCompany.name)" class="icm-btn-delete">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </template>
@@ -486,37 +1056,107 @@ ob_start();
         <!-- Create/Edit Insurance Modal -->
         <template x-if="showCreateModal || showEditModal">
             <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="showCreateModal ? closeCreateModal() : closeEditModal()">
-                <div class="modal-v2-backdrop fixed inset-0" @click="showCreateModal ? closeCreateModal() : closeEditModal()"></div>
-                <form @submit.prevent="showCreateModal ? createCompany() : updateCompany()" class="modal-v2 relative w-full max-w-lg z-10" style="max-height:90vh; display:flex; flex-direction:column;" @click.stop>
-                    <div class="modal-v2-header flex-shrink-0">
-                        <h3 class="modal-v2-title" x-text="showEditModal ? 'Edit Insurance Company' : 'New Insurance Company'"></h3>
-                        <button type="button" class="modal-v2-close" @click="showCreateModal ? closeCreateModal() : closeEditModal()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-                    </div>
-                    <div class="modal-v2-body" style="overflow-y:auto; flex:1; min-height:0;">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="form-v2-label">Company Name *</label><input type="text" x-model="showEditModal ? editCompany.name : newCompany.name" required class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Type *</label><select x-model="showEditModal ? editCompany.type : newCompany.type" required class="form-v2-select"><option value="auto">Auto</option><option value="health">Health</option><option value="workers_comp">Worker's Comp</option><option value="liability">Liability</option><option value="um_uim">UM/UIM</option><option value="other">Other</option></select></div>
+                <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showCreateModal ? closeCreateModal() : closeEditModal()"></div>
+                <form @submit.prevent="showCreateModal ? createCompany() : updateCompany()" class="icm relative z-10" @click.stop style="display:flex; flex-direction:column; max-height:90vh;">
+
+                    <!-- Header -->
+                    <div class="icm-header" style="flex-shrink:0;">
+                        <div>
+                            <h3 x-text="showEditModal ? 'Edit Insurance Company' : 'New Insurance Company'"></h3>
+                            <p class="icm-subtitle" x-text="showEditModal ? 'Update company details' : 'Add a new insurance company'"></p>
                         </div>
-                        <div class="form-v2-divider"></div>
-                        <div class="grid grid-cols-3 gap-3">
-                            <div><label class="form-v2-label">Phone</label><input type="text" x-model="showEditModal ? editCompany.phone : newCompany.phone" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Fax</label><input type="text" x-model="showEditModal ? editCompany.fax : newCompany.fax" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Email</label><input type="email" x-model="showEditModal ? editCompany.email : newCompany.email" class="form-v2-input"></div>
-                        </div>
-                        <div class="form-v2-divider"></div>
-                        <div><label class="form-v2-label">Address</label><input type="text" x-model="showEditModal ? editCompany.address : newCompany.address" class="form-v2-input"></div>
-                        <div class="grid grid-cols-6 gap-3">
-                            <div class="col-span-3"><label class="form-v2-label">City</label><input type="text" x-model="showEditModal ? editCompany.city : newCompany.city" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">State</label><input type="text" x-model="showEditModal ? editCompany.state : newCompany.state" maxlength="2" class="form-v2-input uppercase"></div>
-                            <div class="col-span-2"><label class="form-v2-label">ZIP</label><input type="text" x-model="showEditModal ? editCompany.zip : newCompany.zip" maxlength="10" class="form-v2-input"></div>
-                        </div>
-                        <div><label class="form-v2-label">Website</label><input type="url" x-model="showEditModal ? editCompany.website : newCompany.website" class="form-v2-input" placeholder="https://..."></div>
-                        <div><label class="form-v2-label">Notes</label><textarea x-model="showEditModal ? editCompany.notes : newCompany.notes" rows="2" class="form-v2-textarea"></textarea></div>
+                        <button type="button" class="icm-close" @click="showCreateModal ? closeCreateModal() : closeEditModal()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
                     </div>
-                    <div class="modal-v2-footer flex-shrink-0">
-                        <button type="button" @click="showCreateModal ? closeCreateModal() : closeEditModal()" class="btn-v2-cancel">Cancel</button>
-                        <button type="submit" :disabled="saving" class="btn-v2-primary"><span x-text="saving ? 'Saving...' : (showEditModal ? 'Update' : 'Create')"></span></button>
+
+                    <!-- Body -->
+                    <div class="icm-body" style="flex:1; min-height:0;">
+                        <!-- Basic Info -->
+                        <div class="icm-section"><span>Basic Info</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="icm-label">Company Name <span class="icm-req">*</span></label>
+                                <input type="text" x-model="showEditModal ? editCompany.name : newCompany.name" required class="icm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="icm-label">Type <span class="icm-req">*</span></label>
+                                <select x-model="showEditModal ? editCompany.type : newCompany.type" required class="icm-select">
+                                    <option value="auto">Auto</option>
+                                    <option value="health">Health</option>
+                                    <option value="workers_comp">Worker's Comp</option>
+                                    <option value="liability">Liability</option>
+                                    <option value="um_uim">UM/UIM</option>
+                                    <option value="government">Government</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Contact -->
+                        <div class="icm-section"><span>Contact</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="icm-label">Phone</label>
+                                <input type="text" x-model="showEditModal ? editCompany.phone : newCompany.phone" class="icm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="icm-label">Fax</label>
+                                <input type="text" x-model="showEditModal ? editCompany.fax : newCompany.fax" class="icm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="icm-label">Email</label>
+                                <input type="email" x-model="showEditModal ? editCompany.email : newCompany.email" class="icm-input">
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="icm-section"><span>Address</span></div>
+                        <div>
+                            <label class="icm-label">Street Address</label>
+                            <input type="text" x-model="showEditModal ? editCompany.address : newCompany.address" class="icm-input">
+                        </div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:3;">
+                                <label class="icm-label">City</label>
+                                <input type="text" x-model="showEditModal ? editCompany.city : newCompany.city" class="icm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="icm-label">State</label>
+                                <input type="text" x-model="showEditModal ? editCompany.state : newCompany.state" maxlength="2" class="icm-input" style="text-transform:uppercase;">
+                            </div>
+                            <div style="flex:1.5;">
+                                <label class="icm-label">ZIP</label>
+                                <input type="text" x-model="showEditModal ? editCompany.zip : newCompany.zip" maxlength="10" class="icm-input">
+                            </div>
+                        </div>
+
+                        <!-- Other -->
+                        <div class="icm-section"><span>Other</span></div>
+                        <div>
+                            <label class="icm-label">Website</label>
+                            <input type="url" x-model="showEditModal ? editCompany.website : newCompany.website" class="icm-input" placeholder="https://...">
+                        </div>
+                        <div>
+                            <label class="icm-label">Notes</label>
+                            <textarea x-model="showEditModal ? editCompany.notes : newCompany.notes" class="icm-textarea" placeholder="Optional notes..."></textarea>
+                        </div>
                     </div>
+
+                    <!-- Footer -->
+                    <div class="icm-footer" style="flex-shrink:0;">
+                        <button type="button" @click="showCreateModal ? closeCreateModal() : closeEditModal()" class="icm-btn-cancel">Cancel</button>
+                        <button type="submit" :disabled="saving" class="icm-btn-submit">
+                            <template x-if="!showEditModal">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </template>
+                            <template x-if="showEditModal">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </template>
+                            <span x-text="saving ? 'Saving...' : (showEditModal ? 'Update' : 'Create')"></span>
+                        </button>
+                    </div>
+
                 </form>
             </div>
         </template>
@@ -598,36 +1238,74 @@ ob_start();
             </div>
         </div>
 
-        <!-- Detail Modal -->
+        <!-- Adjuster Detail Modal -->
         <div x-show="selectedAdjuster" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;" @keydown.escape.window="selectedAdjuster = null">
-            <div class="modal-v2-backdrop fixed inset-0" @click="selectedAdjuster = null"></div>
-            <div @click.stop class="modal-v2 relative w-full max-w-md z-10">
+            <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="selectedAdjuster = null"></div>
+            <div @click.stop class="ajm relative z-10">
                 <template x-if="selectedAdjuster">
                     <div>
-                        <div class="modal-v2-header">
-                            <div class="flex-1 pr-4">
-                                <h2 class="modal-v2-title" x-text="selectedAdjuster.first_name + ' ' + selectedAdjuster.last_name"></h2>
-                                <div class="flex items-center gap-2 mt-1">
-                                    <template x-if="selectedAdjuster.title"><span class="text-xs" style="color:rgba(255,255,255,0.7);" x-text="selectedAdjuster.title"></span></template>
-                                    <span class="text-xs px-1.5 py-0.5 rounded font-medium" :class="selectedAdjuster.is_active == 1 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'" x-text="selectedAdjuster.is_active == 1 ? 'Active' : 'Inactive'"></span>
+                        <!-- Header -->
+                        <div class="ajm-header">
+                            <div style="flex:1; padding-right:16px;">
+                                <h3 x-text="selectedAdjuster.first_name + ' ' + selectedAdjuster.last_name"></h3>
+                                <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+                                    <template x-if="selectedAdjuster.title">
+                                        <span class="ajm-subtitle" x-text="selectedAdjuster.title"></span>
+                                    </template>
+                                    <span class="ajm-badge" :style="selectedAdjuster.is_active == 1 ? 'background:#dcfce7; color:#15803d;' : 'background:#f3f4f6; color:#6b7280;'" x-text="selectedAdjuster.is_active == 1 ? 'Active' : 'Inactive'"></span>
                                 </div>
                             </div>
-                            <button type="button" class="modal-v2-close" @click="selectedAdjuster = null"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                            <button type="button" class="ajm-close" @click="selectedAdjuster = null">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
                         </div>
-                        <div class="modal-v2-body space-y-4">
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <div class="detail-card-v2"><p class="detail-label-v2">Type</p><p class="detail-value-v2" x-text="getTypeLabel(selectedAdjuster.adjuster_type)"></p></div>
-                                <div class="detail-card-v2"><p class="detail-label-v2">Insurance Company</p><p class="detail-value-v2" x-text="selectedAdjuster.insurance_company_name || '—'"></p></div>
-                                <div class="detail-card-v2"><p class="detail-label-v2">Phone</p><p class="detail-value-v2" x-text="selectedAdjuster.phone || '—'"></p></div>
-                                <div class="detail-card-v2"><p class="detail-label-v2">Fax</p><p class="detail-value-v2" x-text="selectedAdjuster.fax || '—'"></p></div>
-                                <div class="detail-card-v2 col-span-2"><p class="detail-label-v2">Email</p><p class="detail-value-v2 break-all" x-text="selectedAdjuster.email || '—'"></p></div>
+
+                        <!-- Body -->
+                        <div class="ajm-body">
+                            <div class="ajm-section"><span>Details</span></div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div class="ajm-card">
+                                    <p class="ajm-label">Type</p>
+                                    <p class="ajm-value" x-text="getTypeLabel(selectedAdjuster.adjuster_type)"></p>
+                                </div>
+                                <div class="ajm-card">
+                                    <p class="ajm-label">Insurance Company</p>
+                                    <p class="ajm-value" x-text="selectedAdjuster.insurance_company_name || '—'"></p>
+                                </div>
+                                <div class="ajm-card">
+                                    <p class="ajm-label">Phone</p>
+                                    <p class="ajm-value" x-text="selectedAdjuster.phone || '—'"></p>
+                                </div>
+                                <div class="ajm-card">
+                                    <p class="ajm-label">Fax</p>
+                                    <p class="ajm-value" x-text="selectedAdjuster.fax || '—'"></p>
+                                </div>
+                                <div class="ajm-card" style="grid-column:span 2;">
+                                    <p class="ajm-label">Email</p>
+                                    <p class="ajm-value" style="word-break:break-all;" x-text="selectedAdjuster.email || '—'"></p>
+                                </div>
                             </div>
-                            <template x-if="selectedAdjuster.notes"><div><h3 class="detail-section-title">Notes</h3><p class="text-sm text-v2-text-mid" x-text="selectedAdjuster.notes"></p></div></template>
+
+                            <!-- Notes -->
+                            <template x-if="selectedAdjuster.notes">
+                                <div>
+                                    <div class="ajm-section"><span>Notes</span></div>
+                                    <p style="font-size:13px; color:#3D4F63; line-height:1.5;" x-text="selectedAdjuster.notes"></p>
+                                </div>
+                            </template>
                         </div>
-                        <div class="modal-v2-footer">
-                            <button @click="openEditModal()" class="btn-v2-primary flex-1">Edit</button>
-                            <button @click="toggleActive(selectedAdjuster.id, selectedAdjuster.is_active)" class="btn-v2-cancel" x-text="selectedAdjuster.is_active == 1 ? 'Deactivate' : 'Activate'"></button>
-                            <button @click="deleteAdjuster(selectedAdjuster.id, selectedAdjuster.first_name + ' ' + selectedAdjuster.last_name)" class="btn-v2-danger">Delete</button>
+
+                        <!-- Footer -->
+                        <div class="ajm-footer">
+                            <button @click="openEditModal()" class="ajm-btn-edit">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                Edit
+                            </button>
+                            <button @click="toggleActive(selectedAdjuster.id, selectedAdjuster.is_active)" class="ajm-btn-secondary" x-text="selectedAdjuster.is_active == 1 ? 'Deactivate' : 'Activate'"></button>
+                            <button @click="deleteAdjuster(selectedAdjuster.id, selectedAdjuster.first_name + ' ' + selectedAdjuster.last_name)" class="ajm-btn-delete">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                Delete
+                            </button>
                         </div>
                     </div>
                 </template>
@@ -637,21 +1315,42 @@ ob_start();
         <!-- Create/Edit Adjuster Modal -->
         <template x-if="showCreateModal || showEditModal">
             <div class="fixed inset-0 z-50 flex items-center justify-center p-4" @keydown.escape.window="showCreateModal ? closeCreateModal() : closeEditModal()">
-                <div class="modal-v2-backdrop fixed inset-0" @click="showCreateModal ? closeCreateModal() : closeEditModal()"></div>
-                <form @submit.prevent="showCreateModal ? createAdjuster() : updateAdjuster()" class="modal-v2 relative w-full max-w-md z-10" @click.stop>
-                    <div class="modal-v2-header">
-                        <h3 class="modal-v2-title" x-text="showEditModal ? 'Edit Adjuster' : 'New Adjuster'"></h3>
-                        <button type="button" class="modal-v2-close" @click="showCreateModal ? closeCreateModal() : closeEditModal()"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
-                    </div>
-                    <div class="modal-v2-body">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="form-v2-label">First Name *</label><input type="text" x-model="showEditModal ? editAdjuster.first_name : newAdjuster.first_name" required class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Last Name *</label><input type="text" x-model="showEditModal ? editAdjuster.last_name : newAdjuster.last_name" required class="form-v2-input"></div>
+                <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showCreateModal ? closeCreateModal() : closeEditModal()"></div>
+                <form @submit.prevent="showCreateModal ? createAdjuster() : updateAdjuster()" class="ajm relative z-10" @click.stop>
+
+                    <!-- Header -->
+                    <div class="ajm-header">
+                        <div>
+                            <h3 x-text="showEditModal ? 'Edit Adjuster' : 'New Adjuster'"></h3>
+                            <p class="ajm-subtitle" x-text="showEditModal ? 'Update adjuster details' : 'Add a new adjuster'"></p>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="form-v2-label">Title</label><input type="text" x-model="showEditModal ? editAdjuster.title : newAdjuster.title" class="form-v2-input" placeholder="e.g., Claims Adjuster"></div>
-                            <div><label class="form-v2-label">Type</label>
-                                <select x-model="showEditModal ? editAdjuster.adjuster_type : newAdjuster.adjuster_type" class="form-v2-select">
+                        <button type="button" class="ajm-close" @click="showCreateModal ? closeCreateModal() : closeEditModal()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="ajm-body">
+                        <!-- Basic Info -->
+                        <div class="ajm-section"><span>Basic Info</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="ajm-label">First Name <span class="ajm-req">*</span></label>
+                                <input type="text" x-model="showEditModal ? editAdjuster.first_name : newAdjuster.first_name" required class="ajm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="ajm-label">Last Name <span class="ajm-req">*</span></label>
+                                <input type="text" x-model="showEditModal ? editAdjuster.last_name : newAdjuster.last_name" required class="ajm-input">
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="ajm-label">Title</label>
+                                <input type="text" x-model="showEditModal ? editAdjuster.title : newAdjuster.title" class="ajm-input" placeholder="e.g., Claims Adjuster">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="ajm-label">Type</label>
+                                <select x-model="showEditModal ? editAdjuster.adjuster_type : newAdjuster.adjuster_type" class="ajm-select">
                                     <option value="">None</option>
                                     <option value="pip">PIP</option>
                                     <option value="um">UM</option>
@@ -663,24 +1362,52 @@ ob_start();
                                 </select>
                             </div>
                         </div>
-                        <div><label class="form-v2-label">Insurance Company</label>
-                            <select x-model="showEditModal ? editAdjuster.insurance_company_id : newAdjuster.insurance_company_id" class="form-v2-select">
+                        <div>
+                            <label class="ajm-label">Insurance Company</label>
+                            <select x-model="showEditModal ? editAdjuster.insurance_company_id : newAdjuster.insurance_company_id" class="ajm-select">
                                 <option value="">None</option>
                                 <template x-for="co in insuranceCompanies" :key="co.id"><option :value="co.id" x-text="co.name"></option></template>
                             </select>
                         </div>
-                        <div class="form-v2-divider"></div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div><label class="form-v2-label">Phone</label><input type="text" x-model="showEditModal ? editAdjuster.phone : newAdjuster.phone" class="form-v2-input"></div>
-                            <div><label class="form-v2-label">Fax</label><input type="text" x-model="showEditModal ? editAdjuster.fax : newAdjuster.fax" class="form-v2-input"></div>
+
+                        <!-- Contact -->
+                        <div class="ajm-section"><span>Contact</span></div>
+                        <div style="display:flex; gap:12px;">
+                            <div style="flex:1;">
+                                <label class="ajm-label">Phone</label>
+                                <input type="text" x-model="showEditModal ? editAdjuster.phone : newAdjuster.phone" class="ajm-input">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="ajm-label">Fax</label>
+                                <input type="text" x-model="showEditModal ? editAdjuster.fax : newAdjuster.fax" class="ajm-input">
+                            </div>
                         </div>
-                        <div><label class="form-v2-label">Email</label><input type="email" x-model="showEditModal ? editAdjuster.email : newAdjuster.email" class="form-v2-input"></div>
-                        <div><label class="form-v2-label">Notes</label><textarea x-model="showEditModal ? editAdjuster.notes : newAdjuster.notes" rows="2" class="form-v2-textarea"></textarea></div>
+                        <div>
+                            <label class="ajm-label">Email</label>
+                            <input type="email" x-model="showEditModal ? editAdjuster.email : newAdjuster.email" class="ajm-input">
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="ajm-section"><span>Notes</span></div>
+                        <div>
+                            <textarea x-model="showEditModal ? editAdjuster.notes : newAdjuster.notes" class="ajm-textarea" placeholder="Optional notes..."></textarea>
+                        </div>
                     </div>
-                    <div class="modal-v2-footer">
-                        <button type="button" @click="showCreateModal ? closeCreateModal() : closeEditModal()" class="btn-v2-cancel">Cancel</button>
-                        <button type="submit" :disabled="saving" class="btn-v2-primary"><span x-text="saving ? 'Saving...' : (showEditModal ? 'Update' : 'Create')"></span></button>
+
+                    <!-- Footer -->
+                    <div class="ajm-footer">
+                        <button type="button" @click="showCreateModal ? closeCreateModal() : closeEditModal()" class="ajm-btn-cancel">Cancel</button>
+                        <button type="submit" :disabled="saving" class="ajm-btn-submit">
+                            <template x-if="!showEditModal">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </template>
+                            <template x-if="showEditModal">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            </template>
+                            <span x-text="saving ? 'Saving...' : (showEditModal ? 'Update' : 'Create')"></span>
+                        </button>
                     </div>
+
                 </form>
             </div>
         </template>

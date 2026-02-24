@@ -166,7 +166,7 @@
                  @click.self="viewingNote = null" @keydown.escape.window="viewingNote = null">
                 <div style="position:fixed; inset:0; background:rgba(0,0,0,0.4);"></div>
                 <div style="position:relative; background:#fff; border-radius:10px; box-shadow:0 8px 32px rgba(0,0,0,0.18); width:480px; max-width:90vw; max-height:70vh; display:flex; flex-direction:column;">
-                    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid #e8e4dc;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid #d0cdc5;">
                         <span style="font-weight:700; font-size:14px; color:var(--navy);">
                             Round <span x-text="viewingNote.round"></span> Note
                             <span style="font-weight:400; color:var(--mbds-muted); font-size:12px; margin-left:6px;" x-text="'(' + viewingNote.coverage + ')'"></span>

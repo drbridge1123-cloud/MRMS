@@ -34,11 +34,13 @@ function trackerPage() {
             request_method: 'email',
             request_type: 'follow_up',
             followup_date: '',
-            notes: ''
+            notes: '',
+            template_id: ''
         },
         bulkRequestCases: [],
         bulkRequestProviderName: '',
         bulkRequestError: '',
+        bulkTemplates: [],
 
         // Bulk preview modal
         showBulkPreviewModal: false,
@@ -59,6 +61,7 @@ function trackerPage() {
 
         async init() {
             this.loadStaff();
+            this.loadBulkTemplates();
             await this.loadData(1);
         },
 
@@ -67,6 +70,16 @@ function trackerPage() {
                 const res = await api.get('users?active_only=1');
                 this.staffList = res.data || [];
             } catch(e) { this.staffList = []; }
+        },
+
+        async loadBulkTemplates() {
+            try {
+                const res = await api.get('templates?type=bulk_request&active_only=1');
+                this.bulkTemplates = res.data || [];
+                // Auto-select default template
+                const def = this.bulkTemplates.find(t => t.is_default);
+                if (def) this.bulkRequestForm.template_id = def.id;
+            } catch(e) { this.bulkTemplates = []; }
         },
 
         toggleFilter(filter) {
@@ -203,7 +216,8 @@ function trackerPage() {
                     request_method: this.bulkRequestForm.request_method,
                     request_type: this.bulkRequestForm.request_type,
                     next_followup_date: this.bulkRequestForm.followup_date,
-                    notes: this.bulkRequestForm.notes
+                    notes: this.bulkRequestForm.notes,
+                    template_id: this.bulkRequestForm.template_id || undefined
                 };
 
                 const res = await api.post('requests/preview-bulk', payload);
@@ -244,6 +258,7 @@ function trackerPage() {
                     request_type: this.bulkRequestForm.request_type,
                     next_followup_date: this.bulkRequestForm.followup_date,
                     notes: this.bulkRequestForm.notes,
+                    template_id: this.bulkRequestForm.template_id || undefined,
                     auto_send: true
                 };
 

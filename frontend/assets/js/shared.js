@@ -82,11 +82,16 @@ function listPageBase(apiEndpoint, options = {}) {
 function initScrollContainer(el, bottomPadding = 16) {
     function update() {
         const t = el.getBoundingClientRect().top;
+        if (t <= 0 && el.offsetParent === null) return; // hidden tab — skip
         el.style.maxHeight = (window.innerHeight - t - bottomPadding) + 'px';
         el.style.overflowY = 'auto';
     }
     requestAnimationFrame(update);
     window.addEventListener('resize', debounce(update, 100));
+    // Recalculate when element becomes visible (tab switch)
+    new IntersectionObserver((entries, obs) => {
+        if (entries[0].isIntersecting) update();
+    }).observe(el);
 }
 
 /**

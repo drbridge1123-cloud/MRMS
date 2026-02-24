@@ -42,6 +42,33 @@ if (!empty($input['template_id']) && !empty($input['request_id'])) {
 
     // Build sample data if not provided
     if (empty($sampleData)) {
+        $firmPhone = defined('FIRM_PHONE') ? FIRM_PHONE : '(425) 678-0436';
+
+        // Sample bulk letter body for bulk_request templates
+        $sampleBulkBody = '<p style="margin-bottom:15px;"><strong style="text-decoration:underline;">RE: FOLLOW-UP: MEDICAL RECORDS REQUEST &ndash; Multiple Cases</strong></p>'
+            . '<p>Dear Records Custodian:</p>'
+            . '<p>Our office represents the above-referenced clients in personal injury matters. We respectfully request complete copies of medical records and itemized billing statements for the following <strong>3 cases</strong>:</p>'
+            . '<table style="border-collapse:collapse;width:100%;margin:10px 0;">'
+            . '<tr><td style="padding:6px 6px 0 0;vertical-align:top;white-space:nowrap;width:28px;font-size:11pt;" rowspan="2">1.</td>'
+            . '<td style="padding:6px 12px 0 0;vertical-align:top;font-size:11pt;"><strong>Case #202023</strong> &ndash; Choi, Min Hee</td>'
+            . '<td style="padding:6px 0 0 0;vertical-align:top;white-space:nowrap;font-size:11pt;">DOI: 11/20/2024</td></tr>'
+            . '<tr><td colspan="2" style="padding:2px 0 6px 0;border-bottom:1px solid #e2e8f0;font-size:10pt;color:#555;">Treatment: 11/20/2024 to Present</td></tr>'
+            . '<tr><td style="padding:6px 6px 0 0;vertical-align:top;white-space:nowrap;width:28px;font-size:11pt;" rowspan="2">2.</td>'
+            . '<td style="padding:6px 12px 0 0;vertical-align:top;font-size:11pt;"><strong>Case #202115</strong> &ndash; Garcia Infante, Narciso</td>'
+            . '<td style="padding:6px 0 0 0;vertical-align:top;white-space:nowrap;font-size:11pt;">DOI: 03/20/2025</td></tr>'
+            . '<tr><td colspan="2" style="padding:2px 0 6px 0;border-bottom:1px solid #e2e8f0;font-size:10pt;color:#555;">Treatment: 03/20/2025 to Present</td></tr>'
+            . '<tr><td style="padding:6px 6px 0 0;vertical-align:top;white-space:nowrap;width:28px;font-size:11pt;" rowspan="2">3.</td>'
+            . '<td style="padding:6px 12px 0 0;vertical-align:top;font-size:11pt;"><strong>Case #202012</strong> &ndash; Byeon, Seonggyeong</td>'
+            . '<td style="padding:6px 0 0 0;vertical-align:top;white-space:nowrap;font-size:11pt;">DOI: 10/29/2024</td></tr>'
+            . '<tr><td colspan="2" style="padding:2px 0 6px 0;border-bottom:1px solid #e2e8f0;font-size:10pt;color:#555;">Treatment: 10/29/2024 to Present</td></tr>'
+            . '</table>'
+            . '<p><strong>Records Requested for All Cases:</strong></p>'
+            . '<table style="margin:5px 0;"><tr><td style="padding:2px 8px;vertical-align:top;">1.</td><td style="padding:2px 0;">Complete Medical Records (including office/chart notes, diagnostic studies, and test results)</td></tr>'
+            . '<tr><td style="padding:2px 8px;vertical-align:top;">2.</td><td style="padding:2px 0;">Itemized Billing Statements</td></tr></table>'
+            . '<p>Signed authorizations will be forwarded under separate cover.</p>'
+            . '<p>Please forward the requested records to our office at your earliest convenience. If you have any questions or require additional information, please do not hesitate to contact our office at ' . htmlspecialchars($firmPhone) . '.</p>'
+            . '<p>Thank you for your prompt attention to this matter.</p>';
+
         $sampleData = [
             'client_name' => 'Sample Client Name',
             'case_number' => 'CASE-12345',
@@ -63,6 +90,9 @@ if (!empty($input['template_id']) && !empty($input['request_id'])) {
             'sender_name' => 'Ella Kim',
             'sender_email' => 'ella@bridgelawpc.com',
             'followup_dates' => date('m/d/Y', strtotime('-21 days')) . ', ' . date('m/d/Y', strtotime('-14 days')),
+            'bulk_letter_body' => $sampleBulkBody,
+            'case_list' => '',
+            'case_count' => '3',
         ];
     }
 

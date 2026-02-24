@@ -105,7 +105,7 @@ if ($isComplete && $cp['case_id']) {
     if ($case && $case['status'] === 'collecting') {
         $incomplete = dbFetchOne(
             "SELECT COUNT(*) AS cnt FROM case_providers
-             WHERE case_id = ? AND overall_status NOT IN ('received_complete', 'verified')",
+             WHERE case_id = ? AND overall_status NOT IN ('received_complete', 'verified', 'no_records')",
             [$caseId]
         );
         if ($incomplete && (int)$incomplete['cnt'] === 0) {

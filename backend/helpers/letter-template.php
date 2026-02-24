@@ -443,9 +443,23 @@ function getHealthLedgerLetterData($requestId) {
  *
  * @param array $casesData Array of case data (from bulk-create or preview-bulk)
  * @param array $commonData Common data (request_date, request_type, notes, etc.)
+ * @param int|null $templateId Optional template ID to use instead of hardcoded template
  * @return string Full HTML document
  */
-function renderBulkRequestLetter($casesData, $commonData) {
+function renderBulkRequestLetter($casesData, $commonData, $templateId = null) {
+    // If template ID provided, use database template with {{case_list}} placeholder
+    if ($templateId) {
+        return renderBulkFromTemplate($templateId, $casesData, $commonData);
+    }
+
+    // Auto-detect default bulk_request template if none specified
+    $defaultTemplate = dbFetchOne(
+        "SELECT id FROM letter_templates WHERE template_type = 'bulk_request' AND is_default = 1 AND is_active = 1"
+    );
+    if ($defaultTemplate) {
+        return renderBulkFromTemplate($defaultTemplate['id'], $casesData, $commonData);
+    }
+
     $requestDate = !empty($commonData['request_date'])
         ? date('F j, Y', strtotime($commonData['request_date']))
         : date('F j, Y');
@@ -487,16 +501,18 @@ function renderBulkRequestLetter($casesData, $commonData) {
 
         $treatmentStart = !empty($case['treatment_start_date'])
             ? date('m/d/Y', strtotime($case['treatment_start_date']))
-            : 'Date of Injury';
+            : (!empty($case['doi']) ? date('m/d/Y', strtotime($case['doi'])) : 'N/A');
         $treatmentEnd = !empty($case['treatment_end_date'])
             ? date('m/d/Y', strtotime($case['treatment_end_date']))
             : 'Present';
 
         $caseListHtml .= "<tr>
-            <td style=\"padding:4px 8px;vertical-align:top;\">{$num}.</td>
-            <td style=\"padding:4px 8px;\"><strong>Case #{$caseNumber}</strong> &ndash; {$clientName}</td>
-            <td style=\"padding:4px 8px;\">DOI: {$doi}</td>
-            <td style=\"padding:4px 8px;\">Treatment: {$treatmentStart} to {$treatmentEnd}</td>
+            <td style=\"padding:6px 6px 0 0;vertical-align:top;white-space:nowrap;width:28px;\" rowspan=\"2\">{$num}.</td>
+            <td style=\"padding:6px 12px 0 0;vertical-align:top;\"><strong>Case #{$caseNumber}</strong> &ndash; {$clientName}</td>
+            <td style=\"padding:6px 0 0 0;vertical-align:top;white-space:nowrap;\">DOI: {$doi}</td>
+        </tr>
+        <tr>
+            <td colspan=\"2\" style=\"padding:2px 0 6px 0;border-bottom:1px solid #e2e8f0;font-size:10pt;color:#555;\">Treatment: {$treatmentStart} to {$treatmentEnd}</td>
         </tr>";
     }
 
@@ -526,7 +542,7 @@ function renderBulkRequestLetter($casesData, $commonData) {
         .body { margin-bottom: 20px; text-align: justify; }
         .signature { margin-top: 40px; }
         table { border-collapse: collapse; width: 100%; margin: 10px 0; }
-        .case-table td { border-bottom: 1px solid #e2e8f0; }
+        .case-table td { font-size: 11pt; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -547,8 +563,7 @@ function renderBulkRequestLetter($casesData, $commonData) {
         </div>
 
         <div class="re-line">
-            <strong>RE: {$subjectLine} &ndash; Multiple Cases</strong><br>
-            Attorney: {$attorneyName}
+            <strong>RE: {$subjectLine} &ndash; Multiple Cases</strong>
         </div>
 
         <div class="body">
@@ -585,6 +600,125 @@ function renderBulkRequestLetter($casesData, $commonData) {
 </body>
 </html>
 HTML;
+}
+
+/**
+ * Render bulk request letter using a database template.
+ * Generates the full letter body (Dear Records Custodian... case list... etc.)
+ * and passes it as {{bulk_letter_body}} so the template only needs to provide
+ * the letterhead, signature, and footer wrapper.
+ */
+function renderBulkFromTemplate($templateId, $casesData, $commonData) {
+    $template = dbFetchOne("SELECT * FROM letter_templates WHERE id = ? AND is_active = 1", [$templateId]);
+    if (!$template) {
+        return renderBulkRequestLetter($casesData, $commonData);
+    }
+
+    // Template must contain {{bulk_letter_body}} placeholder.
+    // If not, fall back to the hardcoded version.
+    if (strpos($template['body_template'], '{{bulk_letter_body}}') === false) {
+        return renderBulkRequestLetter($casesData, $commonData);
+    }
+
+    // --- Build case list HTML (same as hardcoded version) ---
+    $caseListHtml = '<table style="border-collapse:collapse;width:100%;margin:10px 0;">';
+    foreach ($casesData as $i => $case) {
+        $num = $i + 1;
+        $caseNumber = htmlspecialchars($case['case_number'] ?? '');
+        $clientName = htmlspecialchars($case['client_name'] ?? '');
+        $doi = !empty($case['doi']) ? date('m/d/Y', strtotime($case['doi'])) : 'N/A';
+        $treatmentStart = !empty($case['treatment_start_date'])
+            ? date('m/d/Y', strtotime($case['treatment_start_date']))
+            : (!empty($case['doi']) ? date('m/d/Y', strtotime($case['doi'])) : 'N/A');
+        $treatmentEnd = !empty($case['treatment_end_date'])
+            ? date('m/d/Y', strtotime($case['treatment_end_date']))
+            : 'Present';
+
+        $caseListHtml .= "<tr>
+            <td style=\"padding:6px 6px 0 0;vertical-align:top;white-space:nowrap;width:28px;font-size:11pt;\" rowspan=\"2\">{$num}.</td>
+            <td style=\"padding:6px 12px 0 0;vertical-align:top;font-size:11pt;\"><strong>Case #{$caseNumber}</strong> &ndash; {$clientName}</td>
+            <td style=\"padding:6px 0 0 0;vertical-align:top;white-space:nowrap;font-size:11pt;\">DOI: {$doi}</td>
+        </tr>
+        <tr>
+            <td colspan=\"2\" style=\"padding:2px 0 6px 0;border-bottom:1px solid #e2e8f0;font-size:10pt;color:#555;\">Treatment: {$treatmentStart} to {$treatmentEnd}</td>
+        </tr>";
+    }
+    $caseListHtml .= '</table>';
+
+    // --- Build subject line ---
+    $subjectLine = 'MEDICAL RECORDS REQUEST';
+    if (($commonData['request_type'] ?? '') === 'follow_up') {
+        $subjectLine = 'FOLLOW-UP: MEDICAL RECORDS REQUEST';
+    } elseif (($commonData['request_type'] ?? '') === 're_request') {
+        $subjectLine = 'SECOND REQUEST: MEDICAL RECORDS';
+    } elseif (($commonData['request_type'] ?? '') === 'rfd') {
+        $subjectLine = 'REQUEST FOR DOCUMENTS';
+    }
+
+    $authLine = !empty($commonData['authorization_sent'])
+        ? 'Signed HIPAA-compliant authorizations are enclosed/attached herewith.'
+        : 'Signed authorizations will be forwarded under separate cover.';
+
+    $caseCount = count($casesData);
+    $firstCase = $casesData[0];
+    $attorneyName = htmlspecialchars($firstCase['attorney_name'] ?? '');
+    $provAddress = htmlspecialchars($firstCase['provider_address'] ?? '');
+    $firmPhone = htmlspecialchars(defined('FIRM_PHONE') ? FIRM_PHONE : '');
+
+    $notesHtml = '';
+    if (!empty($commonData['notes'])) {
+        $notesHtml = '<p style="margin-top:15px;"><strong>Additional Instructions:</strong> '
+            . htmlspecialchars($commonData['notes']) . '</p>';
+    }
+
+    // --- Compose full letter body (same content as hardcoded) ---
+    $bulkLetterBody = <<<BODY
+<p style="margin-bottom:15px;"><strong style="text-decoration:underline;">RE: {$subjectLine} &ndash; Multiple Cases</strong></p>
+
+<p>Dear Records Custodian:</p>
+
+<p>Our office represents the above-referenced clients in personal injury matters. We respectfully request complete copies of medical records and itemized billing statements for the following <strong>{$caseCount} cases</strong>:</p>
+
+{$caseListHtml}
+
+<p><strong>Records Requested for All Cases:</strong></p>
+<table style="margin:5px 0;">
+    <tr><td style="padding:2px 8px;vertical-align:top;">1.</td><td style="padding:2px 0;">Complete Medical Records (including office/chart notes, diagnostic studies, and test results)</td></tr>
+    <tr><td style="padding:2px 8px;vertical-align:top;">2.</td><td style="padding:2px 0;">Itemized Billing Statements</td></tr>
+</table>
+
+<p>{$authLine}</p>
+
+<p>Please forward the requested records to our office at your earliest convenience. If you have any questions or require additional information, please do not hesitate to contact our office at {$firmPhone}.</p>
+
+{$notesHtml}
+
+<p>Thank you for your prompt attention to this matter.</p>
+BODY;
+
+    // --- Pass everything to template engine ---
+    $data = [
+        'provider_name' => $firstCase['provider_name'] ?? '',
+        'provider_address' => $firstCase['provider_address'] ?? '',
+        'provider_email' => $firstCase['provider_email'] ?? '',
+        'provider_fax' => $firstCase['provider_fax'] ?? '',
+        'attorney_name' => $firstCase['attorney_name'] ?? '',
+        'request_date' => $commonData['request_date'] ?? date('Y-m-d'),
+        'request_type' => $commonData['request_type'] ?? 'initial',
+        'notes' => $commonData['notes'] ?? '',
+        'authorization_sent' => !empty($commonData['authorization_sent']),
+        'request_method' => $commonData['request_method'] ?? 'email',
+        'sender_name' => $commonData['sender_name'] ?? '',
+        'sender_email' => $commonData['sender_email'] ?? '',
+        'case_list' => $caseListHtml,
+        'case_count' => (string)$caseCount,
+        'bulk_letter_body' => $bulkLetterBody,
+        'client_name' => $firstCase['client_name'] ?? '',
+        'case_number' => $firstCase['case_number'] ?? '',
+        'doi' => $firstCase['doi'] ?? '',
+    ];
+
+    return processTemplatePlaceholders($template['body_template'], $data);
 }
 
 /**
@@ -691,6 +825,11 @@ function processTemplatePlaceholders($template, $data) {
         'attorney_fees' => $data['attorney_fees'] ?? '',
         'costs' => $data['costs'] ?? '',
         'proposed_lien_amount' => $data['proposed_lien_amount'] ?? '',
+
+        // Bulk request fields (pre-built HTML, passed via $data)
+        'case_list' => $data['case_list'] ?? '',
+        'case_count' => $data['case_count'] ?? '',
+        'bulk_letter_body' => $data['bulk_letter_body'] ?? '',
 
         // Computed fields
         'record_types_list' => '', // Will be generated below
@@ -811,7 +950,7 @@ function processTemplatePlaceholders($template, $data) {
             }
 
             // Escape HTML (but not for pre-built HTML placeholders)
-            $rawHtmlPlaceholders = ['record_types_list', 'record_types_checkbox', 'firm_attorneys', 'firm_logo_base64'];
+            $rawHtmlPlaceholders = ['record_types_list', 'record_types_checkbox', 'firm_attorneys', 'firm_logo_base64', 'case_list', 'bulk_letter_body'];
             if (!in_array($variable, $rawHtmlPlaceholders)) {
                 $value = htmlspecialchars((string)$value);
             }
@@ -915,10 +1054,26 @@ function getAvailablePlaceholders($templateType) {
         'treatment_end_date|date:m/d/Y' => 'Last treatment date (formatted)',
     ];
 
+    $bulkRequestPlaceholders = [
+        'case_list' => 'HTML table listing all cases (Case #, Name, DOI, Treatment dates)',
+        'case_count' => 'Number of cases in the bulk request',
+        'provider_name' => 'Medical provider name',
+        'provider_address' => 'Medical provider full address',
+        'attorney_name' => 'Attorney name',
+        'request_date|date:F j, Y' => 'Request date (formatted)',
+        'notes' => 'Additional notes',
+        'sender_name' => 'Name of the user sending the request',
+        'sender_email' => 'Email of the user sending the request',
+        'authorization_sent' => 'Boolean: true if authorization was sent',
+        'record_types_list' => 'HTML numbered list of requested record types',
+        'record_types_checkbox' => 'HTML (X) checkbox-style list of record types',
+    ];
+
     switch ($templateType) {
         case 'medical_records':
-        case 'bulk_request':
             return array_merge($commonPlaceholders, $medicalRecordsPlaceholders);
+        case 'bulk_request':
+            return array_merge($commonPlaceholders, $bulkRequestPlaceholders);
         case 'health_ledger':
             return array_merge($commonPlaceholders, $healthLedgerPlaceholders);
         case 'balance_verification':

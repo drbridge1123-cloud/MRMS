@@ -79,15 +79,22 @@ foreach ($caseProviders as $cp) {
     ];
 }
 
+// Get sender info
+$sender = dbFetchOne("SELECT full_name, smtp_email FROM users WHERE id = ?", [$_SESSION['user_id']]);
+
 $commonData = [
     'request_date' => $input['request_date'],
     'request_type' => $input['request_type'],
+    'request_method' => $input['request_method'] ?? 'email',
     'authorization_sent' => !empty($input['authorization_sent']),
-    'notes' => $input['notes'] ?? null
+    'notes' => $input['notes'] ?? null,
+    'sender_name' => $sender['full_name'] ?? '',
+    'sender_email' => $sender['smtp_email'] ?? '',
 ];
 
 // Render ONE combined letter for preview
-$html = renderBulkRequestLetter($casesData, $commonData);
+$templateId = !empty($input['template_id']) ? (int)$input['template_id'] : null;
+$html = renderBulkRequestLetter($casesData, $commonData, $templateId);
 
 successResponse([
     'letter_html' => $html,

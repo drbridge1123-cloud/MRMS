@@ -1,5 +1,11 @@
 // MRMS - API Helper Functions
 
+// Fix bfcache: reload page when restored from back/forward cache
+// (Alpine.js event listeners die in bfcache-restored pages)
+window.addEventListener('pageshow', function(e) {
+    if (e.persisted) window.location.reload();
+});
+
 const API_BASE = '/MRMS/backend/api';
 
 async function apiCall(endpoint, options = {}) {
@@ -169,6 +175,7 @@ const STATUS_LABELS = {
     action_needed: 'Action Needed',
     received_partial: 'Partial',
     on_hold: 'On Hold',
+    no_records: 'No Records',
     received_complete: 'Complete',
     verified: 'Verified',
     collecting: 'Collection',

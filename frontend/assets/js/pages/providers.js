@@ -22,12 +22,12 @@ function providersListPage() {
         selectedProvider: null,
         editProvider: {
             id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
-            phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+            phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false, no_record_fee: false,
             third_party_name: '', third_party_contact: '', notes: '', contacts: []
         },
         newProvider: {
             name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
-            phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+            phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false, no_record_fee: false,
             third_party_name: '', third_party_contact: '', notes: '', contacts: []
         },
 
@@ -108,7 +108,7 @@ function providersListPage() {
             this.showCreateModal = false;
             this.newProvider = {
                 name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
-                phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+                phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false, no_record_fee: false,
                 third_party_name: '', third_party_contact: '', notes: '', contacts: []
             };
         },
@@ -117,7 +117,7 @@ function providersListPage() {
             this.showProviderModal = false;
             this.editProvider = {
                 id: null, name: '', type: 'hospital', preferred_method: 'fax', address: '', city: '', state: '', zip: '',
-                phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false,
+                phone: '', fax: '', email: '', portal_url: '', difficulty_level: 'medium', uses_third_party: false, no_record_fee: false,
                 third_party_name: '', third_party_contact: '', notes: '', contacts: []
             };
         },
@@ -127,6 +127,8 @@ function providersListPage() {
             try {
                 const data = { ...this.newProvider };
                 data.uses_third_party = data.uses_third_party ? 1 : 0;
+                data.charges_record_fee = data.no_record_fee ? 0 : 1;
+                delete data.no_record_fee;
                 data.contacts = [...(this.newProvider.contacts || [])];
                 await api.post('providers', data);
                 showToast('Provider created successfully');
@@ -153,6 +155,8 @@ function providersListPage() {
             try {
                 const data = { ...this.editProvider };
                 data.uses_third_party = data.uses_third_party ? 1 : 0;
+                data.charges_record_fee = data.no_record_fee ? 0 : 1;
+                delete data.no_record_fee;
                 data.contacts = [...(this.editProvider.contacts || [])].map(c => ({...c}));
                 await api.put('providers/' + data.id, data);
                 showToast('Provider updated successfully');

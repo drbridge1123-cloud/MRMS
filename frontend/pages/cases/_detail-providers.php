@@ -113,30 +113,51 @@
                                     <td><span class="text-xs text-v2-text-light"
                                             x-text="getProviderTypeLabel(p.provider_type)"></span></td>
                                     <td>
-                                        <span class="text-xs font-semibold rounded px-2 py-0.5 inline-block"
-                                            :class="'status-' + p.overall_status"
-                                            x-text="getStatusLabel(p.overall_status)"></span>
-                                        <!-- Record type breakdown for partial status -->
-                                        <template x-if="p.overall_status === 'received_partial' && p.record_types_needed">
-                                            <div class="flex flex-wrap gap-1 mt-1.5">
-                                                <template x-for="rt in p.record_types_needed.split(',')" :key="rt">
-                                                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full"
-                                                        :class="p.received_types && p.received_types[rt]
-                                                            ? 'bg-green-100 text-green-700'
-                                                            : 'bg-red-50 text-red-500'"
-                                                        :title="(p.received_types && p.received_types[rt] ? 'Received: ' : 'Pending: ') + rt.replace('_',' ')">
-                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                            x-show="p.received_types && p.received_types[rt]">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                                        </svg>
-                                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                                            x-show="!p.received_types || !p.received_types[rt]">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 8v4m0 4h.01"/>
-                                                        </svg>
-                                                        <span x-text="getRecordTypeShort(rt)"></span>
-                                                    </span>
-                                                </template>
+                                        <div class="ps-wrap">
+                                            <!-- Label -->
+                                            <span class="ps-label" :class="'ps-label-' + p.overall_status"
+                                                x-text="getStatusLabel(p.overall_status)"></span>
+                                            <!-- Progress bar -->
+                                            <div class="ps-track">
+                                                <div class="ps-fill" :class="'ps-fill-' + p.overall_status"
+                                                    :style="'width:' + ({
+                                                        no_records: '0',
+                                                        not_started: '0',
+                                                        requesting: '20',
+                                                        follow_up: '35',
+                                                        action_needed: '40',
+                                                        on_hold: '60',
+                                                        received_partial: '55',
+                                                        received_complete: '100',
+                                                        received: '100',
+                                                        verified: '100',
+                                                        done: '100'
+                                                    }[p.overall_status] || '0') + '%'"></div>
                                             </div>
+                                            <!-- No records sub-text -->
+                                            <template x-if="p.overall_status === 'no_records' && p.no_records_reason">
+                                                <div class="ps-sub" x-text="({
+                                                    no_treatment: 'No treatment records',
+                                                    patient_not_found: 'Patient not found',
+                                                    records_destroyed: 'Records destroyed',
+                                                    provider_closed: 'Provider closed',
+                                                    other: p.no_records_detail || 'Other'
+                                                })[p.no_records_reason] || p.no_records_reason"></div>
+                                            </template>
+                                            <!-- Partial record type tags -->
+                                            <template x-if="p.overall_status === 'received_partial' && p.record_types_needed">
+                                                <div class="ps-tags">
+                                                    <template x-for="rt in p.record_types_needed.split(',')" :key="rt">
+                                                        <span class="ps-tag"
+                                                            :class="p.received_types && p.received_types[rt] ? 'ps-tag-done' : 'ps-tag-pending'"
+                                                            :title="(p.received_types && p.received_types[rt] ? 'Received: ' : 'Pending: ') + rt.replace('_',' ')">
+                                                            <template x-if="p.received_types && p.received_types[rt]">
+                                                                <svg class="ps-tag-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                            </template>
+                                                            <span x-text="getRecordTypeShort(rt)"></span>
+                                                        </span>
+                                                    </template>
+                                                </div>
                                         </template>
                                     </td>
                                     <td x-text="formatDate(p.first_request_date) || '-'"></td>

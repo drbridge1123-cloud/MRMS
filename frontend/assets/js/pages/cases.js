@@ -6,7 +6,7 @@ function casesListPage() {
             perPage: 9999,
             filtersToParams() {
                 return {
-                    status: this.statusFilter,
+                    status: this.search ? '' : this.statusFilter,
                     assigned_to: this.assignedFilter,
                 };
             }

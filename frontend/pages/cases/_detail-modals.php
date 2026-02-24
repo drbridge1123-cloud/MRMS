@@ -6,3 +6,4 @@
 <?php include __DIR__ . '/modals/_modal-edit-case.php'; ?>
 <?php include __DIR__ . '/modals/_modal-workflow.php'; ?>
 <?php include __DIR__ . '/modals/_modal-payment.php'; ?>
+<?php include __DIR__ . '/modals/_modal-quick-add-provider.php'; ?>

@@ -30,6 +30,22 @@ $reportId = dbInsert('mbds_reports', [
     'case_id' => $caseId
 ]);
 
+// Auto-populate health insurance names from received Health Tracker items
+$healthItems = dbFetchAll(
+    "SELECT insurance_carrier FROM health_ledger_items
+     WHERE case_id = ? AND overall_status IN ('received', 'done')
+     ORDER BY id LIMIT 3",
+    [$caseId]
+);
+if (!empty($healthItems)) {
+    $healthSlots = ['health1_name', 'health2_name', 'health3_name'];
+    $healthUpdate = [];
+    foreach ($healthItems as $idx => $hi) {
+        $healthUpdate[$healthSlots[$idx]] = $hi['insurance_carrier'];
+    }
+    dbUpdate('mbds_reports', $healthUpdate, 'id = ?', [$reportId]);
+}
+
 // Auto-populate provider lines from case_providers
 $providers = dbFetchAll(
     "SELECT cp.id AS cp_id, p.name, cp.treatment_start_date, cp.treatment_end_date

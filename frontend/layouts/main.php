@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/MRMS/frontend/assets/css/app.css">
+    <link rel="stylesheet" href="/MRMS/frontend/assets/css/app.css?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/MRMS/frontend/assets/css/app.css') ?>">
     <script>
         // Suppress Tailwind CDN production warning
         const _warn = console.warn;
@@ -48,9 +48,9 @@
             },
         }
     </script>
-    <script src="/MRMS/frontend/assets/js/app.js"></script>
-    <script src="/MRMS/frontend/assets/js/utils.js"></script>
-    <script src="/MRMS/frontend/assets/js/shared.js"></script>
+    <script src="/MRMS/frontend/assets/js/app.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/MRMS/frontend/assets/js/app.js') ?>"></script>
+    <script src="/MRMS/frontend/assets/js/utils.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/MRMS/frontend/assets/js/utils.js') ?>"></script>
+    <script src="/MRMS/frontend/assets/js/shared.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/MRMS/frontend/assets/js/shared.js') ?>"></script>
     <?php if (!empty($pageHeadScripts)): ?>
         <?php foreach ($pageHeadScripts as $hs): ?>
             <script src="<?= $hs ?>"></script>
@@ -86,7 +86,7 @@
             <script src="<?= $script ?>?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . $script) ?>"></script>
         <?php endforeach; ?>
     <?php endif; ?>
-    <script src="/MRMS/frontend/assets/js/alpine-stores.js"></script>
+    <script src="/MRMS/frontend/assets/js/alpine-stores.js?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . '/MRMS/frontend/assets/js/alpine-stores.js') ?>"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>

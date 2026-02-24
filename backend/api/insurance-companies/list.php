@@ -8,7 +8,7 @@ $params = [];
 
 // Filter by type
 if (!empty($_GET['type'])) {
-    $allowedTypes = ['auto', 'health', 'workers_comp', 'liability', 'um_uim', 'other'];
+    $allowedTypes = ['auto', 'health', 'workers_comp', 'liability', 'um_uim', 'government', 'other'];
     if (validateEnum($_GET['type'], $allowedTypes)) {
         $where .= ' AND ic.type = ?';
         $params[] = $_GET['type'];

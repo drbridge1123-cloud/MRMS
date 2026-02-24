@@ -35,6 +35,7 @@ ob_start();
 
             <?php include __DIR__ . '/_detail-costs.php'; ?>
             <?php include __DIR__ . '/_detail-mbds.php'; ?>
+            <?php include __DIR__ . '/_detail-health-ledger.php'; ?>
             <?php include __DIR__ . '/_detail-negotiate.php'; ?>
             <?php include __DIR__ . '/_detail-disbursement.php'; ?>
         </div>
@@ -43,12 +44,20 @@ ob_start();
     <?php include __DIR__ . '/_detail-modals.php'; ?>
 </div>
 
-<script src="/MRMS/frontend/assets/js/pages/mbds-panel.js"></script>
-<script src="/MRMS/frontend/assets/js/pages/negotiate-panel.js"></script>
-<script src="/MRMS/frontend/assets/js/pages/disbursement-panel.js"></script>
-<script src="/MRMS/frontend/components/template-selector.js"></script>
-<script src="/MRMS/frontend/components/document-uploader.js"></script>
-<script src="/MRMS/frontend/components/document-selector.js"></script>
+<?php
+$detailScripts = [
+    '/MRMS/frontend/assets/js/pages/mbds-panel.js',
+    '/MRMS/frontend/assets/js/pages/negotiate-panel.js',
+    '/MRMS/frontend/assets/js/pages/disbursement-panel.js',
+    '/MRMS/frontend/assets/js/pages/health-ledger-panel.js',
+    '/MRMS/frontend/components/template-selector.js',
+    '/MRMS/frontend/components/document-uploader.js',
+    '/MRMS/frontend/components/document-selector.js',
+];
+foreach ($detailScripts as $s):
+?>
+<script src="<?= $s ?>?v=<?= filemtime($_SERVER['DOCUMENT_ROOT'] . $s) ?>"></script>
+<?php endforeach; ?>
 
 <?php
 $content = ob_get_clean();

@@ -9,7 +9,7 @@ if ($query === '') {
 }
 
 $results = dbFetchAll(
-    "SELECT id, name, type
+    "SELECT id, name, type, email, fax, phone
      FROM insurance_companies
      WHERE name LIKE ?
      ORDER BY name ASC

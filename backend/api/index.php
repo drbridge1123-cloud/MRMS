@@ -71,6 +71,8 @@ switch ($resource) {
             require __DIR__ . '/cases/export.php';
         } elseif ($method === 'POST' && $id === 'import') {
             require __DIR__ . '/cases/import.php';
+        } elseif ($method === 'GET' && $id === 'related') {
+            require __DIR__ . '/cases/related.php';
         } elseif ($method === 'GET' && !$id) {
             require __DIR__ . '/cases/list.php';
         } elseif ($method === 'GET' && $id && !$action) {
@@ -123,6 +125,10 @@ switch ($resource) {
     case 'insurance-companies':
         if ($method === 'GET' && $id === 'search') {
             require __DIR__ . '/insurance-companies/search.php';
+        } elseif ($method === 'GET' && $id === 'export') {
+            require __DIR__ . '/insurance-companies/export.php';
+        } elseif ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/insurance-companies/import.php';
         } elseif ($method === 'GET' && !$id) {
             require __DIR__ . '/insurance-companies/list.php';
         } elseif ($method === 'GET' && $id && !$action) {
@@ -142,7 +148,11 @@ switch ($resource) {
         break;
 
     case 'adjusters':
-        if ($method === 'GET' && !$id) {
+        if ($method === 'GET' && $id === 'export') {
+            require __DIR__ . '/adjusters/export.php';
+        } elseif ($method === 'POST' && $id === 'import') {
+            require __DIR__ . '/adjusters/import.php';
+        } elseif ($method === 'GET' && !$id) {
             require __DIR__ . '/adjusters/list.php';
         } elseif ($method === 'GET' && $id && !$action) {
             $_GET['id'] = $id;

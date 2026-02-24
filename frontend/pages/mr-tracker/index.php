@@ -333,23 +333,209 @@ ob_start();
             </div>
         </div>
 
+        <!-- ===== MRT Modal Styles ===== -->
+        <style>
+            .mrt-backdrop {
+                background: rgba(0,0,0,.45);
+            }
+            .mrt-modal {
+                border-radius: 12px;
+                box-shadow: 0 24px 64px rgba(0,0,0,.24);
+                overflow: hidden;
+                background: #fff;
+            }
+            .mrt-header {
+                background: #0F1B2D;
+                padding: 18px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            .mrt-title {
+                font-size: 15px;
+                font-weight: 700;
+                color: #fff;
+            }
+            .mrt-subtitle {
+                font-size: 12px;
+                font-weight: 500;
+                color: var(--gold, #C9A84C);
+                margin-top: 2px;
+            }
+            .mrt-close {
+                color: rgba(255,255,255,.35);
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: color .2s;
+            }
+            .mrt-close:hover {
+                color: rgba(255,255,255,.75);
+            }
+            .mrt-body {
+                padding: 24px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+            .mrt-footer {
+                padding: 14px 24px;
+                border-top: 1px solid var(--border, #d0cdc5);
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+            }
+            .mrt-label {
+                font-size: 9.5px;
+                font-weight: 700;
+                color: var(--muted, #8a8a82);
+                text-transform: uppercase;
+                letter-spacing: .08em;
+                margin-bottom: 5px;
+                display: block;
+            }
+            .mrt-label .mrt-req {
+                color: var(--gold, #C9A84C);
+            }
+            .mrt-input,
+            .mrt-select,
+            .mrt-textarea {
+                width: 100%;
+                background: #fafafa;
+                border: 1.5px solid var(--border, #d0cdc5);
+                border-radius: 7px;
+                padding: 9px 12px;
+                font-size: 13px;
+                outline: none;
+                transition: border-color .2s, background .2s, box-shadow .2s;
+            }
+            .mrt-input:focus,
+            .mrt-select:focus,
+            .mrt-textarea:focus {
+                border-color: var(--gold, #C9A84C);
+                background: #fff;
+                box-shadow: 0 0 0 3px rgba(201,168,76,.1);
+            }
+            .mrt-select {
+                appearance: none;
+                padding-right: 30px;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238a8a82' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 10px center;
+            }
+            .mrt-textarea {
+                resize: vertical;
+                min-height: 70px;
+                line-height: 1.5;
+            }
+            .mrt-row {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+            }
+            .mrt-divider {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .mrt-divider::before,
+            .mrt-divider::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: var(--border, #d0cdc5);
+            }
+            .mrt-divider span {
+                font-size: 9px;
+                font-weight: 700;
+                color: var(--muted, #8a8a82);
+                text-transform: uppercase;
+                letter-spacing: .1em;
+            }
+            .mrt-btn-cancel {
+                background: #fff;
+                border: 1.5px solid var(--border, #d0cdc5);
+                border-radius: 7px;
+                padding: 9px 18px;
+                font-size: 13px;
+                font-weight: 500;
+                color: #5A6B82;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: background .15s;
+            }
+            .mrt-btn-cancel:hover {
+                background: #f7f7f5;
+            }
+            .mrt-btn-primary {
+                background: var(--gold, #C9A84C);
+                color: #fff;
+                border: none;
+                border-radius: 7px;
+                padding: 9px 22px;
+                font-size: 13px;
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(201,168,76,.35);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: opacity .15s;
+            }
+            .mrt-btn-primary:hover {
+                opacity: .92;
+            }
+            .mrt-btn-primary:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+            .mrt-btn-send {
+                background: #1a9e6a;
+                color: #fff;
+                border: none;
+                border-radius: 7px;
+                padding: 9px 22px;
+                font-size: 13px;
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(26,158,106,.3);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: opacity .15s;
+            }
+            .mrt-btn-send:hover {
+                opacity: .92;
+            }
+            .mrt-btn-send:disabled {
+                opacity: .5;
+                cursor: not-allowed;
+            }
+        </style>
+
         <!-- Bulk Request Modal -->
         <div x-show="showBulkRequestModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style="display:none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="closeBulkRequestModal()"></div>
-            <div class="modal-v2 relative w-full max-w-4xl z-10 max-h-[90vh] flex flex-col" @click.stop>
-                <div class="modal-v2-header">
+            style="display:none;" @keydown.escape.window="closeBulkRequestModal()">
+            <div class="fixed inset-0 mrt-backdrop" @click="closeBulkRequestModal()"></div>
+            <div class="mrt-modal relative w-full max-w-4xl z-10 max-h-[90vh] flex flex-col" @click.stop>
+                <div class="mrt-header">
                     <div>
-                        <div class="modal-v2-title">Bulk Follow-Up Request</div>
+                        <div class="mrt-title">Bulk Follow-Up Request</div>
                     </div>
-                    <button type="button" class="modal-v2-close" @click="closeBulkRequestModal()">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" class="mrt-close" @click="closeBulkRequestModal()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <div class="modal-v2-body" style="overflow-y:auto;">
+                <div class="mrt-body" style="overflow-y:auto;">
                     <template x-if="bulkRequestProviderName">
                         <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p class="text-sm">
@@ -368,38 +554,48 @@ ob_start();
 
                     <div class="mb-6 grid grid-cols-2 gap-4">
                         <div>
-                            <label class="form-v2-label">Request Date</label>
+                            <label class="mrt-label">Request Date</label>
                             <input type="date" x-model="bulkRequestForm.request_date"
-                                   class="form-v2-input">
+                                   class="mrt-input">
                         </div>
                         <div>
-                            <label class="form-v2-label">Request Method</label>
+                            <label class="mrt-label">Request Method</label>
                             <select x-model="bulkRequestForm.request_method"
-                                    class="form-v2-select">
+                                    class="mrt-select">
                                 <option value="email">Email</option>
                                 <option value="fax">Fax</option>
                             </select>
                         </div>
                         <div>
-                            <label class="form-v2-label">Follow-up Date (applies to all)</label>
+                            <label class="mrt-label">Follow-up Date (applies to all)</label>
                             <input type="date" x-model="bulkRequestForm.followup_date"
-                                   class="form-v2-input">
+                                   class="mrt-input">
                         </div>
                         <div>
-                            <label class="form-v2-label">Request Type</label>
+                            <label class="mrt-label">Request Type</label>
                             <select x-model="bulkRequestForm.request_type"
-                                    class="form-v2-select">
+                                    class="mrt-select">
                                 <option value="follow_up">Follow-Up</option>
                                 <option value="re_request">Re-Request</option>
                                 <option value="initial">Initial</option>
                             </select>
                         </div>
+                        <div class="col-span-2" x-show="bulkTemplates.length > 0">
+                            <label class="mrt-label">Letter Template</label>
+                            <select x-model="bulkRequestForm.template_id"
+                                    class="mrt-select">
+                                <option value="">Default (built-in)</option>
+                                <template x-for="t in bulkTemplates" :key="t.id">
+                                    <option :value="t.id" x-text="t.name + (t.is_default ? ' (Default)' : '')"></option>
+                                </template>
+                            </select>
+                        </div>
                     </div>
 
                     <div class="mb-6">
-                        <label class="form-v2-label">Notes (optional, applies to all)</label>
+                        <label class="mrt-label">Notes (optional, applies to all)</label>
                         <textarea x-model="bulkRequestForm.notes" rows="2"
-                                  class="form-v2-textarea"
+                                  class="mrt-textarea"
                                   placeholder="Additional notes for all requests..."></textarea>
                     </div>
 
@@ -422,7 +618,7 @@ ob_start();
                                             <td class="px-3 py-2" x-text="caseItem.client_name"></td>
                                             <td class="px-3 py-2">
                                                 <input type="text" x-model="caseItem.recipient"
-                                                       class="form-v2-input"
+                                                       class="mrt-input"
                                                        placeholder="Auto-detect from provider">
                                             </td>
                                             <td class="px-3 py-2 text-center">
@@ -441,11 +637,11 @@ ob_start();
                     </div>
                 </div>
 
-                <div class="modal-v2-footer" style="justify-content:space-between;">
-                    <button @click="closeBulkRequestModal()" class="btn-v2-cancel">Cancel</button>
+                <div class="mrt-footer" style="justify-content:space-between;">
+                    <button @click="closeBulkRequestModal()" class="mrt-btn-cancel">Cancel</button>
                     <div class="flex gap-3">
                         <button @click="previewBulkRequests()"
-                                class="btn-v2-cancel" style="border-color:var(--gold);color:var(--gold);">
+                                class="mrt-btn-cancel" style="border-color:var(--gold);color:var(--gold);">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -454,7 +650,7 @@ ob_start();
                         </button>
                         <button @click="createAndSendBulkRequests()"
                                 :disabled="bulkRequestCases.length === 0"
-                                class="btn-v2-primary">
+                                class="mrt-btn-primary">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                             </svg>
@@ -467,30 +663,30 @@ ob_start();
 
         <!-- Bulk Preview Modal -->
         <div x-show="showBulkPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style="display:none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="closeBulkPreviewModal()"></div>
-            <div class="modal-v2 relative w-full max-w-5xl z-10 max-h-[90vh] flex flex-col" @click.stop>
-                <div class="modal-v2-header">
+            style="display:none;" @keydown.escape.window="closeBulkPreviewModal()">
+            <div class="fixed inset-0 mrt-backdrop" @click="closeBulkPreviewModal()"></div>
+            <div class="mrt-modal relative w-full max-w-5xl z-10 max-h-[90vh] flex flex-col" @click.stop>
+                <div class="mrt-header">
                     <div>
-                        <div class="modal-v2-title">Preview Bulk Requests</div>
-                        <div class="modal-v2-subtitle">
+                        <div class="mrt-title">Preview Bulk Requests</div>
+                        <div class="mrt-subtitle">
                             Combined letter for <span x-text="bulkPreviewCaseCount"></span> case(s) to <span x-text="bulkPreviewProviderName"></span>
                         </div>
                     </div>
-                    <button type="button" class="modal-v2-close" @click="closeBulkPreviewModal()">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" class="mrt-close" @click="closeBulkPreviewModal()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
-                <div class="modal-v2-body" style="flex:1;overflow-y:auto;">
+                <div class="mrt-body" style="flex:1;overflow-y:auto;">
                     <div x-html="bulkPreviewHtml"></div>
                 </div>
 
-                <div class="modal-v2-footer" style="justify-content:space-between;">
-                    <button @click="closeBulkPreviewModal()" class="btn-v2-cancel">Close</button>
-                    <button @click="confirmAndSendBulk()" class="btn-v2-primary" style="background:#16a34a;">
+                <div class="mrt-footer" style="justify-content:space-between;">
+                    <button @click="closeBulkPreviewModal()" class="mrt-btn-cancel">Close</button>
+                    <button @click="confirmAndSendBulk()" class="mrt-btn-send">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                         </svg>
@@ -675,10 +871,10 @@ ob_start();
                                                     <div class="col-span-1 flex gap-1" @click.stop>
                                                         <button @click="openRequestModal(item)" class="px-2 py-1 text-xs bg-gold/10 text-gold rounded hover:bg-gold/20" title="New Request">Request</button>
                                                         <button @click="updateStatus(item.id, 'received')" class="p-1 text-v2-text-light hover:text-green-600 rounded" title="Mark Received" x-show="item.overall_status !== 'received' && item.overall_status !== 'done'">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                         </button>
                                                         <button @click="openEditModal(item)" class="p-1 text-v2-text-light hover:text-gold rounded" title="Edit">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                                         </button>
                                                         <button @click="deleteItem(item.id)" class="p-1 text-v2-text-light hover:text-red-500 rounded" title="Delete">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -747,27 +943,27 @@ ob_start();
 
         <!-- Add/Edit Item Modal -->
         <div x-show="showAddModal || showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
-             style="display:none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="closeModals()"></div>
-            <div class="modal-v2 relative w-full max-w-2xl z-10" @click.stop>
-                <div class="modal-v2-header">
-                    <div class="modal-v2-title" x-text="showEditModal ? 'Edit Item' : 'Add Item'"></div>
-                    <button type="button" class="modal-v2-close" @click="closeModals()">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             style="display:none;" @keydown.escape.window="closeModals()">
+            <div class="fixed inset-0 mrt-backdrop" @click="closeModals()"></div>
+            <div class="mrt-modal relative w-full max-w-2xl z-10" @click.stop>
+                <div class="mrt-header">
+                    <div class="mrt-title" x-text="showEditModal ? 'Edit Item' : 'Add Item'"></div>
+                    <button type="button" class="mrt-close" @click="closeModals()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <div class="modal-v2-body" style="max-height:calc(90vh - 140px);overflow-y:auto;">
+                <div class="mrt-body" style="max-height:calc(90vh - 140px);overflow-y:auto;">
                     <template x-if="showAddModal">
                         <div>
-                            <label class="form-v2-label">Search Case</label>
+                            <label class="mrt-label">Search Case</label>
                             <div class="relative">
                                 <input type="text" x-model="caseSearch" @input.debounce.300ms="searchCases()"
                                        @focus="showCaseDropdown = caseResults.length > 0"
                                        @click.away="showCaseDropdown = false"
                                        placeholder="Type client name or case #..."
-                                       class="form-v2-input">
+                                       class="mrt-input">
                                 <template x-if="form.case_number && form.client_name">
                                     <div class="mt-2 px-3 py-2 bg-gold/10 border border-gold/30 rounded-lg flex items-center justify-between">
                                         <span class="text-sm"><span class="font-medium" x-text="form.client_name"></span> <span class="text-v2-text-light" x-text="'#' + form.case_number"></span></span>
@@ -788,58 +984,73 @@ ob_start();
                         </div>
                     </template>
                     <template x-if="showEditModal">
-                        <div class="form-v2-row">
+                        <div class="mrt-row">
                             <div>
-                                <label class="form-v2-label">Client Name *</label>
-                                <input type="text" x-model="form.client_name" class="form-v2-input">
+                                <label class="mrt-label">Client Name <span class="mrt-req">*</span></label>
+                                <input type="text" x-model="form.client_name" class="mrt-input">
                             </div>
                             <div>
-                                <label class="form-v2-label">Case #</label>
-                                <input type="text" x-model="form.case_number" class="form-v2-input" style="background:var(--bg);" readonly>
+                                <label class="mrt-label">Case #</label>
+                                <input type="text" x-model="form.case_number" class="mrt-input" style="background:var(--bg);" readonly>
                             </div>
                         </div>
                     </template>
-                    <div class="form-v2-row">
-                        <div>
-                            <label class="form-v2-label">Insurance Carrier *</label>
-                            <input type="text" x-model="form.insurance_carrier" class="form-v2-input">
+                    <div class="mrt-row">
+                        <div class="relative">
+                            <label class="mrt-label">Insurance Carrier <span class="mrt-req">*</span></label>
+                            <input type="text" x-model="form.insurance_carrier"
+                                   @input.debounce.300ms="searchCarriers()"
+                                   @focus="if(form.insurance_carrier.length >= 2) searchCarriers()"
+                                   @click.away="showCarrierDropdown = false"
+                                   autocomplete="off"
+                                   class="mrt-input" placeholder="Type to search...">
+                            <template x-if="showCarrierDropdown && carrierResults.length > 0">
+                                <div class="absolute z-10 w-full mt-1 bg-white border border-v2-card-border rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                                    <template x-for="c in carrierResults" :key="c.id">
+                                        <div @click="selectCarrier(c)" class="px-3 py-2 hover:bg-gold/10 cursor-pointer text-sm border-b border-v2-card-border last:border-0">
+                                            <span class="font-medium" x-text="c.name"></span>
+                                            <span class="text-xs text-v2-text-light ml-2" x-text="[c.email, c.fax].filter(Boolean).join(' | ') || ''"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
                         </div>
                         <div>
-                            <label class="form-v2-label">Assigned To</label>
-                            <select x-model="form.assigned_to" class="form-v2-select">
+                            <label class="mrt-label">Assigned To</label>
+                            <select x-model="form.assigned_to" class="mrt-select">
                                 <option value="">Select...</option>
                                 <template x-for="s in staffList" :key="s.id"><option :value="s.id" x-text="s.full_name"></option></template>
                             </select>
                         </div>
                     </div>
-                    <div class="form-v2-row">
+                    <div class="mrt-row">
                         <div>
-                            <label class="form-v2-label">Carrier Email</label>
-                            <input type="email" x-model="form.carrier_contact_email" class="form-v2-input" placeholder="claims@carrier.com">
+                            <label class="mrt-label">Carrier Email</label>
+                            <input type="email" x-model="form.carrier_contact_email" class="mrt-input" placeholder="claims@carrier.com">
                         </div>
                         <div>
-                            <label class="form-v2-label">Carrier Fax</label>
-                            <input type="text" x-model="form.carrier_contact_fax" class="form-v2-input" placeholder="(xxx) xxx-xxxx">
+                            <label class="mrt-label">Carrier Fax</label>
+                            <input type="text" x-model="form.carrier_contact_fax" class="mrt-input" placeholder="(xxx) xxx-xxxx">
                         </div>
                     </div>
-                    <div class="form-v2-row">
+                    <div class="mrt-row">
                         <div>
-                            <label class="form-v2-label">Claim Number</label>
-                            <input type="text" x-model="form.claim_number" class="form-v2-input" placeholder="e.g., 123456789">
+                            <label class="mrt-label">Claim Number</label>
+                            <input type="text" x-model="form.claim_number" class="mrt-input" placeholder="e.g., 123456789">
                         </div>
                         <div>
-                            <label class="form-v2-label">Member ID</label>
-                            <input type="text" x-model="form.member_id" class="form-v2-input" placeholder="e.g., UZ065914201">
+                            <label class="mrt-label">Member ID</label>
+                            <input type="text" x-model="form.member_id" class="mrt-input" placeholder="e.g., UZ065914201">
                         </div>
                     </div>
                     <div>
-                        <label class="form-v2-label">Note</label>
-                        <textarea x-model="form.note" rows="2" class="form-v2-textarea"></textarea>
+                        <label class="mrt-label">Note</label>
+                        <textarea x-model="form.note" rows="2" class="mrt-textarea"></textarea>
                     </div>
                 </div>
-                <div class="modal-v2-footer">
-                    <button @click="closeModals()" class="btn-v2-cancel">Cancel</button>
-                    <button @click="saveItem()" :disabled="saving" class="btn-v2-primary">
+                <div class="mrt-footer">
+                    <button @click="closeModals()" class="mrt-btn-cancel">Cancel</button>
+                    <button @click="saveItem()" :disabled="saving" class="mrt-btn-primary">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -851,29 +1062,29 @@ ob_start();
 
         <!-- New Request Modal -->
         <div x-show="showRequestModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
-             style="display:none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="showRequestModal = false"></div>
-            <div class="modal-v2 relative w-full max-w-lg z-10" @click.stop>
-                <div class="modal-v2-header">
+             style="display:none;" @keydown.escape.window="showRequestModal = false">
+            <div class="fixed inset-0 mrt-backdrop" @click="showRequestModal = false"></div>
+            <div class="mrt-modal relative w-full max-w-lg z-10" @click.stop>
+                <div class="mrt-header">
                     <div>
-                        <div class="modal-v2-title">New Request</div>
-                        <div class="modal-v2-subtitle" x-text="reqForm._carrierLabel"></div>
+                        <div class="mrt-title">New Request</div>
+                        <div class="mrt-subtitle" x-text="reqForm._carrierLabel"></div>
                     </div>
-                    <button type="button" class="modal-v2-close" @click="showRequestModal = false">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" class="mrt-close" @click="showRequestModal = false">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <div class="modal-v2-body">
-                    <div class="form-v2-row">
+                <div class="mrt-body">
+                    <div class="mrt-row">
                         <div>
-                            <label class="form-v2-label">Request Date *</label>
-                            <input type="date" x-model="reqForm.request_date" class="form-v2-input">
+                            <label class="mrt-label">Request Date <span class="mrt-req">*</span></label>
+                            <input type="date" x-model="reqForm.request_date" class="mrt-input">
                         </div>
                         <div>
-                            <label class="form-v2-label">Method *</label>
-                            <select x-model="reqForm.request_method" @change="updateRecipient()" class="form-v2-select">
+                            <label class="mrt-label">Method <span class="mrt-req">*</span></label>
+                            <select x-model="reqForm.request_method" @change="updateRecipient()" class="mrt-select">
                                 <option value="">Select...</option>
                                 <option value="email">Email</option>
                                 <option value="fax">Fax</option>
@@ -883,23 +1094,23 @@ ob_start();
                             </select>
                         </div>
                     </div>
-                    <div class="form-v2-row">
+                    <div class="mrt-row">
                         <div>
-                            <label class="form-v2-label">Type</label>
-                            <select x-model="reqForm.request_type" class="form-v2-select">
+                            <label class="mrt-label">Type</label>
+                            <select x-model="reqForm.request_type" class="mrt-select">
                                 <option value="initial">Initial</option>
                                 <option value="follow_up">Follow Up</option>
                                 <option value="re_request">Re-Request</option>
                             </select>
                         </div>
                         <div>
-                            <label class="form-v2-label">Send To</label>
-                            <input type="text" x-model="reqForm.sent_to" class="form-v2-input" placeholder="Email or fax #">
+                            <label class="mrt-label">Send To</label>
+                            <input type="text" x-model="reqForm.sent_to" class="mrt-input" placeholder="Email or fax #">
                         </div>
                     </div>
                     <div>
-                        <label class="form-v2-label">Template</label>
-                        <select x-model="reqForm.template_id" @change="onTemplateChange()" class="form-v2-select">
+                        <label class="mrt-label">Template</label>
+                        <select x-model="reqForm.template_id" @change="onTemplateChange()" class="mrt-select">
                             <option value="">Default (no template)</option>
                             <template x-for="t in hlTemplates" :key="t.id">
                                 <option :value="t.id" x-text="t.name + (t.is_default ? ' (Default)' : '')"></option>
@@ -910,37 +1121,37 @@ ob_start();
                     <template x-if="reqForm._showSettlement">
                         <div class="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg space-y-3">
                             <p class="text-xs font-semibold text-amber-700 uppercase">Settlement Information</p>
-                            <div class="form-v2-row">
+                            <div class="mrt-row">
                                 <div>
-                                    <label class="form-v2-label">Settlement Amount</label>
-                                    <input type="number" step="0.01" x-model="reqForm.template_data.settlement_amount" class="form-v2-input" placeholder="$0.00">
+                                    <label class="mrt-label">Settlement Amount</label>
+                                    <input type="number" step="0.01" x-model="reqForm.template_data.settlement_amount" class="mrt-input" placeholder="$0.00">
                                 </div>
                                 <div>
-                                    <label class="form-v2-label">Settlement Date</label>
-                                    <input type="date" x-model="reqForm.template_data.settlement_date" class="form-v2-input">
+                                    <label class="mrt-label">Settlement Date</label>
+                                    <input type="date" x-model="reqForm.template_data.settlement_date" class="mrt-input">
                                 </div>
                             </div>
-                            <div class="form-v2-row">
+                            <div class="mrt-row">
                                 <div>
-                                    <label class="form-v2-label">Attorney's Fees</label>
-                                    <input type="number" step="0.01" x-model="reqForm.template_data.attorney_fees" class="form-v2-input" placeholder="$0.00">
+                                    <label class="mrt-label">Attorney's Fees</label>
+                                    <input type="number" step="0.01" x-model="reqForm.template_data.attorney_fees" class="mrt-input" placeholder="$0.00">
                                 </div>
                                 <div>
-                                    <label class="form-v2-label">Costs</label>
-                                    <input type="number" step="0.01" x-model="reqForm.template_data.costs" class="form-v2-input" placeholder="$0.00">
+                                    <label class="mrt-label">Costs</label>
+                                    <input type="number" step="0.01" x-model="reqForm.template_data.costs" class="mrt-input" placeholder="$0.00">
                                 </div>
                             </div>
                         </div>
                     </template>
 
                     <div>
-                        <label class="form-v2-label">Notes</label>
-                        <textarea x-model="reqForm.notes" rows="2" class="form-v2-textarea"></textarea>
+                        <label class="mrt-label">Notes</label>
+                        <textarea x-model="reqForm.notes" rows="2" class="mrt-textarea"></textarea>
                     </div>
                 </div>
-                <div class="modal-v2-footer">
-                    <button @click="showRequestModal = false" class="btn-v2-cancel">Cancel</button>
-                    <button @click="submitRequest()" :disabled="saving" class="btn-v2-primary">
+                <div class="mrt-footer">
+                    <button @click="showRequestModal = false" class="mrt-btn-cancel">Cancel</button>
+                    <button @click="submitRequest()" :disabled="saving" class="mrt-btn-primary">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
@@ -952,16 +1163,16 @@ ob_start();
 
         <!-- Preview & Send Modal -->
         <div x-show="showSendModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
-             style="display:none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="showSendModal = false"></div>
-            <div class="modal-v2 relative w-full max-w-4xl z-10 flex flex-col" style="max-height:90vh;" @click.stop>
-                <div class="modal-v2-header">
+             style="display:none;" @keydown.escape.window="showSendModal = false">
+            <div class="fixed inset-0 mrt-backdrop" @click="showSendModal = false"></div>
+            <div class="mrt-modal relative w-full max-w-4xl z-10 flex flex-col" style="max-height:90vh;" @click.stop>
+                <div class="mrt-header">
                     <div>
-                        <div class="modal-v2-title">Preview & Send</div>
-                        <div class="modal-v2-subtitle" x-text="previewData.carrier + ' via ' + previewData.method"></div>
+                        <div class="mrt-title">Preview & Send</div>
+                        <div class="mrt-subtitle" x-text="previewData.carrier + ' via ' + previewData.method"></div>
                     </div>
-                    <button type="button" class="modal-v2-close" @click="showSendModal = false">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button type="button" class="mrt-close" @click="showSendModal = false">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -969,13 +1180,13 @@ ob_start();
                 <div class="flex-1 overflow-auto p-6">
                     <iframe :srcdoc="previewData.letter_html" class="w-full border rounded-lg" style="height: 500px;"></iframe>
                 </div>
-                <div class="modal-v2-footer">
+                <div class="mrt-footer">
                     <div class="flex items-center gap-4 w-full">
-                        <label class="form-v2-label" style="margin-bottom:0;white-space:nowrap;">Recipient:</label>
-                        <input type="text" x-model="previewData.recipient" class="form-v2-input flex-1">
+                        <label class="mrt-label" style="margin-bottom:0;white-space:nowrap;">Recipient:</label>
+                        <input type="text" x-model="previewData.recipient" class="mrt-input flex-1">
                         <button @click="confirmAndSend()" :disabled="sending || !previewData.recipient"
-                                class="btn-v2-primary"
-                                :class="previewData.method === 'email' ? '!bg-teal-600 hover:!bg-teal-700' : '!bg-purple-600 hover:!bg-purple-700'"
+                                class="mrt-btn-send"
+                                :style="previewData.method === 'email' ? 'background:#0d9488;box-shadow:0 2px 8px rgba(13,148,136,.3);' : 'background:#7c3aed;box-shadow:0 2px 8px rgba(124,58,237,.3);'"
                                 style="flex-shrink:0;">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -989,18 +1200,18 @@ ob_start();
 
         <!-- Import Modal -->
         <div x-show="showImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
-             style="display:none;">
-            <div class="modal-v2-backdrop fixed inset-0" @click="showImportModal = false; importFile = null; importResult = null;"></div>
-            <div class="modal-v2 relative w-full max-w-lg z-10" @click.stop>
-                <div class="modal-v2-header">
-                    <div class="modal-v2-title">Import CSV</div>
-                    <button type="button" class="modal-v2-close" @click="showImportModal = false; importFile = null; importResult = null;">
-                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             style="display:none;" @keydown.escape.window="showImportModal = false; importFile = null; importResult = null;">
+            <div class="fixed inset-0 mrt-backdrop" @click="showImportModal = false; importFile = null; importResult = null;"></div>
+            <div class="mrt-modal relative w-full max-w-lg z-10" @click.stop>
+                <div class="mrt-header">
+                    <div class="mrt-title">Import CSV</div>
+                    <button type="button" class="mrt-close" @click="showImportModal = false; importFile = null; importResult = null;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
-                <div class="modal-v2-body">
+                <div class="mrt-body">
                     <div class="border-2 border-dashed border-v2-card-border rounded-lg p-8 text-center"
                          :class="dragover ? 'border-gold bg-gold/5' : ''"
                          @dragover.prevent="dragover = true" @dragleave="dragover = false"
@@ -1026,9 +1237,9 @@ ob_start();
                         </div>
                     </template>
                 </div>
-                <div class="modal-v2-footer">
-                    <button @click="showImportModal = false; importFile = null; importResult = null;" class="btn-v2-cancel">Close</button>
-                    <button @click="doImport()" :disabled="!importFile || importing" class="btn-v2-primary">
+                <div class="mrt-footer">
+                    <button @click="showImportModal = false; importFile = null; importResult = null;" class="mrt-btn-cancel">Close</button>
+                    <button @click="doImport()" :disabled="!importFile || importing" class="mrt-btn-primary">
                         <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                         </svg>

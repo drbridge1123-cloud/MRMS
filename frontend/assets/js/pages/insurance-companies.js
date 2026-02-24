@@ -23,7 +23,7 @@ function insuranceListPage() {
         _hasPageFilters() { return this.typeFilter !== ''; },
 
         getInsuranceTypeLabel(type) {
-            const labels = { auto: 'Auto', health: 'Health', workers_comp: "Worker's Comp", liability: 'Liability', um_uim: 'UM/UIM', other: 'Other' };
+            const labels = { auto: 'Auto', health: 'Health', workers_comp: "Worker's Comp", liability: 'Liability', um_uim: 'UM/UIM', government: 'Government', other: 'Other' };
             return labels[type] || type || '-';
         },
 
@@ -34,6 +34,7 @@ function insuranceListPage() {
                 workers_comp: { bg: '#FFFBEB', color: '#D97706' },
                 liability: { bg: '#FEF2F2', color: '#DC2626' },
                 um_uim: { bg: '#F5F3FF', color: '#6B21A8' },
+                government: { bg: '#ECFEFF', color: '#0E7490' },
                 other: { bg: '#F5F5F0', color: '#5A6B82' },
             };
             return colors[type] || colors.other;

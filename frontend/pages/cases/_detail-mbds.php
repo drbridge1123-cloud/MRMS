@@ -137,7 +137,7 @@
                                             <th class="mbds-th-c" style="width:160px; min-width:160px; max-width:160px">Dates</th>
                                             <th class="mbds-th-c" style="width:50px; min-width:50px; max-width:50px">Visits</th>
                                             <th style="text-align:left">Note</th>
-                                            <th style="width:32px; min-width:32px; max-width:32px" x-show="report?.status === 'draft'"></th>
+                                            <th class="mbds-th-action" x-show="report?.status === 'draft'"></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -295,9 +295,9 @@
                                                 </td>
 
                                                 <!-- Delete -->
-                                                <td x-show="row._type === 'line' && report?.status === 'draft'" style="padding:4px;text-align:center">
-                                                    <button @click="deleteLine(row._lineRef)" class="icon-btn icon-btn-danger icon-btn-sm">
-                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                <td x-show="row._type === 'line' && report?.status === 'draft'" class="mbds-td-action">
+                                                    <button @click="deleteLine(row._lineRef)" class="mbds-delete-btn">
+                                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                                     </button>
                                                 </td>
                                             </tr>
@@ -396,79 +396,115 @@
                 </div>
 
                 <!-- MBDS Import Preview Modal -->
-                <div x-show="showMbdsImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-                    <div class="modal-v2-backdrop fixed inset-0" @click="showMbdsImportModal = false"></div>
-                    <div class="modal-v2 relative w-full max-w-4xl z-10" @click.stop>
-                        <div class="modal-v2-header">
-                            <h3 class="modal-v2-title">Import Medical Balance Preview</h3>
-                            <button type="button" class="modal-v2-close" @click="showMbdsImportModal = false">
-                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <style>
+                    .mim-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.45); }
+                    .mim-dialog { position:relative; width:800px; max-width:calc(100vw - 32px); border-radius:12px; box-shadow:0 24px 64px rgba(0,0,0,.24); overflow:hidden; background:#fff; z-index:10; }
+                    .mim-header { background:#0F1B2D; padding:18px 24px; display:flex; align-items:center; justify-content:space-between; }
+                    .mim-header h3 { font-size:15px; font-weight:700; color:#fff; margin:0; }
+                    .mim-close { background:none; border:none; cursor:pointer; color:rgba(255,255,255,.35); transition:color .15s; padding:0; line-height:0; }
+                    .mim-close:hover { color:rgba(255,255,255,.75); }
+                    .mim-body { padding:24px; display:flex; flex-direction:column; gap:16px; }
+                    .mim-summary { display:flex; gap:12px; }
+                    .mim-summary-card { flex:1; background:#fafafa; border-radius:8px; padding:10px 16px; text-align:center; }
+                    .mim-summary-card .mim-val { font-size:17px; font-weight:700; color:#1a1a1a; }
+                    .mim-summary-card .mim-val-navy { font-size:17px; font-weight:700; color:#0F1B2D; }
+                    .mim-summary-card .mim-lbl { font-size:10px; color:#8a8a82; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+                    .mim-warning { background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:10px 16px; font-size:13px; color:#92400e; }
+                    .mim-table-wrap { max-height:320px; overflow-y:auto; border:1.5px solid var(--border,#d0cdc5); border-radius:7px; }
+                    .mim-table { width:100%; font-size:12px; border-collapse:collapse; }
+                    .mim-table thead { position:sticky; top:0; background:#fff; }
+                    .mim-table thead th { text-align:left; padding:8px 12px; font-size:9.5px; font-weight:700; color:var(--muted,#8a8a82); text-transform:uppercase; letter-spacing:.08em; border-bottom:1.5px solid var(--border,#d0cdc5); }
+                    .mim-table thead th.r { text-align:right; }
+                    .mim-table thead th.c { text-align:center; }
+                    .mim-table tbody tr { border-bottom:1px solid #f3f1ed; }
+                    .mim-table tbody tr:last-child { border-bottom:none; }
+                    .mim-table tbody td { padding:6px 12px; font-size:12px; }
+                    .mim-table tbody td.r { text-align:right; }
+                    .mim-table tbody td.c { text-align:center; }
+                    .mim-type-badge { display:inline-block; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; }
+                    .mim-type-provider { background:#dbeafe; color:#1d4ed8; }
+                    .mim-type-rx { background:#f3e8ff; color:#7c3aed; }
+                    .mim-footer { padding:14px 24px; border-top:1px solid var(--border,#d0cdc5); display:flex; justify-content:flex-end; gap:10px; }
+                    .mim-btn-cancel { padding:8px 18px; font-size:13px; font-weight:600; border-radius:7px; border:1.5px solid var(--border,#d0cdc5); background:#fff; color:#555; cursor:pointer; transition:all .15s; }
+                    .mim-btn-cancel:hover { background:#fafafa; border-color:#ccc; }
+                    .mim-btn-submit { padding:8px 18px; font-size:13px; font-weight:700; border-radius:7px; border:none; background:var(--gold,#C9A84C); color:#fff; cursor:pointer; box-shadow:0 2px 8px rgba(201,168,76,.35); display:flex; align-items:center; gap:6px; transition:all .15s; }
+                    .mim-btn-submit:hover { filter:brightness(1.05); }
+                    .mim-btn-submit:disabled { opacity:.55; cursor:not-allowed; }
+                </style>
+                <div x-show="showMbdsImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;"
+                     @keydown.escape.window="showMbdsImportModal = false">
+                    <div class="mim-backdrop" @click="showMbdsImportModal = false"></div>
+                    <div class="mim-dialog" @click.stop>
+                        <div class="mim-header">
+                            <h3>Import Medical Balance Preview</h3>
+                            <button type="button" class="mim-close" @click="showMbdsImportModal = false">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                 </svg>
                             </button>
                         </div>
-                        <div class="modal-v2-body">
-                            <div class="flex gap-4 mb-4">
-                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                                    <p class="text-lg font-bold text-v2-text" x-text="mbdsImportSummary.count || 0"></p>
-                                    <p class="text-[10px] text-v2-text-light">Lines</p>
+                        <div class="mim-body">
+                            <div class="mim-summary">
+                                <div class="mim-summary-card">
+                                    <p class="mim-val" x-text="mbdsImportSummary.count || 0"></p>
+                                    <p class="mim-lbl">Lines</p>
                                 </div>
-                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                                    <p class="text-lg font-bold text-v2-text" x-text="formatCurrency(mbdsImportSummary.total_charges || 0)"></p>
-                                    <p class="text-[10px] text-v2-text-light">Total Charges</p>
+                                <div class="mim-summary-card">
+                                    <p class="mim-val" x-text="formatCurrency(mbdsImportSummary.total_charges || 0)"></p>
+                                    <p class="mim-lbl">Total Charges</p>
                                 </div>
-                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                                    <p class="text-lg font-bold" x-text="formatCurrency(mbdsImportSummary.total_pip1 || 0)" style="color:var(--navy)"></p>
-                                    <p class="text-[10px] text-v2-text-light">Total PIP #1</p>
+                                <div class="mim-summary-card">
+                                    <p class="mim-val-navy" x-text="formatCurrency(mbdsImportSummary.total_pip1 || 0)"></p>
+                                    <p class="mim-lbl">Total PIP #1</p>
                                 </div>
-                                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                                    <p class="text-lg font-bold" x-text="formatCurrency(mbdsImportSummary.total_balance || 0)"
-                                        :class="(mbdsImportSummary.total_balance || 0) > 0 ? 'text-amber-600' : 'text-green-600'"></p>
-                                    <p class="text-[10px] text-v2-text-light">Total Balance</p>
+                                <div class="mim-summary-card">
+                                    <p class="mim-val" x-text="formatCurrency(mbdsImportSummary.total_balance || 0)"
+                                        :style="(mbdsImportSummary.total_balance || 0) > 0 ? 'color:#d97706' : 'color:#16a34a'"></p>
+                                    <p class="mim-lbl">Total Balance</p>
                                 </div>
                             </div>
 
                             <template x-if="lines.length > 0">
-                                <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-2 mb-4 text-sm text-amber-800">
+                                <div class="mim-warning">
                                     <strong>Warning:</strong> This will replace all <span x-text="lines.length"></span> existing Medical Balance lines with the imported data.
                                 </div>
                             </template>
 
-                            <div class="max-h-80 overflow-y-auto border border-v2-card-border rounded-lg">
-                                <table class="w-full text-xs">
-                                    <thead class="sticky top-0 bg-white">
-                                        <tr class="border-b border-v2-card-border">
-                                            <th class="text-left px-3 py-2">Type</th>
-                                            <th class="text-left px-3 py-2">Provider</th>
-                                            <th class="text-right px-3 py-2">Charges</th>
-                                            <th class="text-right px-3 py-2">PIP #1</th>
-                                            <th class="text-right px-3 py-2">Discount</th>
-                                            <th class="text-right px-3 py-2">Balance</th>
-                                            <th class="text-left px-3 py-2">Dates</th>
-                                            <th class="text-center px-3 py-2">Visits</th>
-                                            <th class="text-center px-3 py-2">Matched</th>
+                            <div class="mim-table-wrap">
+                                <table class="mim-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Provider</th>
+                                            <th class="r">Charges</th>
+                                            <th class="r">PIP #1</th>
+                                            <th class="r">Discount</th>
+                                            <th class="r">Balance</th>
+                                            <th>Dates</th>
+                                            <th class="c">Visits</th>
+                                            <th class="c">Matched</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <template x-for="(row, idx) in mbdsImportPreview" :key="idx">
-                                            <tr class="border-b border-v2-bg">
-                                                <td class="px-3 py-1.5">
-                                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                                                        :class="row.line_type === 'provider' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'"
+                                            <tr>
+                                                <td>
+                                                    <span class="mim-type-badge"
+                                                        :class="row.line_type === 'provider' ? 'mim-type-provider' : 'mim-type-rx'"
                                                         x-text="row.line_type.replace('_',' ').toUpperCase()"></span>
                                                 </td>
-                                                <td class="px-3 py-1.5 font-medium" x-text="row.provider_name"></td>
-                                                <td class="px-3 py-1.5 text-right" x-text="formatCurrency(row.charges)"></td>
-                                                <td class="px-3 py-1.5 text-right" x-text="formatCurrency(row.pip1_amount)"></td>
-                                                <td class="px-3 py-1.5 text-right" x-text="formatCurrency(row.discount)"></td>
-                                                <td class="px-3 py-1.5 text-right font-semibold"
-                                                    :class="row.balance > 0 ? 'text-amber-600' : (row.balance < 0 ? 'text-red-600' : 'text-green-600')"
+                                                <td style="font-weight:500" x-text="row.provider_name"></td>
+                                                <td class="r" x-text="formatCurrency(row.charges)"></td>
+                                                <td class="r" x-text="formatCurrency(row.pip1_amount)"></td>
+                                                <td class="r" x-text="formatCurrency(row.discount)"></td>
+                                                <td class="r" style="font-weight:600"
+                                                    :style="row.balance > 0 ? 'color:#d97706' : (row.balance < 0 ? 'color:#dc2626' : 'color:#16a34a')"
                                                     x-text="formatCurrency(row.balance)"></td>
-                                                <td class="px-3 py-1.5 text-xs" x-text="row.treatment_dates || '-'"></td>
-                                                <td class="px-3 py-1.5 text-center" x-text="row.visits || '-'"></td>
-                                                <td class="px-3 py-1.5 text-center">
-                                                    <span x-show="row.matched_provider" class="text-green-600">&#10003;</span>
-                                                    <span x-show="!row.matched_provider && row.line_type === 'provider'" class="text-v2-text-light">-</span>
+                                                <td style="font-size:11px" x-text="row.treatment_dates || '-'"></td>
+                                                <td class="c" x-text="row.visits || '-'"></td>
+                                                <td class="c">
+                                                    <span x-show="row.matched_provider" style="color:#16a34a">&#10003;</span>
+                                                    <span x-show="!row.matched_provider && row.line_type === 'provider'" style="color:#aaa">-</span>
                                                 </td>
                                             </tr>
                                         </template>
@@ -476,11 +512,11 @@
                                 </table>
                             </div>
                         </div>
-                        <div class="modal-v2-footer">
-                            <button type="button" @click="showMbdsImportModal = false" class="btn-v2-cancel">Cancel</button>
+                        <div class="mim-footer">
+                            <button type="button" @click="showMbdsImportModal = false" class="mim-btn-cancel">Cancel</button>
                             <button type="button" @click="confirmMbdsImport()" :disabled="mbdsImporting"
-                                    class="btn-v2-primary">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    class="mim-btn-submit">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
                                 </svg>
                                 <span x-text="mbdsImporting ? 'Importing...' : 'Import ' + (mbdsImportSummary.count || 0) + ' Lines'"></span>

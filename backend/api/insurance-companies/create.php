@@ -9,7 +9,7 @@ if (!empty($errors)) {
     errorResponse(implode(', ', $errors), 422);
 }
 
-$allowedTypes = ['auto', 'health', 'workers_comp', 'liability', 'um_uim', 'other'];
+$allowedTypes = ['auto', 'health', 'workers_comp', 'liability', 'um_uim', 'government', 'other'];
 if (!validateEnum($input['type'], $allowedTypes)) {
     errorResponse('Invalid insurance type. Allowed: ' . implode(', ', $allowedTypes), 422);
 }

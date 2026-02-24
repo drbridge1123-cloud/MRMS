@@ -26,6 +26,11 @@ if (!empty($_GET['assigned_to'])) {
     $params[] = (int)$_GET['assigned_to'];
 }
 
+if (!empty($_GET['case_id'])) {
+    $where[] = 'hli.case_id = ?';
+    $params[] = (int)$_GET['case_id'];
+}
+
 // Health ledger has no deadline-based escalation tiers
 
 // Special filters

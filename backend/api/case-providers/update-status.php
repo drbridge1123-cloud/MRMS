@@ -16,7 +16,7 @@ if (!empty($errors)) {
     errorResponse(implode(', ', $errors));
 }
 
-$allowedStatuses = ['not_started', 'requesting', 'follow_up', 'action_needed', 'received_partial', 'on_hold', 'received_complete', 'verified'];
+$allowedStatuses = ['not_started', 'requesting', 'follow_up', 'action_needed', 'received_partial', 'on_hold', 'no_records', 'received_complete', 'verified'];
 if (!validateEnum($input['overall_status'], $allowedStatuses)) {
     errorResponse('Invalid status');
 }
@@ -40,6 +40,16 @@ $statusUpdate = ['overall_status' => $newStatus];
 if (in_array($newStatus, ['received_complete', 'received_partial']) && !$cp['received_date']) {
     $statusUpdate['received_date'] = date('Y-m-d');
 }
+if ($newStatus === 'no_records') {
+    $allowedReasons = ['no_treatment', 'patient_not_found', 'records_destroyed', 'provider_closed', 'other'];
+    $reason = $input['no_records_reason'] ?? 'other';
+    if (!validateEnum($reason, $allowedReasons)) $reason = 'other';
+    $statusUpdate['no_records_reason'] = $reason;
+    $statusUpdate['no_records_detail'] = sanitizeString($input['no_records_detail'] ?? '');
+} elseif ($oldStatus === 'no_records') {
+    $statusUpdate['no_records_reason'] = null;
+    $statusUpdate['no_records_detail'] = null;
+}
 dbUpdate('case_providers', $statusUpdate, 'id = ?', [$cpId]);
 
 if ($newStatus === 'received_complete' && $oldStatus !== 'received_complete') {
@@ -60,10 +70,10 @@ logActivity($userId, 'updated_status', 'case_provider', $cpId, [
     'new_status' => $newStatus
 ]);
 
-// Auto-move case to In Review if all providers are received_complete
-if ($newStatus === 'received_complete') {
+// Auto-move case to In Review if all providers are received_complete or no_records
+if (in_array($newStatus, ['received_complete', 'no_records'])) {
     $incomplete = dbFetchOne(
-        "SELECT COUNT(*) as cnt FROM case_providers WHERE case_id = ? AND overall_status != 'received_complete' AND overall_status != 'verified'",
+        "SELECT COUNT(*) as cnt FROM case_providers WHERE case_id = ? AND overall_status NOT IN ('received_complete', 'verified', 'no_records')",
         [$cp['case_id']]
     );
     if ($incomplete && (int)$incomplete['cnt'] === 0) {

@@ -69,6 +69,10 @@ if (array_key_exists('avg_response_days', $input)) {
     $updateData['avg_response_days'] = $input['avg_response_days'] !== null ? (int)$input['avg_response_days'] : null;
 }
 
+if (array_key_exists('charges_record_fee', $input)) {
+    $updateData['charges_record_fee'] = $input['charges_record_fee'] ? 1 : 0;
+}
+
 $pdo = getDBConnection();
 $pdo->beginTransaction();
 

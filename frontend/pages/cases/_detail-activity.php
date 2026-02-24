@@ -9,7 +9,7 @@
                         <span class="panel-count" x-text="notes.length"></span>
                     </div>
                     <select x-model="noteFilterProvider" @change="loadNotes()" @click.stop
-                        class="act-form-input" style="width:auto; border:1px solid #e8e4dc; padding:4px 8px; font-size:13px;">
+                        class="act-form-input" style="width:auto; border:1px solid #d0cdc5; padding:4px 8px; font-size:13px;">
                         <option value="">All Providers</option>
                         <template x-for="prov in providers" :key="prov.id">
                             <option :value="prov.id" x-text="prov.provider_name"></option>

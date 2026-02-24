@@ -68,7 +68,12 @@
       "Bash(# Check if the medical records templates have headers/footers unzip -l \"\"/c/Users/Server/Downloads/Template/Medical Records Request.docx\"\")",
       "Bash(c:/xampp/php/php.exe:*)",
       "Bash(git branch:*)",
-      "Bash(/c/xampp/mysql/bin/mysqldump:*)"
+      "Bash(/c/xampp/mysql/bin/mysqldump:*)",
+      "Bash(c:/xampp/mysql/bin/mysql:*)",
+      "Bash(/c/xampp/apache/bin/httpd:*)",
+      "Bash(c:/xampp/apache/bin/httpd.exe -t)",
+      "Bash(c:/xampp/apache/bin/httpd.exe:*)",
+      "Bash(tasklist:*)"
     ]
   }
 }

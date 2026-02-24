@@ -1,13 +1,13 @@
 <?php
 /**
- * Migration 026: Seed Bulk Request Template
+ * Migration 034: Update Bulk Request Template
  *
- * Inserts a default bulk_request template that uses {{bulk_letter_body}}
- * to auto-generate the letter content (case list, records requested, etc.)
- * while wrapping it with the firm letterhead, signature, and footer.
+ * Updates the existing bulk_request template to use {{bulk_letter_body}} placeholder.
+ * Template provides letterhead + signature wrapper; bulk letter body is auto-generated.
+ * Matches the format from the firm's "Bulk email Request.docx" document.
  *
- * Usage: php database/migrations/026_seed_bulk_request_template.php
- *   Or:  http://localhost/MRMS/database/migrations/026_seed_bulk_request_template.php
+ * Usage: php database/migrations/034_update_bulk_request_template.php
+ *   Or:  http://localhost/MRMS/database/migrations/034_update_bulk_request_template.php
  */
 
 $isCli = php_sapi_name() === 'cli';
@@ -18,15 +18,14 @@ require_once __DIR__ . '/../../backend/helpers/db.php';
 
 $pdo = getDBConnection();
 
-// Check if bulk_request template already exists
-$existing = dbFetchOne("SELECT id FROM letter_templates WHERE template_type = 'bulk_request'", []);
-if ($existing) {
-    echo "SKIP: bulk_request template already exists (id={$existing['id']})\n";
+$existing = dbFetchOne("SELECT id, body_template FROM letter_templates WHERE template_type = 'bulk_request' AND is_default = 1", []);
+if (!$existing) {
+    echo "SKIP: No default bulk_request template found. Run migration 026 first.\n";
     if (!$isCli) echo '</pre>';
     exit;
 }
 
-$body = <<<'HTML'
+$newBody = <<<'HTML'
 <!DOCTYPE html>
 <html>
 <head>
@@ -76,14 +75,13 @@ $body = <<<'HTML'
     {{bulk_letter_body}}
 
     <div class="signature">
-        <p>Best regards,</p>
+        <p>Sincerely,</p>
         <br><br>
-        <p><strong>{{sender_name}}</strong><br>
-        Billing Assistant<br>
+        <p><strong>{{sender_name}}</strong>,<br>
+        Administrative Personnel<br>
         {{firm_name}}<br>
         {{firm_address}}, {{firm_city_state_zip}}<br>
-        Telephone: {{firm_phone}}<br>
-        Fax: {{firm_fax}}</p>
+        Telephone: {{firm_phone}}&nbsp;&nbsp;Fax: {{firm_fax}}</p>
     </div>
 
     <div class="footer">
@@ -95,27 +93,33 @@ $body = <<<'HTML'
 </html>
 HTML;
 
-$id = dbInsert('letter_templates', [
-    'name' => 'Bulk Medical Records Request',
-    'description' => 'Template for bulk medical records requests. Uses {{bulk_letter_body}} to auto-generate the letter content (case list, records requested, etc.) with firm letterhead and signature wrapper.',
-    'template_type' => 'bulk_request',
-    'subject_template' => 'Medical Records Request - Multiple Cases ({{case_count}} cases)',
-    'body_template' => $body,
-    'is_default' => 1,
-    'is_active' => 1,
-]);
+$newSubject = 'Medical Records Request - Multiple Cases ({{case_count}} cases)';
 
-// Create version 1
+// Save current version
+$latestVersion = dbFetchOne(
+    "SELECT MAX(version_number) as max_v FROM letter_template_versions WHERE template_id = ?",
+    [$existing['id']]
+);
+$nextVersion = ($latestVersion['max_v'] ?? 0) + 1;
+
 dbInsert('letter_template_versions', [
-    'template_id' => $id,
-    'version_number' => 1,
-    'body_template' => $body,
-    'subject_template' => 'Medical Records Request - Multiple Cases ({{case_count}} cases)',
+    'template_id' => $existing['id'],
+    'version_number' => $nextVersion,
+    'body_template' => $newBody,
+    'subject_template' => $newSubject,
     'changed_by' => null,
-    'change_notes' => 'Initial version - bulk template with {{bulk_letter_body}}',
+    'change_notes' => 'Updated to match Bulk email Request.docx - {{bulk_letter_body}}, Sincerely signature',
 ]);
 
-echo "INSERT: 'Bulk Medical Records Request' (id={$id}, type=bulk_request, DEFAULT)\n";
+// Update the template
+dbUpdate('letter_templates', [
+    'body_template' => $newBody,
+    'subject_template' => $newSubject,
+    'description' => 'Template for bulk medical records requests. Uses {{bulk_letter_body}} to auto-generate the letter content (case list, records requested, etc.) with firm letterhead and signature wrapper.',
+], 'id = ?', [$existing['id']]);
+
+echo "UPDATED: bulk_request template (id={$existing['id']}) - matches Bulk email Request.docx format\n";
+echo "VERSION: Created version {$nextVersion}\n";
 echo "\n=== Done ===\n";
 
 if (!$isCli) echo '</pre>';

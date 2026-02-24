@@ -75,7 +75,13 @@
                                     <tr>
                                         <td style="padding-left:16px;" x-text="formatDate(cost.payment_date)"></td>
                                         <td style="font-weight:500;" x-text="cost.linked_provider_name || cost.provider_name || '-'"></td>
-                                        <td style="color:var(--mbds-muted);" x-text="cost.description || '-'"></td>
+                                        <td style="color:var(--mbds-muted);">
+                                            <span x-text="cost.description || '-'"></span>
+                                            <template x-if="cost.split_group_id">
+                                                <span class="ml-1" style="display:inline-block; font-size:10px; font-weight:600; padding:1px 6px; border-radius:4px; background:rgba(201,168,76,.12); color:var(--gold);"
+                                                    x-text="'Split ' + cost.split_count + '-way ($' + parseFloat(cost.split_total).toFixed(2) + ')'"></span>
+                                            </template>
+                                        </td>
                                         <td style="text-align:center;">
                                             <span class="cost-category-badge"
                                                 :class="'cost-cat-' + (cost.expense_category || 'other')"
@@ -116,36 +122,56 @@
 </div>
 
 <!-- Cost Import Preview Modal -->
-<div x-show="showCostImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;">
-    <div class="modal-v2-backdrop fixed inset-0" @click="showCostImportModal = false"></div>
-    <div class="modal-v2 relative w-full max-w-3xl z-10" @click.stop>
-        <div class="modal-v2-header">
-            <h3 class="modal-v2-title">Import Cost Ledger Preview</h3>
-            <button type="button" class="modal-v2-close" @click="showCostImportModal = false">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+<style>
+.cim { width: 720px; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,.24); overflow: hidden; background: #fff; }
+.cim-header { background: #0F1B2D; padding: 18px 24px; display: flex; align-items: center; justify-content: space-between; }
+.cim-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; }
+.cim-close { background: none; border: none; color: rgba(255,255,255,.35); cursor: pointer; padding: 4px; transition: color .15s; }
+.cim-close:hover { color: rgba(255,255,255,.75); }
+.cim-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.cim-stats { display: flex; gap: 12px; }
+.cim-stat { flex: 1; background: #fafafa; border: 1.5px solid var(--border, #d0cdc5); border-radius: 8px; padding: 10px 14px; text-align: center; }
+.cim-stat .cim-stat-val { font-size: 18px; font-weight: 700; color: var(--text, #1a2535); font-family: 'IBM Plex Mono', monospace; }
+.cim-stat .cim-stat-val.gold { color: var(--gold, #C9A84C); }
+.cim-stat .cim-stat-label { font-size: 9px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+.cim-table-wrap { max-height: 320px; overflow-y: auto; border: 1.5px solid var(--border, #d0cdc5); border-radius: 8px; }
+.cim-table-wrap::-webkit-scrollbar { width: 4px; }
+.cim-table-wrap::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+.cim-footer { padding: 14px 24px; border-top: 1px solid var(--border, #d0cdc5); display: flex; justify-content: flex-end; gap: 10px; }
+.cim-btn-cancel { background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px; padding: 9px 18px; font-size: 13px; font-weight: 500; color: #5A6B82; cursor: pointer; transition: all .15s; }
+.cim-btn-cancel:hover { background: #f8f7f4; border-color: #ccc; }
+.cim-btn-submit { background: var(--gold, #C9A84C); color: #fff; border: none; border-radius: 7px; padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(201,168,76,.35); display: flex; align-items: center; gap: 6px; transition: all .15s; }
+.cim-btn-submit:hover { filter: brightness(1.05); box-shadow: 0 4px 12px rgba(201,168,76,.45); }
+.cim-btn-submit:disabled { opacity: .55; cursor: not-allowed; }
+</style>
+<div x-show="showCostImportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none;" @keydown.escape.window="showCostImportModal && (showCostImportModal = false)">
+    <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="showCostImportModal = false"></div>
+    <div class="cim relative z-10" @click.stop>
+        <div class="cim-header">
+            <h3>Import Cost Ledger Preview</h3>
+            <button type="button" class="cim-close" @click="showCostImportModal = false">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        <div class="modal-v2-body">
-            <div class="flex gap-4 mb-4">
-                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                    <p class="text-lg font-bold text-v2-text" x-text="costImportSummary.count || 0"></p>
-                    <p class="text-[10px] text-v2-text-light">Entries</p>
+        <div class="cim-body">
+            <div class="cim-stats">
+                <div class="cim-stat">
+                    <div class="cim-stat-val" x-text="costImportSummary.count || 0"></div>
+                    <div class="cim-stat-label">Entries</div>
                 </div>
-                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                    <p class="text-lg font-bold text-v2-text" x-text="'$' + (costImportSummary.total_billed || 0).toFixed(2)"></p>
-                    <p class="text-[10px] text-v2-text-light">Total Billed</p>
+                <div class="cim-stat">
+                    <div class="cim-stat-val" x-text="'$' + (costImportSummary.total_billed || 0).toFixed(2)"></div>
+                    <div class="cim-stat-label">Total Billed</div>
                 </div>
-                <div class="bg-v2-bg rounded-lg px-4 py-2 text-center flex-1">
-                    <p class="text-lg font-bold" style="color:#C9A84C;" x-text="'$' + (costImportSummary.total_paid || 0).toFixed(2)"></p>
-                    <p class="text-[10px] text-v2-text-light">Total Paid</p>
+                <div class="cim-stat">
+                    <div class="cim-stat-val gold" x-text="'$' + (costImportSummary.total_paid || 0).toFixed(2)"></div>
+                    <div class="cim-stat-label">Total Paid</div>
                 </div>
             </div>
-            <div class="max-h-80 overflow-y-auto border border-v2-card-border rounded-lg">
+            <div class="cim-table-wrap">
                 <table class="w-full text-xs">
                     <thead class="sticky top-0 bg-white">
-                        <tr class="border-b border-v2-card-border">
+                        <tr style="border-bottom:1.5px solid var(--border, #d0cdc5);">
                             <th class="text-left px-3 py-2">Date</th>
                             <th class="text-left px-3 py-2">Provider</th>
                             <th class="text-left px-3 py-2">Description</th>
@@ -158,7 +184,7 @@
                     </thead>
                     <tbody>
                         <template x-for="(row, idx) in costImportPreview" :key="idx">
-                            <tr class="border-b border-v2-bg">
+                            <tr style="border-bottom:1px solid #f5f4f0;">
                                 <td class="px-3 py-1.5 whitespace-nowrap" x-text="row.original_date ? formatDate(row.original_date) : '-'"></td>
                                 <td class="px-3 py-1.5">
                                     <div class="font-medium" x-text="row.provider_name || '-'"></div>
@@ -178,13 +204,10 @@
                 </table>
             </div>
         </div>
-        <div class="modal-v2-footer">
-            <button type="button" @click="showCostImportModal = false" class="btn-v2-cancel">Cancel</button>
-            <button type="button" @click="confirmCostImport()" :disabled="costImporting"
-                    class="btn-v2-primary bg-amber-600 hover:bg-amber-700">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-                </svg>
+        <div class="cim-footer">
+            <button type="button" @click="showCostImportModal = false" class="cim-btn-cancel">Cancel</button>
+            <button type="button" @click="confirmCostImport()" :disabled="costImporting" class="cim-btn-submit">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 <span x-text="costImporting ? 'Importing...' : 'Import ' + (costImportSummary.count || 0) + ' Entries'"></span>
             </button>
         </div>

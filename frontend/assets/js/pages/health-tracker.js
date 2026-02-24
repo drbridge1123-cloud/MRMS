@@ -5,11 +5,13 @@ function healthLedgerPage() {
             defaultDir: 'desc',
             perPage: 99999,
             filtersToParams() {
-                return {
+                const p = {
                     status: this.statusFilter,
                     tier: this.tierFilter,
                     assigned_to: this.assignedFilter,
                 };
+                if (this.caseIdFilter) p.case_id = this.caseIdFilter;
+                return p;
             }
         }),
 
@@ -17,6 +19,7 @@ function healthLedgerPage() {
         statusFilter: '',
         tierFilter: '',
         assignedFilter: '',
+        caseIdFilter: '',
         staffList: [],
         summary: {},
 
@@ -48,6 +51,10 @@ function healthLedgerPage() {
         caseResults: [],
         showCaseDropdown: false,
 
+        // Carrier autocomplete
+        carrierResults: [],
+        showCarrierDropdown: false,
+
         _resetPageFilters() {
             this.statusFilter = '';
             this.tierFilter = '';
@@ -62,7 +69,14 @@ function healthLedgerPage() {
             this.form = this.getEmptyForm();
             this.loadStaff();
             this.loadHlTemplates();
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlCaseId = urlParams.get('case_id');
+            if (urlCaseId) this.caseIdFilter = urlCaseId;
             await this.loadData(1);
+            // Auto-expand first item when navigating from Case Detail
+            if (urlCaseId && this.items.length > 0) {
+                this.toggleExpand(this.items[0].id);
+            }
         },
 
         // Health ledger templates
@@ -144,6 +158,7 @@ function healthLedgerPage() {
             this.showEditModal = false;
             this.editId = null;
             this.showCaseDropdown = false;
+            this.showCarrierDropdown = false;
         },
 
         // --- Case search (add modal) ---
@@ -169,6 +184,26 @@ function healthLedgerPage() {
             this.form.client_name = '';
             this.form.case_number = '';
             this.caseSearch = '';
+        },
+
+        // --- Carrier autocomplete ---
+
+        async searchCarriers() {
+            const q = this.form.insurance_carrier;
+            if (!q || q.length < 2) { this.carrierResults = []; this.showCarrierDropdown = false; return; }
+            try {
+                const r = await api.get('insurance-companies/search?q=' + encodeURIComponent(q));
+                this.carrierResults = r.data || [];
+                this.showCarrierDropdown = this.carrierResults.length > 0;
+            } catch(e) { this.carrierResults = []; }
+        },
+
+        selectCarrier(c) {
+            this.form.insurance_carrier = c.name;
+            if (c.email) this.form.carrier_contact_email = c.email;
+            if (c.fax) this.form.carrier_contact_fax = c.fax;
+            this.carrierResults = [];
+            this.showCarrierDropdown = false;
         },
 
         async saveItem() {

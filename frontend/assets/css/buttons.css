@@ -6,7 +6,7 @@
     width: 32px;
     height: 32px;
     border-radius: 6px;
-    border: 1px solid var(--border, #e8e4dc);
+    border: 1px solid var(--border, #d0cdc5);
     background: #fff;
     cursor: pointer;
     transition: all 0.15s;

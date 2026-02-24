@@ -64,6 +64,10 @@ if (isset($input['difficulty_level'])) {
     $providerData['difficulty_level'] = $input['difficulty_level'];
 }
 
+if (isset($input['charges_record_fee'])) {
+    $providerData['charges_record_fee'] = $input['charges_record_fee'] ? 1 : 0;
+}
+
 // Insert provider
 $pdo = getDBConnection();
 $pdo->beginTransaction();

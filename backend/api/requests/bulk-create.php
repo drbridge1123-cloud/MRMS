@@ -197,7 +197,8 @@ try {
         ];
 
         // Render ONE combined letter
-        $html = renderBulkRequestLetter($casesData, $commonData);
+        $templateId = !empty($input['template_id']) ? (int)$input['template_id'] : null;
+        $html = renderBulkRequestLetter($casesData, $commonData, $templateId);
 
         // Update all requests to sending status
         foreach ($createdRequestIds as $reqId) {

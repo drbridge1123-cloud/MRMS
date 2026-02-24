@@ -1,17 +1,7 @@
-                /* ── Gold Header (matching Medical Balance / Cost Ledger) ── */
-                .data-table thead th {
-                    background: #b5a070;
-                    color: #0F1B2D;
-                    font-weight: 700;
-                    font-size: 10px;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
-                    padding: 9px 16px;
-                    border-bottom: 2px solid #e8e4dc;
-                    border-right: 1px solid rgba(255,255,255,0.25);
+                /* ── Provider table: disable sticky header (inside collapsible panel) ── */
+                .panel-section .data-table thead th {
                     position: static;
                 }
-                .data-table thead th:last-child { border-right: none; }
 
                 /* ── Provider Selection ── */
                 tbody.provider-dimmed {
@@ -60,3 +50,41 @@
                     border-radius: 4px;
                     display: inline-block;
                 }
+
+                /* ── Provider Status Progress Bar ── */
+                .ps-wrap { min-width: 80px; }
+                .ps-label { font-size: 12px; font-weight: 600; display: block; margin-bottom: 4px; }
+                .ps-track { height: 5px; border-radius: 3px; background: #e8e8e4; overflow: hidden; }
+                .ps-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+                .ps-sub { font-size: 10px; color: #e74c3c; margin-top: 3px; }
+                .ps-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+                .ps-tag { display: inline-flex; align-items: center; gap: 2px; font-size: 9.5px; font-weight: 600; padding: 1px 6px; border-radius: 3px; }
+                .ps-tag-icon { width: 9px; height: 9px; }
+                .ps-tag-done { background: rgba(26,158,106,.1); color: #1a9e6a; border: 1px solid rgba(26,158,106,.2); }
+                .ps-tag-pending { background: rgba(232,160,0,.1); color: #b8860b; border: 1px solid rgba(232,160,0,.2); }
+
+                /* Label colors */
+                .ps-label-no_records { color: #9ca3af; }
+                .ps-label-not_started { color: #9ca3af; }
+                .ps-label-requesting { color: #2563eb; }
+                .ps-label-follow_up { color: #d97706; }
+                .ps-label-action_needed { color: #ea580c; }
+                .ps-label-on_hold { color: #9B6DB5; }
+                .ps-label-received_partial { color: #b8860b; }
+                .ps-label-received_complete { color: #1a9e6a; }
+                .ps-label-received { color: #1a9e6a; }
+                .ps-label-verified { color: #15803d; }
+                .ps-label-done { color: #15803d; }
+
+                /* Bar fill colors */
+                .ps-fill-no_records { background: transparent; }
+                .ps-fill-not_started { background: transparent; }
+                .ps-fill-requesting { background: #2563eb; }
+                .ps-fill-follow_up { background: #d97706; }
+                .ps-fill-action_needed { background: #ea580c; }
+                .ps-fill-on_hold { background: #9B6DB5; }
+                .ps-fill-received_partial { background: #E8A000; }
+                .ps-fill-received_complete { background: #1a9e6a; }
+                .ps-fill-received { background: #1a9e6a; }
+                .ps-fill-verified { background: #15803d; }
+                .ps-fill-done { background: #15803d; }

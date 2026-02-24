@@ -40,7 +40,7 @@ function caseDetailPage() {
         selectedProvider: null,
         newProvider: { record_types: [], deadline: '' },
         newRequest: { request_date: new Date().toISOString().split('T')[0], request_method: 'email', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '', template_id: null, document_ids: [] },
-        newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '' },
+        newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '', no_records: false, no_records_reason: '', no_records_detail: '' },
         newNote: { note_type: 'general', content: '', case_provider_id: '', contact_method: '', contact_date: '' },
         noteFilterProvider: '',
 
@@ -52,6 +52,20 @@ function caseDetailPage() {
         paymentForm: { id: null, case_provider_id: null, provider_name: '', description: 'Record Fee', expense_category: 'mr_cost', billed_amount: 0, paid_amount: 0, payment_type: 'check', check_number: '', payment_date: new Date().toISOString().split('T')[0], paid_date: '', paid_by: '', receipt_document_id: null, receipt_file_name: '', notes: '' },
         paymentProviderSearch: '',
         paymentProviderResults: [],
+        showPaymentProviderDropdown: false,
+        showProviderDropdown: false,
+
+        // Quick-add provider state
+        showQuickAddProvider: false,
+        quickAddFor: '', // 'provider' or 'payment'
+        quickAddForm: { name: '', type: 'hospital', phone: '', fax: '', email: '', address: '', city: '', state: '', zip: '' },
+        quickAddSaving: false,
+
+        // Cost split state
+        relatedCases: [],
+        splitEnabled: false,
+        splitSelectedCaseIds: [],
+        loadingRelatedCases: false,
 
         // Workflow stepper
         workflowSteps: [
@@ -83,7 +97,7 @@ function caseDetailPage() {
             await Promise.all([this.loadCase(), this.loadProviders(), this.loadNotes(), this.loadStaffList(), this.loadAllCosts()]);
 
             // Auto-collapse providers if all are complete
-            if (this.providers.length > 0 && this.providers.every(p => p.overall_status === 'received_complete')) {
+            if (this.providers.length > 0 && this.providers.every(p => ['received_complete', 'no_records', 'verified'].includes(p.overall_status))) {
                 this.showProviders = false;
             }
 
@@ -217,17 +231,19 @@ function caseDetailPage() {
         },
 
         async searchProviders() {
-            if (this.providerSearch.length < 2) { this.providerResults = []; return; }
+            if (this.providerSearch.length < 2) { this.providerResults = []; this.showProviderDropdown = false; return; }
             try {
                 const res = await api.get('providers/search?q=' + encodeURIComponent(this.providerSearch));
                 this.providerResults = res.data || [];
-            } catch (e) { }
+                this.showProviderDropdown = true;
+            } catch (e) { this.showProviderDropdown = true; }
         },
 
         selectProvider(p) {
             this.selectedProvider = p;
             this.providerSearch = p.name;
             this.providerResults = [];
+            this.showProviderDropdown = false;
         },
 
         getDefaultDeadline() {
@@ -362,25 +378,36 @@ function caseDetailPage() {
         openReceiptModal(p) {
             this.currentProvider = p;
             const alreadyComplete = p.overall_status === 'received_complete';
-            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: alreadyComplete, incomplete_reason: '', file_location: '' };
+            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: alreadyComplete, incomplete_reason: '', file_location: '', no_records: false, no_records_reason: '', no_records_detail: '' };
             this.showReceiptModal = true;
         },
 
         async submitReceipt() {
             this.saving = true;
             try {
-                await api.post('receipts', {
-                    case_provider_id: this.currentProvider.id,
-                    ...this.newReceipt,
-                    has_medical_records: this.newReceipt.has_medical_records ? 1 : 0,
-                    has_billing: this.newReceipt.has_billing ? 1 : 0,
-                    has_chart: this.newReceipt.has_chart ? 1 : 0,
-                    has_imaging: this.newReceipt.has_imaging ? 1 : 0,
-                    is_complete: this.newReceipt.is_complete ? 1 : 0,
-                });
-                showToast('Receipt logged');
+                if (this.newReceipt.no_records) {
+                    // No records — update status directly instead of creating a receipt
+                    await api.put('case-providers/' + this.currentProvider.id + '/status', {
+                        overall_status: 'no_records',
+                        no_records_reason: this.newReceipt.no_records_reason || 'other',
+                        no_records_detail: this.newReceipt.no_records_detail || '',
+                    });
+                    showToast('Marked as No Records');
+                } else {
+                    await api.post('receipts', {
+                        case_provider_id: this.currentProvider.id,
+                        ...this.newReceipt,
+                        has_medical_records: this.newReceipt.has_medical_records ? 1 : 0,
+                        has_billing: this.newReceipt.has_billing ? 1 : 0,
+                        has_chart: this.newReceipt.has_chart ? 1 : 0,
+                        has_imaging: this.newReceipt.has_imaging ? 1 : 0,
+                        is_complete: this.newReceipt.is_complete ? 1 : 0,
+                    });
+                    showToast('Receipt logged');
+                }
                 this.showReceiptModal = false;
                 await this.loadProviders();
+                await this.loadCase();
             } catch (e) {
                 showToast(e.data?.message || 'Failed to log receipt', 'error');
             }
@@ -756,11 +783,13 @@ function caseDetailPage() {
             };
             this.paymentProviderSearch = '';
             this.paymentProviderResults = [];
+            this.resetSplitState();
             this.showPaymentModal = true;
         },
 
         editCostEntry(pmt) {
             this.currentProvider = pmt.case_provider_id ? { id: pmt.case_provider_id } : null;
+            this.resetSplitState();
             this.editPayment(pmt);
         },
 
@@ -1015,9 +1044,18 @@ function caseDetailPage() {
                     notes: this.paymentForm.notes || null
                 };
 
+                // Add split data if enabled
+                if (this.splitEnabled && this.splitSelectedCaseIds.length > 1
+                    && this.paymentForm.expense_category === 'litigation' && !this.paymentForm.id) {
+                    payload.split_case_ids = this.splitSelectedCaseIds;
+                }
+
                 if (this.paymentForm.id) {
                     await api.put('mr-fee-payments/' + this.paymentForm.id, payload);
                     showToast('Payment updated');
+                } else if (payload.split_case_ids) {
+                    const res = await api.post('mr-fee-payments', payload);
+                    showToast('Cost split across ' + payload.split_case_ids.length + ' cases ($' + this.splitPerPersonAmount.toFixed(2) + ' each)');
                 } else {
                     await api.post('mr-fee-payments', payload);
                     showToast('Payment logged');
@@ -1037,20 +1075,32 @@ function caseDetailPage() {
         async searchPaymentProviders() {
             if (this.paymentProviderSearch.length < 2) {
                 this.paymentProviderResults = [];
+                this.showPaymentProviderDropdown = false;
                 return;
             }
             try {
                 const res = await api.get('providers/search?q=' + encodeURIComponent(this.paymentProviderSearch));
                 this.paymentProviderResults = res.data || [];
+                this.showPaymentProviderDropdown = true;
             } catch (e) {
                 this.paymentProviderResults = [];
+                this.showPaymentProviderDropdown = true;
             }
         },
 
         selectPaymentProvider(pr) {
             this.paymentProviderSearch = pr.name;
             this.paymentProviderResults = [];
+            this.showPaymentProviderDropdown = false;
             this.paymentForm.provider_name = pr.name;
+            this.paymentForm._noRecordFee = pr.charges_record_fee == 0;
+            if (this.paymentForm._noRecordFee) {
+                this.paymentForm.paid_amount = 0;
+                this.paymentForm.payment_type = '';
+                this.paymentForm.check_number = '';
+                this.paymentForm.paid_by = '';
+                this.paymentForm.paid_date = '';
+            }
             const matched = this.providers.find(p => p.provider_id == pr.id);
             if (matched) {
                 this.paymentForm.case_provider_id = matched.id;
@@ -1064,8 +1114,10 @@ function caseDetailPage() {
         clearPaymentProvider() {
             this.paymentProviderSearch = '';
             this.paymentProviderResults = [];
+            this.showPaymentProviderDropdown = false;
             this.paymentForm.provider_name = '';
             this.paymentForm.case_provider_id = null;
+            this.paymentForm._noRecordFee = false;
             this.currentProvider = null;
         },
 
@@ -1080,6 +1132,58 @@ function caseDetailPage() {
             } else if (this.paymentForm.payment_type !== 'check') {
                 this.paymentForm.check_number = '';
             }
+        },
+
+        // ── Cost Split Functions ──
+        async fetchRelatedCases() {
+            this.loadingRelatedCases = true;
+            try {
+                const res = await api.get('cases/related?case_id=' + this.caseId);
+                this.relatedCases = res.data.related_cases || [];
+                if (this.relatedCases.length > 0) {
+                    this.splitSelectedCaseIds = [
+                        parseInt(this.caseId),
+                        ...this.relatedCases.map(c => c.id)
+                    ];
+                    this.splitEnabled = true;
+                } else {
+                    this.splitSelectedCaseIds = [];
+                    this.splitEnabled = false;
+                }
+            } catch (e) {
+                this.relatedCases = [];
+                this.splitSelectedCaseIds = [];
+            }
+            this.loadingRelatedCases = false;
+        },
+
+        toggleSplitCase(caseId) {
+            if (caseId === parseInt(this.caseId)) return;
+            const idx = this.splitSelectedCaseIds.indexOf(caseId);
+            if (idx === -1) {
+                this.splitSelectedCaseIds.push(caseId);
+            } else {
+                this.splitSelectedCaseIds.splice(idx, 1);
+            }
+        },
+
+        get splitPerPersonAmount() {
+            const count = this.splitSelectedCaseIds.length;
+            if (count <= 1) return this.paymentForm.billed_amount || 0;
+            return Math.round(((this.paymentForm.billed_amount || 0) / count) * 100) / 100;
+        },
+
+        get splitPerPersonPaid() {
+            const count = this.splitSelectedCaseIds.length;
+            if (count <= 1) return this.paymentForm.paid_amount || 0;
+            return Math.round(((this.paymentForm.paid_amount || 0) / count) * 100) / 100;
+        },
+
+        resetSplitState() {
+            this.relatedCases = [];
+            this.splitEnabled = false;
+            this.splitSelectedCaseIds = [];
+            this.loadingRelatedCases = false;
         },
 
         async deletePayment(pmt) {
@@ -1122,6 +1226,55 @@ function caseDetailPage() {
         getPaymentTypeLabel(type) {
             const labels = { check: 'Check', card: 'Card', cash: 'Cash', wire: 'Wire', other: 'Other' };
             return labels[type] || type;
+        },
+
+        // ── Quick-Add Provider ──
+        openQuickAddProvider(context) {
+            this.quickAddFor = context; // 'provider' or 'payment'
+            const prefill = context === 'payment' ? this.paymentProviderSearch : this.providerSearch;
+            this.quickAddForm = { name: prefill || '', type: 'hospital', phone: '', fax: '', email: '', address: '', city: '', state: '', zip: '' };
+            this.showQuickAddProvider = true;
+            // Close autocomplete dropdowns
+            this.providerResults = [];
+            this.paymentProviderResults = [];
+            this.showProviderDropdown = false;
+            this.showPaymentProviderDropdown = false;
+        },
+
+        closeQuickAddProvider() {
+            this.showQuickAddProvider = false;
+            this.quickAddForm = { name: '', type: 'hospital', phone: '', fax: '', email: '', address: '', city: '', state: '', zip: '' };
+        },
+
+        async submitQuickAddProvider() {
+            if (!this.quickAddForm.name.trim()) {
+                showToast('Provider name is required', 'error');
+                return;
+            }
+            this.quickAddSaving = true;
+            try {
+                const data = { ...this.quickAddForm };
+                data.name = data.name.trim();
+                const res = await api.post('providers', data);
+                const newProvider = res.data;
+                showToast('Provider "' + newProvider.name + '" created');
+                this.closeQuickAddProvider();
+
+                // Auto-select in the appropriate context
+                if (this.quickAddFor === 'provider') {
+                    this.selectProvider({ id: newProvider.id, name: newProvider.name, type: newProvider.type });
+                } else if (this.quickAddFor === 'payment') {
+                    this.selectPaymentProvider({
+                        id: newProvider.id,
+                        name: newProvider.name,
+                        type: newProvider.type,
+                        charges_record_fee: newProvider.charges_record_fee ?? 1
+                    });
+                }
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to create provider', 'error');
+            }
+            this.quickAddSaving = false;
         }
     };
 }
