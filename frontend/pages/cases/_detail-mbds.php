@@ -1,12 +1,10 @@
             <!-- MBDS Report Section -->
-            <div class="mbds-panel" data-panel :class="{'panel-open': mbdsOpen}" x-data="mbdsPanel(caseId)" x-init="init()">
+            <div class="mbds-panel c1-section" data-panel x-data="mbdsPanel(caseId)" x-init="init()">
 
                 <!-- Report Header Bar -->
-                <div class="mbds-header" @click="mbdsOpen = !mbdsOpen; if(mbdsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+                <div class="mbds-header c1-section-header" @click="mbdsOpen = !mbdsOpen; if(mbdsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
                     <div class="mbds-header-left">
-                        <svg class="mbds-collapse-chevron" :class="mbdsOpen ? 'open' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                        </svg>
+                        <span class="c1-num c1-num-gold">05</span>
                         <span class="mbds-title">Medical Balance Report</span>
                         <template x-if="report">
                             <span class="mbds-badge"
@@ -123,20 +121,20 @@
                                 <table class="mbds-table">
                                     <thead>
                                         <tr class="mbds-col-head">
-                                            <th style="text-align:left; width:200px; min-width:200px; max-width:200px">Provider</th>
-                                            <th class="mbds-th-r" style="width:115px; min-width:115px; max-width:115px">Charges</th>
-                                            <th class="mbds-th-r" x-show="settings.pip1_name" style="width:115px; min-width:115px; max-width:115px">PIP #1</th>
-                                            <th class="mbds-th-r" x-show="settings.pip2_name" style="width:115px; min-width:115px; max-width:115px">PIP #2</th>
-                                            <th class="mbds-th-r" x-show="settings.health1_name" style="width:115px; min-width:115px; max-width:115px">Health #1</th>
-                                            <th class="mbds-th-r" x-show="settings.health2_name" style="width:115px; min-width:115px; max-width:115px">Health #2</th>
-                                            <th class="mbds-th-r" x-show="settings.health3_name" style="width:115px; min-width:115px; max-width:115px">Health #3</th>
-                                            <th class="mbds-th-r" style="width:115px; min-width:115px; max-width:115px">Discount</th>
-                                            <th class="mbds-th-r" style="width:115px; min-width:115px; max-width:115px">Office Paid</th>
-                                            <th class="mbds-th-r" style="width:115px; min-width:115px; max-width:115px">Client Paid</th>
-                                            <th class="mbds-th-balance" style="width:115px; min-width:115px; max-width:115px">Balance</th>
-                                            <th class="mbds-th-c" style="width:160px; min-width:160px; max-width:160px">Dates</th>
-                                            <th class="mbds-th-c" style="width:50px; min-width:50px; max-width:50px">Visits</th>
-                                            <th style="text-align:left">Note</th>
+                                            <th class="mbds-th-provider">Provider</th>
+                                            <th class="mbds-th-r mbds-th-amount">Charges</th>
+                                            <th class="mbds-th-r mbds-th-amount" x-show="settings.pip1_name">PIP #1</th>
+                                            <th class="mbds-th-r mbds-th-amount" x-show="settings.pip2_name">PIP #2</th>
+                                            <th class="mbds-th-r mbds-th-amount" x-show="settings.health1_name">Health #1</th>
+                                            <th class="mbds-th-r mbds-th-amount" x-show="settings.health2_name">Health #2</th>
+                                            <th class="mbds-th-r mbds-th-amount" x-show="settings.health3_name">Health #3</th>
+                                            <th class="mbds-th-r mbds-th-amount">Discount</th>
+                                            <th class="mbds-th-r mbds-th-amount">Office Paid</th>
+                                            <th class="mbds-th-r mbds-th-amount">Client Paid</th>
+                                            <th class="mbds-th-balance mbds-th-amount">Balance</th>
+                                            <th class="mbds-th-c mbds-th-dates">Dates</th>
+                                            <th class="mbds-th-c mbds-th-visits">Visits</th>
+                                            <th class="mbds-th-note">Note</th>
                                             <th class="mbds-th-action" x-show="report?.status === 'draft'"></th>
                                         </tr>
                                     </thead>
@@ -155,7 +153,7 @@
                                                 </td>
 
                                                 <!-- Charges -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'charges', row.charges)"
                                                         @focus="startCellEdit($el, row._lineRef, 'charges')"
@@ -167,7 +165,7 @@
                                                 </td>
 
                                                 <!-- PIP #1 -->
-                                                <td x-show="row._type === 'line' && settings.pip1_name" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line' && settings.pip1_name" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'pip1_amount', row.pip1_amount)"
                                                         @focus="startCellEdit($el, row._lineRef, 'pip1_amount')"
@@ -178,7 +176,7 @@
                                                         :disabled="report?.status !== 'draft'">
                                                 </td>
                                                 <!-- PIP #2 -->
-                                                <td x-show="row._type === 'line' && settings.pip2_name" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line' && settings.pip2_name" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'pip2_amount', row.pip2_amount)"
                                                         @focus="startCellEdit($el, row._lineRef, 'pip2_amount')"
@@ -189,7 +187,7 @@
                                                         :disabled="report?.status !== 'draft'">
                                                 </td>
                                                 <!-- Health #1 -->
-                                                <td x-show="row._type === 'line' && settings.health1_name" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line' && settings.health1_name" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'health1_amount', row.health1_amount)"
                                                         @focus="startCellEdit($el, row._lineRef, 'health1_amount')"
@@ -200,7 +198,7 @@
                                                         :disabled="report?.status !== 'draft'">
                                                 </td>
                                                 <!-- Health #2 -->
-                                                <td x-show="row._type === 'line' && settings.health2_name" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line' && settings.health2_name" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'health2_amount', row.health2_amount)"
                                                         @focus="startCellEdit($el, row._lineRef, 'health2_amount')"
@@ -211,7 +209,7 @@
                                                         :disabled="report?.status !== 'draft'">
                                                 </td>
                                                 <!-- Health #3 -->
-                                                <td x-show="row._type === 'line' && settings.health3_name" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line' && settings.health3_name" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'health3_amount', row.health3_amount)"
                                                         @focus="startCellEdit($el, row._lineRef, 'health3_amount')"
@@ -223,7 +221,7 @@
                                                 </td>
 
                                                 <!-- Discount -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'discount', row.discount)"
                                                         @focus="startCellEdit($el, row._lineRef, 'discount')"
@@ -235,7 +233,7 @@
                                                 </td>
 
                                                 <!-- Office Paid -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'office_paid', row.office_paid)"
                                                         @focus="startCellEdit($el, row._lineRef, 'office_paid')"
@@ -247,7 +245,7 @@
                                                 </td>
 
                                                 <!-- Client Paid -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 6px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 3px">
                                                     <input type="text"
                                                         :value="cellVal(row.id, 'client_paid', row.client_paid)"
                                                         @focus="startCellEdit($el, row._lineRef, 'client_paid')"
@@ -259,7 +257,7 @@
                                                 </td>
 
                                                 <!-- Balance -->
-                                                <td x-show="row._type === 'line'" style="padding:10px 14px;text-align:right">
+                                                <td x-show="row._type === 'line'" style="padding:6px;text-align:right">
                                                     <span class="mbds-balance"
                                                         :class="balanceColor(calcBalance(row))"
                                                         x-text="formatCurrency(calcBalance(row))">
@@ -267,7 +265,7 @@
                                                 </td>
 
                                                 <!-- Treatment Dates -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 2px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 1px">
                                                     <input type="text" :value="row.treatment_dates || ''"
                                                         @input="formatDateInput($event, row._lineRef)"
                                                         @change="saveLine(row._lineRef)"
@@ -277,7 +275,7 @@
                                                 </td>
 
                                                 <!-- Visits -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 2px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 1px">
                                                     <input type="text" x-model="row._lineRef.visits"
                                                         @change="saveLine(row._lineRef)"
                                                         class="mbds-visits-input"
@@ -285,7 +283,7 @@
                                                 </td>
 
                                                 <!-- Note -->
-                                                <td x-show="row._type === 'line'" style="padding:4px 16px 4px 6px">
+                                                <td x-show="row._type === 'line'" style="padding:4px 3px">
                                                     <div @click="openNote($event, row.id)"
                                                         class="mbds-note-trigger"
                                                         :class="row.note ? 'has-note' : ''"
@@ -294,7 +292,7 @@
                                                     </div>
                                                 </td>
 
-                                                <!-- Delete -->
+                                                <!-- Actions: Delete -->
                                                 <td x-show="row._type === 'line' && report?.status === 'draft'" class="mbds-td-action">
                                                     <button @click="deleteLine(row._lineRef)" class="mbds-delete-btn">
                                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -331,14 +329,38 @@
                                         placeholder="General notes about this report..."
                                         :disabled="report?.status !== 'draft'"></textarea>
                                 </div>
-                                <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:2px">
+                                <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:2px;position:relative">
                                     <template x-if="report?.status === 'draft'">
                                         <div style="display:flex;gap:8px">
                                             <button @click="addLine('rx')" class="mbds-btn-ghost">+ Add RX</button>
-                                            <button @click="addLine('provider')" class="mbds-btn-ghost">+ Add Line</button>
+                                            <button @click="addLine('provider')" class="mbds-btn-ghost">+ Add Provider</button>
                                             <button @click="markComplete()" class="mbds-btn-gold">Mark Complete</button>
                                         </div>
                                     </template>
+
+                                    <!-- Provider Search Dropdown -->
+                                    <div x-show="showProviderSearch" @click.outside="showProviderSearch = false" @keydown.escape.window="showProviderSearch = false"
+                                        class="mbds-provider-search" x-transition>
+                                        <div class="mbds-ps-header">
+                                            <input type="text" id="mbds-provider-search-input"
+                                                x-model="providerSearchQuery"
+                                                @input="searchProviders()"
+                                                placeholder="Search provider name..."
+                                                class="mbds-ps-input"
+                                                @keydown.escape="showProviderSearch = false">
+                                        </div>
+                                        <div class="mbds-ps-results">
+                                            <template x-if="providerSearchQuery.length > 0 && providerSearchResults.length === 0">
+                                                <div class="mbds-ps-empty">No providers found</div>
+                                            </template>
+                                            <template x-for="p in providerSearchResults" :key="p.id">
+                                                <button @click="selectProvider(p)" class="mbds-ps-item">
+                                                    <span class="mbds-ps-name" x-text="p.name"></span>
+                                                    <span class="mbds-ps-type" x-text="(p.type || '').replace(/_/g,' ')"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
                                     <template x-if="report?.status === 'completed'">
                                         <div style="display:flex;gap:8px">
                                             <button @click="reopenDraft()" class="mbds-btn-outline-red">Reopen as Draft</button>
@@ -524,4 +546,5 @@
                         </div>
                     </div>
                 </div>
+
             </div>

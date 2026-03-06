@@ -54,48 +54,28 @@ document.addEventListener('alpine:init', () => {
         }
     });
 
-    // Notifications store
-    Alpine.store('notifications', {
-        items: [],
+    // Messages store (unified notifications + messaging)
+    Alpine.store('messages', {
         unreadCount: 0,
-        loading: false,
 
-        async load() {
-            this.loading = true;
+        async loadCount() {
             try {
-                const res = await api.get('notifications?unread_only=1');
-                this.items = res.data || [];
-                this.unreadCount = this.items.length;
-            } catch (e) {
-                this.items = [];
-            }
-            this.loading = false;
-        },
-
-        async markRead(id) {
-            try {
-                await api.put(`notifications/${id}/read`);
-                this.items = this.items.filter(n => n.id !== id);
-                this.unreadCount = this.items.length;
-            } catch (e) {}
-        },
-
-        async markAllRead() {
-            try {
-                await api.put('notifications/read-all');
-                this.items = [];
-                this.unreadCount = 0;
+                const res = await api.get('messages?filter=unread');
+                this.unreadCount = res.unread_count || 0;
             } catch (e) {}
         }
     });
 
+    // Poll messages every 30 seconds
+    Alpine.store('messages').loadCount();
+    setInterval(() => Alpine.store('messages').loadCount(), 30000);
+
     // Sidebar state
     Alpine.store('sidebar', {
-        collapsed: localStorage.getItem('sidebar_collapsed') === 'true',
+        collapsed: false,
 
         toggle() {
             this.collapsed = !this.collapsed;
-            localStorage.setItem('sidebar_collapsed', this.collapsed);
         }
     });
 });

@@ -317,6 +317,7 @@ ob_start();
                     <option value="imaging">Imaging</option>
                     <option value="pharmacy">Pharmacy</option>
                     <option value="surgery_center">Surgery Center</option>
+                    <option value="police">Police</option>
                     <option value="other">Other</option>
                 </select>
 
@@ -569,6 +570,7 @@ ob_start();
                                     <option value="imaging">Imaging Center</option>
                                     <option value="pharmacy">Pharmacy</option>
                                     <option value="surgery_center">Surgery Center</option>
+                                    <option value="police">Police</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>
@@ -748,6 +750,7 @@ ob_start();
                                     <option value="imaging">Imaging Center</option>
                                     <option value="pharmacy">Pharmacy</option>
                                     <option value="surgery_center">Surgery Center</option>
+                                    <option value="police">Police</option>
                                     <option value="other">Other</option>
                                 </select>
                             </div>

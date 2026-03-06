@@ -24,8 +24,6 @@ function caseDetailPage() {
         showProviders: true,
         provSortBy: '',
         provSortDir: 'asc',
-        expandedProvider: null,
-        requestHistory: [],
         previewData: { method: '', recipient: '', provider_name: '', client_name: '', send_status: '', subject: '', letter_html: '', request_id: null },
         isEditingLetter: false,
         originalLetterHtml: '',
@@ -39,8 +37,8 @@ function caseDetailPage() {
         providerResults: [],
         selectedProvider: null,
         newProvider: { record_types: [], deadline: '' },
-        newRequest: { request_date: new Date().toISOString().split('T')[0], request_method: 'email', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '', template_id: null, document_ids: [] },
-        newReceipt: { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '', no_records: false, no_records_reason: '', no_records_detail: '' },
+        newRequest: { request_date: todayLocal(), request_method: 'email', request_type: 'initial', sent_to: '', authorization_sent: true, notes: '', template_id: null, document_ids: [] },
+        newReceipt: { received_date: todayLocal(), received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: false, incomplete_reason: '', file_location: '', no_records: false, no_records_reason: '', no_records_detail: '' },
         newNote: { note_type: 'general', content: '', case_provider_id: '', contact_method: '', contact_date: '' },
         noteFilterProvider: '',
 
@@ -49,7 +47,7 @@ function caseDetailPage() {
         payments: [],
         paymentTotal: 0,
         staffList: [],
-        paymentForm: { id: null, case_provider_id: null, provider_name: '', description: 'Record Fee', expense_category: 'mr_cost', billed_amount: 0, paid_amount: 0, payment_type: 'check', check_number: '', payment_date: new Date().toISOString().split('T')[0], paid_date: '', paid_by: '', receipt_document_id: null, receipt_file_name: '', notes: '' },
+        paymentForm: { id: null, case_provider_id: null, provider_name: '', description: 'Record Fee', expense_category: 'mr_cost', billed_amount: 0, paid_amount: 0, payment_type: 'check', check_number: '', payment_date: todayLocal(), paid_date: '', paid_by: '', receipt_document_id: null, receipt_file_name: '', notes: '' },
         paymentProviderSearch: '',
         paymentProviderResults: [],
         showPaymentProviderDropdown: false,
@@ -66,6 +64,7 @@ function caseDetailPage() {
         splitEnabled: false,
         splitSelectedCaseIds: [],
         loadingRelatedCases: false,
+        showSplitPanel: false,
 
         // Workflow stepper
         workflowSteps: [
@@ -77,6 +76,13 @@ function caseDetailPage() {
             { key: 'settlement', label: 'SETTLEMENT', statuses: ['disbursement', 'accounting'] },
             { key: 'closed', label: 'CLOSED', statuses: ['closed'] },
         ],
+
+        // INI activation state
+        showIniStaffModal: false,
+        iniSelectedStaff: '',
+        iniActivating: false,
+        iniProviderIds: [],  // specific provider IDs to activate (empty = all)
+        iniRecordTypes: { request_mr: true, request_bill: true, request_chart: false, request_img: false, request_op: false },
 
         // Cost Ledger state
         allCosts: [],
@@ -92,6 +98,8 @@ function caseDetailPage() {
                 window.location.href = '/MRMS/frontend/pages/cases/index.php';
                 return;
             }
+            // Auto-collapse sidebar on case detail page
+            Alpine.store('sidebar').collapsed = true;
             // Set default deadline (2 weeks from today)
             this.newProvider.deadline = this.getDefaultDeadline();
             await Promise.all([this.loadCase(), this.loadProviders(), this.loadNotes(), this.loadStaffList(), this.loadAllCosts()]);
@@ -101,15 +109,17 @@ function caseDetailPage() {
                 this.showProviders = false;
             }
 
-            // Auto-expand provider if cp param is present (from tracker)
+            // If cp param is present (from tracker), redirect to tracker
             const cpId = getQueryParam('cp');
             if (cpId) {
-                this.expandedProvider = parseInt(cpId);
-                this.loadRequestHistory(parseInt(cpId));
                 this.loadPayments(parseInt(cpId));
             }
 
             this.loading = false;
+
+            // Listen for MBR-triggered provider/cost changes
+            window.addEventListener('providers-changed', () => this.loadProviders());
+            window.addEventListener('costs-changed', () => this.loadAllCosts());
 
             // Scroll to expanded provider and flash
             if (cpId) {
@@ -162,6 +172,22 @@ function caseDetailPage() {
         },
 
         async updateCase() {
+            // If Treating Completed was just checked, intercept and show staff modal first
+            const wasCompleted = this.caseData.ini_completed;
+            const nowCompleted = this.editData.ini_completed;
+            if (!wasCompleted && nowCompleted) {
+                const treatingProviders = this.providers.filter(p => p.overall_status === 'treating');
+                if (treatingProviders.length > 0) {
+                    // Close edit modal, open INI staff modal instead
+                    this.showEditModal = false;
+                    this.iniProviderIds = treatingProviders.map(p => p.id);
+                    this.iniSelectedStaff = '';
+                    this.iniRecordTypes = { request_mr: true, request_bill: true, request_chart: false, request_img: false, request_op: false };
+                    this.showIniStaffModal = true;
+                    return;
+                }
+            }
+
             this.saving = true;
             try {
                 await api.put('cases/' + this.caseId, this.editData);
@@ -173,6 +199,70 @@ function caseDetailPage() {
                 showToast(e.data?.message || 'Update failed', 'error');
             }
             this.saving = false;
+        },
+
+        activateProvider(p) {
+            this.iniProviderIds = [p.id];
+            this.iniSelectedStaff = '';
+            this.iniRecordTypes = { request_mr: true, request_bill: true, request_chart: false, request_img: false, request_op: false };
+            this.showIniStaffModal = true;
+        },
+
+        toggleIniCompleted() {
+            if (this.caseData.ini_completed) {
+                // Yes → confirm to undo
+                if (!confirm('Are you sure you want to undo Treating Completed? This will not change provider statuses.')) return;
+                api.put('cases/' + this.caseId, { ini_completed: 0 })
+                    .then(() => {
+                        showToast('Treating Completed undone');
+                        this.loadCase();
+                    })
+                    .catch(e => showToast(e.data?.message || 'Failed to update', 'error'));
+            } else {
+                // No → open INI staff modal to activate treating providers
+                this.completeIni();
+            }
+        },
+
+        completeIni() {
+            const treatingProviders = this.providers.filter(p => p.overall_status === 'treating');
+            if (treatingProviders.length === 0) {
+                showToast('No treating providers to activate', 'info');
+                return;
+            }
+            this.iniProviderIds = treatingProviders.map(p => p.id);
+            this.iniSelectedStaff = '';
+            this.iniRecordTypes = { request_mr: true, request_bill: true, request_chart: false, request_img: false, request_op: false };
+            this.showIniStaffModal = true;
+        },
+
+        async confirmIniActivation() {
+            if (!this.iniSelectedStaff) {
+                showToast('Please select a staff member', 'error');
+                return;
+            }
+            this.iniActivating = true;
+            try {
+                const payload = {
+                    assigned_to: parseInt(this.iniSelectedStaff),
+                    ...this.iniRecordTypes
+                };
+                if (this.iniProviderIds.length > 0) {
+                    payload.provider_ids = this.iniProviderIds;
+                }
+                const res = await api.post('cases/' + this.caseId + '/activate-providers', payload);
+                showToast(res.message || 'Providers activated');
+                this.showIniStaffModal = false;
+                this.iniProviderIds = [];
+                await this.loadProviders();
+                await this.loadAllCosts();
+                await this.loadCase();
+                window.dispatchEvent(new CustomEvent('providers-changed'));
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to activate', 'error');
+            } finally {
+                this.iniActivating = false;
+            }
         },
 
         openMoveForwardModal() {
@@ -283,7 +373,7 @@ function caseDetailPage() {
             const nextFollowupStr = nextFollowup.toISOString().split('T')[0];
 
             this.newRequest = {
-                request_date: new Date().toISOString().split('T')[0],
+                request_date: todayLocal(),
                 request_method: 'email',
                 request_type: p.overall_status === 'not_started' ? 'initial' : 'follow_up',
                 sent_to: '',
@@ -366,9 +456,6 @@ function caseDetailPage() {
                 this.showRequestModal = false;
                 const cpId = this.currentProvider.id;
                 await this.loadProviders();
-                if (this.expandedProvider === cpId) {
-                    await this.loadRequestHistory(cpId);
-                }
             } catch (e) {
                 showToast(e.data?.message || 'Failed to log request', 'error');
             }
@@ -378,7 +465,7 @@ function caseDetailPage() {
         openReceiptModal(p) {
             this.currentProvider = p;
             const alreadyComplete = p.overall_status === 'received_complete';
-            this.newReceipt = { received_date: new Date().toISOString().split('T')[0], received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: alreadyComplete, incomplete_reason: '', file_location: '', no_records: false, no_records_reason: '', no_records_detail: '' };
+            this.newReceipt = { received_date: todayLocal(), received_method: 'fax', has_medical_records: false, has_billing: false, has_chart: false, has_imaging: false, is_complete: alreadyComplete, incomplete_reason: '', file_location: '', no_records: false, no_records_reason: '', no_records_detail: '' };
             this.showReceiptModal = true;
         },
 
@@ -520,25 +607,6 @@ function caseDetailPage() {
             this.saving = false;
         },
 
-        toggleRequestHistory(cpId) {
-            if (this.expandedProvider === cpId) {
-                this.expandedProvider = null;
-                return;
-            }
-            this.expandedProvider = cpId;
-            this.loadRequestHistory(cpId);
-            this.loadPayments(cpId);
-        },
-
-        async loadRequestHistory(cpId) {
-            try {
-                const res = await api.get('requests?case_provider_id=' + cpId);
-                this.requestHistory = res.data || [];
-            } catch (e) {
-                this.requestHistory = [];
-            }
-        },
-
         async deleteRequest(req) {
             if (!confirm(`Delete this ${req.send_status} ${req.request_type} request (${req.request_date})?`)) {
                 return;
@@ -547,7 +615,6 @@ function caseDetailPage() {
             try {
                 await api.delete('requests/' + req.id);
                 showToast('Request deleted successfully', 'success');
-                await this.loadRequestHistory(req.case_provider_id);
                 await this.loadProviders();
                 await this.loadCase();
             } catch (e) {
@@ -679,9 +746,6 @@ function caseDetailPage() {
                 const res = await api.post('requests/' + this.previewData.request_id + '/send', payload);
                 showToast(res.message || 'Sent successfully!');
                 this.closePreviewModal();
-                if (this.expandedProvider) {
-                    await this.loadRequestHistory(this.expandedProvider);
-                }
                 await this.loadProviders();
             } catch (e) {
                 showToast(e.data?.message || 'Send failed', 'error');
@@ -774,7 +838,7 @@ function caseDetailPage() {
                 paid_amount: 0,
                 payment_type: 'check',
                 check_number: '',
-                payment_date: new Date().toISOString().split('T')[0],
+                payment_date: todayLocal(),
                 paid_date: '',
                 paid_by: '',
                 receipt_document_id: null,
@@ -799,9 +863,6 @@ function caseDetailPage() {
                 await api.delete('mr-fee-payments/' + pmt.id);
                 showToast('Cost entry deleted');
                 await this.loadAllCosts();
-                if (this.expandedProvider) {
-                    await this.loadPayments(this.expandedProvider);
-                }
             } catch (e) {
                 showToast(e.data?.message || 'Failed to delete cost entry', 'error');
             }
@@ -989,7 +1050,7 @@ function caseDetailPage() {
                 paid_amount: 0,
                 payment_type: 'check',
                 check_number: '',
-                payment_date: new Date().toISOString().split('T')[0],
+                payment_date: todayLocal(),
                 paid_date: '',
                 paid_by: '',
                 receipt_document_id: null,
@@ -1055,7 +1116,7 @@ function caseDetailPage() {
                     showToast('Payment updated');
                 } else if (payload.split_case_ids) {
                     const res = await api.post('mr-fee-payments', payload);
-                    showToast('Cost split across ' + payload.split_case_ids.length + ' cases ($' + this.splitPerPersonAmount.toFixed(2) + ' each)');
+                    showToast('Cost split across ' + payload.split_case_ids.length + ' cases ($' + this.splitPerPersonAmount().toFixed(2) + ' each)');
                 } else {
                     await api.post('mr-fee-payments', payload);
                     showToast('Payment logged');
@@ -1063,9 +1124,6 @@ function caseDetailPage() {
 
                 this.showPaymentModal = false;
                 await this.loadAllCosts();
-                if (this.expandedProvider) {
-                    await this.loadPayments(this.expandedProvider);
-                }
             } catch (e) {
                 showToast(e.data?.message || 'Failed to save payment', 'error');
             }
@@ -1101,6 +1159,16 @@ function caseDetailPage() {
                 this.paymentForm.paid_by = '';
                 this.paymentForm.paid_date = '';
             }
+            // Provider-specific defaults (auto-fill but editable)
+            const providerDefaults = {
+                'Bridge Law & Associates, PLLC': { description: 'Cost', expense_category: 'other', billed_amount: 100, payment_type: 'other' },
+                'WSP(Washington State Patrol)': { description: 'Police Report', expense_category: 'mr_cost', billed_amount: 10.50, payment_type: 'card' },
+            };
+            const defaults = providerDefaults[pr.name];
+            if (defaults && !this.paymentForm.id) {
+                Object.assign(this.paymentForm, defaults);
+            }
+
             const matched = this.providers.find(p => p.provider_id == pr.id);
             if (matched) {
                 this.paymentForm.case_provider_id = matched.id;
@@ -1139,20 +1207,23 @@ function caseDetailPage() {
             this.loadingRelatedCases = true;
             try {
                 const res = await api.get('cases/related?case_id=' + this.caseId);
-                this.relatedCases = res.data.related_cases || [];
+                this.relatedCases = res.data?.related_cases || [];
                 if (this.relatedCases.length > 0) {
                     this.splitSelectedCaseIds = [
                         parseInt(this.caseId),
                         ...this.relatedCases.map(c => c.id)
                     ];
                     this.splitEnabled = true;
+                    this.showSplitPanel = true;
                 } else {
                     this.splitSelectedCaseIds = [];
                     this.splitEnabled = false;
+                    this.showSplitPanel = false;
                 }
             } catch (e) {
                 this.relatedCases = [];
                 this.splitSelectedCaseIds = [];
+                this.showSplitPanel = false;
             }
             this.loadingRelatedCases = false;
         },
@@ -1167,13 +1238,13 @@ function caseDetailPage() {
             }
         },
 
-        get splitPerPersonAmount() {
+        splitPerPersonAmount() {
             const count = this.splitSelectedCaseIds.length;
             if (count <= 1) return this.paymentForm.billed_amount || 0;
             return Math.round(((this.paymentForm.billed_amount || 0) / count) * 100) / 100;
         },
 
-        get splitPerPersonPaid() {
+        splitPerPersonPaid() {
             const count = this.splitSelectedCaseIds.length;
             if (count <= 1) return this.paymentForm.paid_amount || 0;
             return Math.round(((this.paymentForm.paid_amount || 0) / count) * 100) / 100;
@@ -1184,6 +1255,7 @@ function caseDetailPage() {
             this.splitEnabled = false;
             this.splitSelectedCaseIds = [];
             this.loadingRelatedCases = false;
+            this.showSplitPanel = false;
         },
 
         async deletePayment(pmt) {
@@ -1192,9 +1264,6 @@ function caseDetailPage() {
                 await api.delete('mr-fee-payments/' + pmt.id);
                 showToast('Payment deleted');
                 await this.loadAllCosts();
-                if (this.expandedProvider) {
-                    await this.loadPayments(this.expandedProvider);
-                }
             } catch (e) {
                 showToast(e.data?.message || 'Failed to delete payment', 'error');
             }

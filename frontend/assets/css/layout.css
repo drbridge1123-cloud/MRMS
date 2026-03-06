@@ -25,5 +25,4 @@
 }
 
 /* ===== Panel scroll offset (accounts for sticky header) ===== */
-[data-panel] { scroll-margin-top: 60px; transition: border 0.2s ease; }
-[data-panel].panel-open { border: 2px solid #b5a070 !important; }
+[data-panel] { scroll-margin-top: 60px; }

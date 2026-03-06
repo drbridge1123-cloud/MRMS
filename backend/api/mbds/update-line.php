@@ -34,6 +34,13 @@ if (array_key_exists('sort_order', $input)) {
     $updateData['sort_order'] = (int)$input['sort_order'];
 }
 
+// Record types needed (SET field)
+if (array_key_exists('record_types_needed', $input)) {
+    $allowed = ['medical_records','billing','chart','imaging','op_report'];
+    $values = array_filter(explode(',', $input['record_types_needed'] ?? ''), fn($v) => in_array(trim($v), $allowed));
+    $updateData['record_types_needed'] = $values ? implode(',', $values) : null;
+}
+
 // Auto-calculate balance
 $charges = $updateData['charges'] ?? (float)$line['charges'];
 $pip1 = $updateData['pip1_amount'] ?? (float)$line['pip1_amount'];

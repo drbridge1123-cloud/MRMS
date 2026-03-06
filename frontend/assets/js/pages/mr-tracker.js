@@ -10,17 +10,42 @@ function trackerPage() {
                     filter: this.activeFilter,
                     tier: this.tierFilter,
                     assigned_to: this.assignedFilter,
+                    case_id: this.caseIdFilter,
                 };
             }
         }),
 
         // Page-specific state
-        summary: { total: 0, overdue: 0, followup_due: 0, not_started: 0 },
+        pendingAssignments: [],
+        summary: { total: 0, overdue: 0, followup_due: 0, not_started: 0, pending_assignments: 0 },
         statusFilter: '',
         activeFilter: '',
         tierFilter: '',
         assignedFilter: '',
+        caseIdFilter: '',
         staffList: [],
+
+        // Expand / request history
+        expandedId: null,
+        requestHistory: [],
+
+        // Request modal
+        showRequestModal: false,
+        saving: false,
+        reqForm: {},
+        hlTemplates: [],
+
+        // Receipt modal
+        showReceiptModal: false,
+        receiptForm: {},
+
+        // Preview & Send modal (full letter editing)
+        showPreviewModal: false,
+        sending: false,
+        previewData: { method: '', recipient: '', provider_name: '', client_name: '', send_status: '', subject: '', letter_html: '', request_id: null },
+        isEditingLetter: false,
+        originalLetterHtml: '',
+        originalSubject: '',
 
         // Bulk selection
         selectedItems: [],
@@ -30,7 +55,7 @@ function trackerPage() {
         // Bulk request modal
         showBulkRequestModal: false,
         bulkRequestForm: {
-            request_date: new Date().toISOString().split('T')[0],
+            request_date: todayLocal(),
             request_method: 'email',
             request_type: 'follow_up',
             followup_date: '',
@@ -53,16 +78,33 @@ function trackerPage() {
             this.activeFilter = '';
             this.tierFilter = '';
             this.assignedFilter = '';
+            this.caseIdFilter = '';
+            // Clean URL param
+            const url = new URL(window.location);
+            url.searchParams.delete('case_id');
+            window.history.replaceState({}, '', url);
         },
 
         _hasPageFilters() {
-            return this.statusFilter || this.activeFilter || this.tierFilter || this.assignedFilter;
+            return this.statusFilter || this.activeFilter || this.tierFilter || this.assignedFilter || this.caseIdFilter;
         },
 
         async init() {
+            // Check for case_id URL param (from "Manage in Tracker")
+            const urlParams = new URLSearchParams(window.location.search);
+            this.caseIdFilter = urlParams.get('case_id') || '';
+
             this.loadStaff();
             this.loadBulkTemplates();
+            this.loadHlTemplates();
+            this.loadPendingAssignments();
             await this.loadData(1);
+
+            // Auto-select all items when filtering by case_id
+            if (this.caseIdFilter && this.items.length > 0) {
+                this.selectedItems = this.items.map(item => item.id);
+                this.updateAllSelected();
+            }
         },
 
         async loadStaff() {
@@ -76,10 +118,16 @@ function trackerPage() {
             try {
                 const res = await api.get('templates?type=bulk_request&active_only=1');
                 this.bulkTemplates = res.data || [];
-                // Auto-select default template
                 const def = this.bulkTemplates.find(t => t.is_default);
                 if (def) this.bulkRequestForm.template_id = def.id;
             } catch(e) { this.bulkTemplates = []; }
+        },
+
+        async loadHlTemplates() {
+            try {
+                const r = await api.get('templates?type=medical_records&active_only=1');
+                this.hlTemplates = r.data || [];
+            } catch(e) { this.hlTemplates = []; }
         },
 
         toggleFilter(filter) {
@@ -96,6 +144,43 @@ function trackerPage() {
         getMethodLabel(method) {
             const labels = { email: 'Email', fax: 'Fax', portal: 'Portal', phone: 'Phone', mail: 'Mail' };
             return labels[method] || method || '';
+        },
+
+        // Pending assignments
+        async loadPendingAssignments() {
+            try {
+                const res = await api.get('tracker/pending-assignments');
+                this.pendingAssignments = res.data || [];
+            } catch(e) { this.pendingAssignments = []; }
+        },
+
+        async acceptAssignment(cpId) {
+            if (!confirm('Accept this assignment?')) return;
+            try {
+                await api.put('case-providers/' + cpId + '/respond', { action: 'accept' });
+                showToast('Assignment accepted', 'success');
+                this.pendingAssignments = this.pendingAssignments.filter(a => a.id !== cpId);
+                await this.loadData(this.pagination?.page || 1);
+            } catch(e) {
+                showToast(e.data?.message || 'Failed to accept', 'error');
+            }
+        },
+
+        async declineAssignment(cpId) {
+            const reason = prompt('Please enter the reason for declining:');
+            if (reason === null) return;
+            if (!reason.trim()) {
+                showToast('Decline reason is required', 'error');
+                return;
+            }
+            try {
+                await api.put('case-providers/' + cpId + '/respond', { action: 'decline', reason: reason.trim() });
+                showToast('Assignment declined', 'success');
+                this.pendingAssignments = this.pendingAssignments.filter(a => a.id !== cpId);
+                await this.loadData(this.pagination?.page || 1);
+            } catch(e) {
+                showToast(e.data?.message || 'Failed to decline', 'error');
+            }
         },
 
         // Bulk selection methods
@@ -154,7 +239,7 @@ function trackerPage() {
             }
 
             // Reset form
-            this.bulkRequestForm.request_date = new Date().toISOString().split('T')[0];
+            this.bulkRequestForm.request_date = todayLocal();
             const nextWeek = new Date();
             nextWeek.setDate(nextWeek.getDate() + 7);
             this.bulkRequestForm.followup_date = nextWeek.toISOString().split('T')[0];
@@ -276,6 +361,306 @@ function trackerPage() {
         async confirmAndSendBulk() {
             this.closeBulkPreviewModal();
             await this.createAndSendBulkRequests();
+        },
+
+        // --- Expand / Request History ---
+
+        async toggleExpand(id) {
+            if (this.expandedId === id) { this.expandedId = null; return; }
+            this.expandedId = id;
+            this.requestHistory = [];
+            try {
+                const r = await api.get('requests?case_provider_id=' + id);
+                this.requestHistory = r.data || [];
+            } catch(e) { this.requestHistory = []; }
+        },
+
+        async loadRequestHistory(cpId) {
+            try {
+                const r = await api.get('requests?case_provider_id=' + cpId);
+                this.requestHistory = r.data || [];
+            } catch(e) { this.requestHistory = []; }
+        },
+
+        getSendStatusLabel(status) {
+            const labels = { draft: 'Draft', sending: 'Sending...', sent: 'Sent', failed: 'Failed' };
+            return labels[status] || status;
+        },
+
+        // --- Request Modal ---
+
+        openRequestModal(item) {
+            this.reqForm = {
+                _cpId: item.id,
+                _caseId: item.case_id,
+                request_date: todayLocal(),
+                request_method: '',
+                request_type: item.request_count > 0 ? 'follow_up' : 'initial',
+                sent_to: '',
+                notes: '',
+                template_id: '',
+                template_data: {},
+                document_ids: [],
+                _showSettlement: false,
+                _carrierLabel: item.client_name + ' — ' + item.provider_name,
+                _email: item.provider_email || '',
+                _fax: item.provider_fax || ''
+            };
+            this.showRequestModal = true;
+        },
+
+        openReceiptModal(item) {
+            const needed = (item.record_types_needed || '').split(',').filter(Boolean);
+            this.receiptForm = {
+                _cpId: item.id,
+                _label: item.client_name + ' — ' + item.provider_name,
+                received_date: todayLocal(),
+                received_method: '',
+                has_medical_records: false,
+                has_billing: false,
+                has_chart: false,
+                has_imaging: false,
+                has_op_report: false,
+                is_complete: false,
+                incomplete_reason: '',
+                notes: '',
+                // Show checkboxes based on what was requested or needed
+                _needsMr: !!item.request_mr || needed.includes('medical_records'),
+                _needsBill: !!item.request_bill || needed.includes('billing'),
+                _needsChart: !!item.request_chart || needed.includes('chart'),
+                _needsImg: !!item.request_img || needed.includes('imaging'),
+                _needsOp: !!item.request_op || needed.includes('op_report'),
+            };
+            // If no specific types were set, show all checkboxes
+            if (!this.receiptForm._needsMr && !this.receiptForm._needsBill && !this.receiptForm._needsChart && !this.receiptForm._needsImg && !this.receiptForm._needsOp) {
+                this.receiptForm._needsMr = true;
+                this.receiptForm._needsBill = true;
+                this.receiptForm._needsChart = true;
+                this.receiptForm._needsImg = true;
+                this.receiptForm._needsOp = true;
+            }
+            this.showReceiptModal = true;
+        },
+
+        async submitReceipt() {
+            if (!this.receiptForm.received_date || !this.receiptForm.received_method) {
+                showToast('Date and method are required', 'error');
+                return;
+            }
+            this.saving = true;
+            try {
+                const payload = {
+                    case_provider_id: this.receiptForm._cpId,
+                    received_date: this.receiptForm.received_date,
+                    received_method: this.receiptForm.received_method,
+                    has_medical_records: this.receiptForm.has_medical_records ? 1 : 0,
+                    has_billing: this.receiptForm.has_billing ? 1 : 0,
+                    has_chart: this.receiptForm.has_chart ? 1 : 0,
+                    has_imaging: this.receiptForm.has_imaging ? 1 : 0,
+                    has_op_report: this.receiptForm.has_op_report ? 1 : 0,
+                    is_complete: this.receiptForm.is_complete ? 1 : 0,
+                    notes: this.receiptForm.notes,
+                };
+                if (!this.receiptForm.is_complete && this.receiptForm.incomplete_reason) {
+                    payload.incomplete_reason = this.receiptForm.incomplete_reason;
+                }
+                await api.post('receipts', payload);
+                showToast(this.receiptForm.is_complete ? 'Marked as received (complete)' : 'Receipt logged (partial)');
+                this.showReceiptModal = false;
+                this.loadData(this.pagination?.page || 1);
+            } catch(e) {
+                showToast(e.data?.message || 'Failed to log receipt', 'error');
+            }
+            this.saving = false;
+        },
+
+        async setProviderOnHold() {
+            if (!this.receiptForm._cpId) return;
+            this.saving = true;
+            try {
+                await api.put('case-providers/' + this.receiptForm._cpId + '/status', { overall_status: 'on_hold' });
+                showToast('Provider set to On Hold');
+                this.showReceiptModal = false;
+                this.loadData(this.pagination?.page || 1);
+            } catch (e) {
+                showToast(e.data?.message || 'Failed to update status', 'error');
+            }
+            this.saving = false;
+        },
+
+        async updateItemStatus(id, status) {
+            try {
+                await api.put('case-providers/' + id, { overall_status: status });
+                showToast('Status updated');
+                this.loadData(this.pagination?.page || 1);
+            } catch(e) { showToast(e.data?.message || 'Update failed', 'error'); }
+        },
+
+        updateRecipient() {
+            if (this.reqForm.request_method === 'email') this.reqForm.sent_to = this.reqForm._email;
+            else if (this.reqForm.request_method === 'fax') this.reqForm.sent_to = this.reqForm._fax;
+            else this.reqForm.sent_to = '';
+        },
+
+        async submitRequest() {
+            if (!this.reqForm.request_date || !this.reqForm.request_method) { showToast('Date and method required', 'error'); return; }
+            this.saving = true;
+            try {
+                const payload = {
+                    case_provider_id: this.reqForm._cpId,
+                    request_date: this.reqForm.request_date,
+                    request_method: this.reqForm.request_method,
+                    request_type: this.reqForm.request_type,
+                    sent_to: this.reqForm.sent_to,
+                    notes: this.reqForm.notes,
+                };
+                if (this.reqForm.template_id) payload.template_id = this.reqForm.template_id;
+                if (this.reqForm.template_data && Object.keys(this.reqForm.template_data).length > 0) {
+                    payload.template_data = this.reqForm.template_data;
+                }
+                const res = await api.post('requests', payload);
+                const createdRequest = res.data;
+                const method = this.reqForm.request_method;
+                const cpId = this.reqForm._cpId;
+                const docIds = this.reqForm.document_ids || [];
+
+                // Attach documents if any selected
+                if (createdRequest && createdRequest.id && docIds.length > 0) {
+                    for (const docId of docIds) {
+                        try {
+                            await api.post('requests/' + createdRequest.id + '/attach', { document_id: docId });
+                        } catch(e) { console.error('Failed to attach document:', e); }
+                    }
+                }
+
+                showToast('Request created' + (docIds.length > 0 ? ' with ' + docIds.length + ' attachment(s)' : ''));
+                this.showRequestModal = false;
+
+                // Auto-expand the row and refresh history
+                this.expandedId = cpId;
+                await this.loadRequestHistory(cpId);
+                this.loadData(this.pagination?.page || 1);
+
+                // Auto-open preview for email/fax methods
+                if ((method === 'email' || method === 'fax') && createdRequest && createdRequest.id) {
+                    this.$nextTick(() => this.openPreviewModal(createdRequest));
+                }
+            } catch(e) { showToast(e.data?.message || 'Error', 'error'); }
+            this.saving = false;
+        },
+
+        // --- Preview & Send (full letter editing, same as case-detail) ---
+
+        async openPreviewModal(req) {
+            try {
+                const res = await api.get('requests/' + req.id + '/preview');
+                this.previewData = res.data;
+                this.previewData.request_id = req.id;
+                this.isEditingLetter = false;
+                this.originalLetterHtml = '';
+                this.originalSubject = '';
+                this.showPreviewModal = true;
+            } catch(e) {
+                showToast(e.data?.message || 'Failed to load preview', 'error');
+            }
+        },
+
+        toggleLetterEdit() {
+            const iframe = this.$refs.letterIframe;
+            if (!iframe) return;
+            if (this.isEditingLetter) {
+                try {
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    this.previewData.letter_html = '<!DOCTYPE html>' + iframeDoc.documentElement.outerHTML;
+                    iframeDoc.designMode = 'off';
+                } catch(e) {}
+                this.isEditingLetter = false;
+            } else {
+                if (!this.originalLetterHtml) {
+                    this.originalLetterHtml = this.previewData.letter_html;
+                    this.originalSubject = this.previewData.subject;
+                }
+                this.isEditingLetter = true;
+                const enableEdit = () => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc && iframeDoc.body) { iframeDoc.designMode = 'on'; }
+                        else { setTimeout(enableEdit, 50); }
+                    } catch(e) { setTimeout(enableEdit, 50); }
+                };
+                this.$nextTick(() => enableEdit());
+            }
+        },
+
+        resetLetterToOriginal() {
+            if (this.originalLetterHtml) {
+                this.previewData.letter_html = this.originalLetterHtml;
+                this.previewData.subject = this.originalSubject;
+                if (this.isEditingLetter) {
+                    const iframe = this.$refs.letterIframe;
+                    const enableEdit = () => {
+                        try {
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            if (iframeDoc && iframeDoc.body && iframeDoc.readyState === 'complete') { iframeDoc.designMode = 'on'; }
+                            else { setTimeout(enableEdit, 50); }
+                        } catch(e) { setTimeout(enableEdit, 50); }
+                    };
+                    iframe.addEventListener('load', enableEdit, { once: true });
+                }
+                showToast('Letter reset to original');
+            }
+        },
+
+        closePreviewModal() {
+            if (this.isEditingLetter) {
+                try {
+                    const iframe = this.$refs.letterIframe;
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                    iframeDoc.designMode = 'off';
+                } catch(e) {}
+            }
+            this.isEditingLetter = false;
+            this.originalLetterHtml = '';
+            this.originalSubject = '';
+            this.showPreviewModal = false;
+        },
+
+        getEditedLetterHtml() {
+            try {
+                const iframe = this.$refs.letterIframe;
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                return '<!DOCTYPE html>' + iframeDoc.documentElement.outerHTML;
+            } catch(e) { return this.previewData.letter_html; }
+        },
+
+        async confirmAndSend() {
+            if (!this.previewData.recipient) { showToast('Please enter a recipient', 'error'); return; }
+            if (!await confirmAction('Send this request via ' + (this.previewData.method === 'email' ? 'email' : 'fax') + ' to ' + this.previewData.recipient + '?')) return;
+            this.sending = true;
+            try {
+                const payload = { recipient: this.previewData.recipient };
+                if (this.originalLetterHtml) {
+                    const currentHtml = this.isEditingLetter ? this.getEditedLetterHtml() : this.previewData.letter_html;
+                    if (currentHtml !== this.originalLetterHtml) payload.letter_html = currentHtml;
+                    if (this.previewData.subject !== this.originalSubject) payload.subject = this.previewData.subject;
+                }
+                const res = await api.post('requests/' + this.previewData.request_id + '/send', payload);
+                showToast(res.message || 'Sent successfully!');
+                this.closePreviewModal();
+                if (this.expandedId) await this.loadRequestHistory(this.expandedId);
+                this.loadData(this.pagination?.page || 1);
+            } catch(e) { showToast(e.data?.message || 'Send failed', 'error'); }
+            this.sending = false;
+        },
+
+        async deleteRequest(req) {
+            if (!confirm('Delete this ' + req.send_status + ' ' + (req.request_type || '') + ' request (' + req.request_date + ')?')) return;
+            try {
+                await api.delete('requests/' + req.id);
+                showToast('Request deleted');
+                if (this.expandedId) await this.loadRequestHistory(this.expandedId);
+                this.loadData(this.pagination?.page || 1);
+            } catch(e) { showToast(e.data?.message || 'Delete failed', 'error'); }
         }
     };
 }

@@ -4,6 +4,67 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 use setasign\Fpdi\Fpdi;
 
 /**
+ * Convert a PDF to version 1.4 using Ghostscript (for FPDI compatibility).
+ * Returns the converted file path, or the original path if already compatible.
+ */
+function convertPdfTo14($pdfPath) {
+    // Read first bytes to check PDF version
+    $handle = fopen($pdfPath, 'rb');
+    if (!$handle) return $pdfPath;
+    $header = fread($handle, 20);
+    fclose($handle);
+
+    // Extract version (e.g. "%PDF-1.7" -> "1.7")
+    if (preg_match('/%PDF-(\d+\.\d+)/', $header, $m)) {
+        $version = (float)$m[1];
+        if ($version <= 1.4) {
+            return $pdfPath; // Already compatible
+        }
+    }
+
+    // Find Ghostscript binary
+    $gsBin = '';
+    $candidates = [
+        'C:\\Program Files\\gs\\gs10.04.0\\bin\\gswin64c.exe',
+        'C:\\Program Files\\gs\\gs10.03.1\\bin\\gswin64c.exe',
+        'C:\\Program Files (x86)\\gs\\gs10.04.0\\bin\\gswin32c.exe',
+    ];
+    foreach ($candidates as $c) {
+        if (file_exists($c)) { $gsBin = $c; break; }
+    }
+    // Fallback: search gs directory
+    if (!$gsBin) {
+        $gsDir = glob('C:\\Program Files\\gs\\gs*\\bin\\gswin64c.exe');
+        if ($gsDir) $gsBin = $gsDir[0];
+    }
+    if (!$gsBin) {
+        error_log("[PDF Convert] Ghostscript not found, using original PDF");
+        return $pdfPath;
+    }
+
+    // Convert to temp file
+    $tmpPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fpdi_' . md5($pdfPath) . '_14.pdf';
+
+    // Skip if already converted recently (cache)
+    if (file_exists($tmpPath) && filemtime($tmpPath) >= filemtime($pdfPath)) {
+        return $tmpPath;
+    }
+
+    $cmd = sprintf(
+        '"%s" -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dBATCH -dQUIET -sOutputFile="%s" "%s" 2>&1',
+        $gsBin, $tmpPath, $pdfPath
+    );
+    $output = shell_exec($cmd);
+
+    if (file_exists($tmpPath) && filesize($tmpPath) > 0) {
+        return $tmpPath;
+    }
+
+    error_log("[PDF Convert] Ghostscript conversion failed: " . ($output ?: 'unknown error'));
+    return $pdfPath; // Fallback to original
+}
+
+/**
  * Generate a new PDF by overlaying provider name and optionally date on a template PDF
  *
  * @param string $templatePath Full path to the template PDF file
@@ -179,6 +240,9 @@ function generateProviderDocument($documentId, $providerName, $outputDir, $overr
         if (!file_exists($templatePath)) {
             return ['success' => false, 'error' => 'Template file not found'];
         }
+
+        // Convert PDF 1.5+ to 1.4 for FPDI compatibility using Ghostscript
+        $templatePath = convertPdfTo14($templatePath);
 
         // Prepare date overlay if configured
         $dateOverlay = null;

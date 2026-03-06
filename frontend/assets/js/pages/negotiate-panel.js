@@ -17,7 +17,7 @@ function negotiatePanel(caseId) {
         showRoundForm: false,
         editingRound: null,
         roundForm: {
-            demand_date: new Date().toISOString().split('T')[0],
+            demand_date: todayLocal(),
             demand_amount: 0,
             offer_date: '',
             offer_amount: 0,
@@ -103,7 +103,7 @@ function negotiatePanel(caseId) {
 
         resetRoundForm() {
             this.roundForm = {
-                demand_date: new Date().toISOString().split('T')[0],
+                demand_date: todayLocal(),
                 demand_amount: 0,
                 offer_date: '',
                 offer_amount: 0,
@@ -113,7 +113,7 @@ function negotiatePanel(caseId) {
         },
 
         autoFillDate(round) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = todayLocal();
             if (round.demand_amount && !round.demand_date) round.demand_date = today;
             if (round.offer_amount && !round.offer_date) round.offer_date = today;
         },

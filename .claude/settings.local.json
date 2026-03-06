@@ -73,7 +73,19 @@
       "Bash(/c/xampp/apache/bin/httpd:*)",
       "Bash(c:/xampp/apache/bin/httpd.exe -t)",
       "Bash(c:/xampp/apache/bin/httpd.exe:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root mrms:*)",
+      "Bash(\"C:/xampp/mysql/bin/mysql.exe\" -u root mrms -e \"DESCRIBE mbds_lines record_types_needed;\")",
+      "Bash(node -c:*)",
+      "Bash(for f in 233 234 243 244 245 258)",
+      "Bash(do echo -n \"ID $f: \")",
+      "Bash(done)",
+      "Bash(gswin64c:*)",
+      "Bash(gswin32c:*)",
+      "Bash(gs:*)",
+      "Bash(qpdf:*)",
+      "Bash(winget install:*)",
+      "Bash(\"/c/Program Files/gs/gs10.04.0/bin/gswin64c.exe\" --version)"
     ]
   }
 }

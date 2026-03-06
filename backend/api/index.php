@@ -86,6 +86,9 @@ switch ($resource) {
         } elseif ($method === 'POST' && $id && $action === 'change-status') {
             $_GET['id'] = $id;
             require __DIR__ . '/cases/change-status.php';
+        } elseif ($method === 'POST' && $id && $action === 'activate-providers') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/cases/activate-providers.php';
         } elseif ($method === 'PUT' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/cases/update.php';
@@ -187,6 +190,9 @@ switch ($resource) {
         } elseif ($method === 'PUT' && $id && $action === 'assign') {
             $_GET['id'] = $id;
             require __DIR__ . '/case-providers/assign.php';
+        } elseif ($method === 'PUT' && $id && $action === 'respond') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/case-providers/respond.php';
         } elseif ($method === 'PUT' && $id) {
             $_GET['id'] = $id;
             require __DIR__ . '/case-providers/update-status.php';
@@ -304,6 +310,24 @@ switch ($resource) {
         }
         break;
 
+    case 'messages':
+        if ($method === 'GET' && !$id) {
+            require __DIR__ . '/messages/list.php';
+        } elseif ($method === 'POST' && !$id) {
+            require __DIR__ . '/messages/create.php';
+        } elseif ($method === 'PUT' && $id === 'read-all') {
+            require __DIR__ . '/messages/mark-read.php';
+        } elseif ($method === 'PUT' && $id && $action === 'read') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/messages/mark-read.php';
+        } elseif ($method === 'DELETE' && $id) {
+            $_GET['id'] = $id;
+            require __DIR__ . '/messages/delete.php';
+        } else {
+            errorResponse('Messages endpoint not found', 404);
+        }
+        break;
+
     case 'notes':
         if ($method === 'GET' && !$id) {
             require __DIR__ . '/notes/list.php';
@@ -376,6 +400,8 @@ switch ($resource) {
     case 'tracker':
         if ($method === 'GET' && $id === 'list') {
             require __DIR__ . '/tracker/list.php';
+        } elseif ($method === 'GET' && $id === 'pending-assignments') {
+            require __DIR__ . '/tracker/pending-assignments.php';
         } else {
             errorResponse('Tracker endpoint not found', 404);
         }
@@ -393,6 +419,9 @@ switch ($resource) {
         } elseif ($method === 'POST' && $id && $action === 'lines') {
             $_GET['id'] = $id;
             require __DIR__ . '/mbds/add-line.php';
+        } elseif ($method === 'POST' && $id && $action === 'activate-providers') {
+            $_GET['id'] = $id;
+            require __DIR__ . '/mbds/activate-providers.php';
         } elseif ($method === 'POST' && $id && $action === 'complete') {
             $_GET['id'] = $id;
             require __DIR__ . '/mbds/complete.php';

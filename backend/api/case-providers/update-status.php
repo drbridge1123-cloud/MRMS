@@ -16,7 +16,7 @@ if (!empty($errors)) {
     errorResponse(implode(', ', $errors));
 }
 
-$allowedStatuses = ['not_started', 'requesting', 'follow_up', 'action_needed', 'received_partial', 'on_hold', 'no_records', 'received_complete', 'verified'];
+$allowedStatuses = ['treating', 'not_started', 'requesting', 'follow_up', 'action_needed', 'received_partial', 'on_hold', 'no_records', 'received_complete', 'verified'];
 if (!validateEnum($input['overall_status'], $allowedStatuses)) {
     errorResponse('Invalid status');
 }

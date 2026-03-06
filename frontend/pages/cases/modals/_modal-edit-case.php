@@ -122,10 +122,11 @@
                     </div>
                 </div>
 
-                <!-- INI Completed -->
-                <label class="ecm-check-card" :class="{ checked: editData.ini_completed }">
-                    <input type="checkbox" x-model="editData.ini_completed">
-                    <span>INI Completed</span>
+                <!-- Treating Completed -->
+                <label class="ecm-check-card" :class="{ checked: !!parseInt(editData.ini_completed) }">
+                    <input type="checkbox" :checked="!!parseInt(editData.ini_completed)"
+                        @change="editData.ini_completed = $el.checked ? 1 : 0">
+                    <span>Treating Completed</span>
                 </label>
 
                 <!-- Notes -->

@@ -62,7 +62,7 @@
         </script>
     <?php endif; ?>
 </head>
-<body class="bg-v2-bg font-franklin min-h-screen" x-data x-init="$store.auth.init(); $store.notifications.load();">
+<body class="bg-v2-bg font-franklin min-h-screen" x-data x-init="$store.auth.init();">
 
     <!-- Sidebar -->
     <?php include __DIR__ . '/../components/sidebar.php'; ?>

@@ -22,22 +22,24 @@ ob_start();
     <template x-if="!loading && caseData">
         <div>
             <?php include __DIR__ . '/_detail-header.php'; ?>
-            <?php include __DIR__ . '/_detail-providers.php'; ?>
-            <?php include __DIR__ . '/_detail-activity.php'; ?>
-            <?php include __DIR__ . '/_detail-documents.php'; ?>
 
-            <!-- Workflow Section Divider -->
-            <div class="flex items-center gap-3 mb-4 mt-2">
-                <div class="h-px flex-1" style="background:var(--gold-light,#E8D5A0);"></div>
-                <span class="font-black uppercase tracking-widest" style="font-size:13px; color:var(--gold-hover,#B8973F);letter-spacing:0.15em;">WORKFLOW</span>
-                <div class="h-px flex-1" style="background:var(--gold-light,#E8D5A0);"></div>
+            <!-- C1 Main Card — all accordion sections inside one card -->
+            <div class="c1-card">
+                <?php include __DIR__ . '/_detail-providers.php'; ?>
+                <?php include __DIR__ . '/_detail-activity.php'; ?>
+                <?php include __DIR__ . '/_detail-documents.php'; ?>
+
+                <!-- Workflow Section Divider -->
+                <div class="c1-workflow-divider">
+                    <span class="c1-workflow-label">WORKFLOW</span>
+                </div>
+
+                <?php include __DIR__ . '/_detail-costs.php'; ?>
+                <?php include __DIR__ . '/_detail-mbds.php'; ?>
+                <?php include __DIR__ . '/_detail-health-ledger.php'; ?>
+                <?php include __DIR__ . '/_detail-negotiate.php'; ?>
+                <?php include __DIR__ . '/_detail-disbursement.php'; ?>
             </div>
-
-            <?php include __DIR__ . '/_detail-costs.php'; ?>
-            <?php include __DIR__ . '/_detail-mbds.php'; ?>
-            <?php include __DIR__ . '/_detail-health-ledger.php'; ?>
-            <?php include __DIR__ . '/_detail-negotiate.php'; ?>
-            <?php include __DIR__ . '/_detail-disbursement.php'; ?>
         </div>
     </template>
 

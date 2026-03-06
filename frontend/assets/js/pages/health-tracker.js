@@ -247,7 +247,7 @@ function healthLedgerPage() {
             const defaultTpl = this.hlTemplates.find(t => t.is_default == 1);
             this.reqForm = {
                 item_id: item.id,
-                request_date: new Date().toISOString().split('T')[0],
+                request_date: todayLocal(),
                 request_method: '',
                 request_type: item.request_count > 0 ? 'follow_up' : 'initial',
                 sent_to: '',

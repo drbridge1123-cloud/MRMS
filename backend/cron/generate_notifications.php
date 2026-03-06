@@ -1,6 +1,6 @@
 <?php
 /**
- * Generate Notifications - Run daily via cron/task scheduler
+ * Generate System Messages - Run daily via cron/task scheduler
  * Usage: php generate_notifications.php
  *
  * Checks for:
@@ -17,13 +17,34 @@ require_once __DIR__ . '/../helpers/db.php';
 require_once __DIR__ . '/../helpers/escalation.php';
 require_once __DIR__ . '/../helpers/email.php';
 
-echo "=== MRMS Notification Generator ===\n";
+echo "=== MRMS System Message Generator ===\n";
 echo "Running at: " . date('Y-m-d H:i:s') . "\n\n";
 
 $today = date('Y-m-d');
 $warningDate = date('Y-m-d', strtotime('+' . DEADLINE_WARNING_DAYS . ' days'));
 
-// 1. Follow-up Due notifications
+/**
+ * Helper: create a system message (prevents duplicates per day by checking existing messages)
+ */
+function createSystemMessage($toUserId, $subject, $message, $cpId, $type) {
+    global $today;
+    // Prevent duplicates: check if same subject sent to same user today
+    $exists = dbFetchOne(
+        "SELECT id FROM messages WHERE to_user_id = ? AND subject = ? AND DATE(created_at) = ?",
+        [$toUserId, $subject, $today]
+    );
+    if ($exists) return false;
+
+    dbInsert('messages', [
+        'from_user_id' => $toUserId, // System message: from self
+        'to_user_id' => $toUserId,
+        'subject' => $subject,
+        'message' => $message
+    ]);
+    return true;
+}
+
+// 1. Follow-up Due
 echo "Checking follow-ups due...\n";
 $followupDue = dbFetchAll("
     SELECT cp.id, cp.assigned_to, cp.case_id,
@@ -44,20 +65,10 @@ $followupDue = dbFetchAll("
 ", [$today]);
 
 foreach ($followupDue as $item) {
-    $exists = dbFetchOne("
-        SELECT id FROM notifications
-        WHERE case_provider_id = ? AND type = 'followup_due' AND DATE(created_at) = ?
-    ", [$item['id'], $today]);
-
-    if (!$exists) {
-        dbInsert('notifications', [
-            'user_id' => $item['assigned_to'],
-            'case_provider_id' => $item['id'],
-            'type' => 'followup_due',
-            'message' => "Follow-up due: {$item['provider_name']} for {$item['client_name']} ({$item['case_number']})",
-            'due_date' => $today
-        ]);
-        echo "  Created follow-up notification for case_provider #{$item['id']}\n";
+    $subject = "[System] Follow-up due: {$item['provider_name']} — Case #{$item['case_number']}";
+    $msg = "Follow-up is due for {$item['provider_name']} on case {$item['case_number']} ({$item['client_name']}).";
+    if (createSystemMessage($item['assigned_to'], $subject, $msg, $item['id'], 'followup_due')) {
+        echo "  Created follow-up message for case_provider #{$item['id']}\n";
     }
 }
 
@@ -70,26 +81,16 @@ $deadlineWarnings = dbFetchAll("
     FROM case_providers cp
     JOIN cases c ON c.id = cp.case_id
     JOIN providers p ON p.id = cp.provider_id
-    WHERE cp.overall_status NOT IN ('received_complete', 'verified')
+    WHERE cp.overall_status NOT IN ('treating', 'received_complete', 'verified')
       AND cp.deadline BETWEEN ? AND ?
       AND cp.assigned_to IS NOT NULL
 ", [$today, $warningDate]);
 
 foreach ($deadlineWarnings as $item) {
-    $exists = dbFetchOne("
-        SELECT id FROM notifications
-        WHERE case_provider_id = ? AND type = 'deadline_warning' AND DATE(created_at) = ?
-    ", [$item['id'], $today]);
-
-    if (!$exists) {
-        $daysLeft = (int)((strtotime($item['deadline']) - strtotime($today)) / 86400);
-        dbInsert('notifications', [
-            'user_id' => $item['assigned_to'],
-            'case_provider_id' => $item['id'],
-            'type' => 'deadline_warning',
-            'message' => "Deadline in {$daysLeft} days: {$item['provider_name']} for {$item['client_name']} ({$item['case_number']})",
-            'due_date' => $item['deadline']
-        ]);
+    $daysLeft = (int)((strtotime($item['deadline']) - strtotime($today)) / 86400);
+    $subject = "[System] Deadline in {$daysLeft} days: {$item['provider_name']} — Case #{$item['case_number']}";
+    $msg = "Deadline approaching for {$item['provider_name']} on case {$item['case_number']} ({$item['client_name']}).\n\nDeadline: " . date('M j, Y', strtotime($item['deadline'])) . " ({$daysLeft} days remaining)";
+    if (createSystemMessage($item['assigned_to'], $subject, $msg, $item['id'], 'deadline_warning')) {
         echo "  Created deadline warning for case_provider #{$item['id']}\n";
     }
 }
@@ -103,44 +104,29 @@ $overdue = dbFetchAll("
     FROM case_providers cp
     JOIN cases c ON c.id = cp.case_id
     JOIN providers p ON p.id = cp.provider_id
-    WHERE cp.overall_status NOT IN ('received_complete', 'verified')
+    WHERE cp.overall_status NOT IN ('treating', 'received_complete', 'verified')
       AND cp.deadline < ?
       AND cp.assigned_to IS NOT NULL
 ", [$today]);
 
 foreach ($overdue as $item) {
-    $exists = dbFetchOne("
-        SELECT id FROM notifications
-        WHERE case_provider_id = ? AND type = 'deadline_overdue' AND DATE(created_at) = ?
-    ", [$item['id'], $today]);
+    $daysOver = (int)((strtotime($today) - strtotime($item['deadline'])) / 86400);
+    $subject = "[System] OVERDUE ({$daysOver}d): {$item['provider_name']} — Case #{$item['case_number']}";
+    $msg = "OVERDUE: {$item['provider_name']} for case {$item['case_number']} ({$item['client_name']}) is {$daysOver} day(s) past deadline.\n\nDeadline was: " . date('M j, Y', strtotime($item['deadline']));
 
-    if (!$exists) {
-        $daysOver = (int)((strtotime($today) - strtotime($item['deadline'])) / 86400);
-        // Notify assigned staff
-        dbInsert('notifications', [
-            'user_id' => $item['assigned_to'],
-            'case_provider_id' => $item['id'],
-            'type' => 'deadline_overdue',
-            'message' => "OVERDUE ({$daysOver} days): {$item['provider_name']} for {$item['client_name']} ({$item['case_number']})",
-            'due_date' => $item['deadline']
-        ]);
+    // Notify assigned staff
+    if (createSystemMessage($item['assigned_to'], $subject, $msg, $item['id'], 'deadline_overdue')) {
+        echo "  Created overdue message for case_provider #{$item['id']}\n";
+    }
 
-        // Also notify admin (Ella - user id 1)
-        $adminId = 1;
-        if ($item['assigned_to'] != $adminId) {
-            dbInsert('notifications', [
-                'user_id' => $adminId,
-                'case_provider_id' => $item['id'],
-                'type' => 'deadline_overdue',
-                'message' => "OVERDUE ({$daysOver} days): {$item['provider_name']} for {$item['client_name']} ({$item['case_number']})",
-                'due_date' => $item['deadline']
-            ]);
-        }
-        echo "  Created overdue notification for case_provider #{$item['id']}\n";
+    // Also notify admin (user id 1) if different from assigned
+    $adminId = 1;
+    if ((int)$item['assigned_to'] !== $adminId) {
+        createSystemMessage($adminId, $subject, $msg, $item['id'], 'deadline_overdue');
     }
 }
 
-// 4. Escalation notifications (deadline reached → managers + action_needed, deadline+14d → admins)
+// 4. Escalation notifications
 echo "Checking escalation notifications...\n";
 $escCreated = generateEscalationNotifications();
 echo "  Created {$escCreated} escalation notification(s)\n";

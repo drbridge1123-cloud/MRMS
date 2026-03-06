@@ -48,7 +48,7 @@ if (!empty($healthItems)) {
 
 // Auto-populate provider lines from case_providers
 $providers = dbFetchAll(
-    "SELECT cp.id AS cp_id, p.name, cp.treatment_start_date, cp.treatment_end_date
+    "SELECT cp.id AS cp_id, p.name, cp.treatment_start_date, cp.treatment_end_date, cp.record_types_needed
      FROM case_providers cp
      JOIN providers p ON p.id = cp.provider_id
      WHERE cp.case_id = ?
@@ -72,9 +72,29 @@ foreach ($providers as $prov) {
         'provider_name' => $prov['name'],
         'case_provider_id' => $prov['cp_id'],
         'treatment_dates' => $dates ?: null,
+        'record_types_needed' => $prov['record_types_needed'] ?: null,
         'sort_order' => $sortOrder
     ]);
     $sortOrder += 10;
+
+    // Auto-create cost ledger entry (Record Fee) if doesn't exist
+    $existingFee = dbFetchOne(
+        "SELECT id FROM mr_fee_payments WHERE case_id = ? AND case_provider_id = ? AND description = 'Record Fee'",
+        [$caseId, $prov['cp_id']]
+    );
+    if (!$existingFee) {
+        dbInsert('mr_fee_payments', [
+            'case_id' => $caseId,
+            'case_provider_id' => $prov['cp_id'],
+            'expense_category' => 'mr_cost',
+            'provider_name' => $prov['name'],
+            'description' => 'Record Fee',
+            'billed_amount' => 0,
+            'paid_amount' => 0,
+            'payment_date' => date('Y-m-d'),
+            'created_by' => $userId,
+        ]);
+    }
 }
 
 logActivity($userId, 'created', 'mbds_report', $reportId, [

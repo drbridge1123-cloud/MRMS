@@ -1,11 +1,9 @@
             <!-- Documents Section -->
-            <div class="doc-panel panel-section bg-white mb-4" data-panel :class="{'panel-open': docsOpen}"
+            <div class="doc-panel c1-section c1-group-end" data-panel
                 x-data="{...documentUploader(caseId), docsOpen: false}" x-init="init()">
-                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer panel-header-bordered" @click="docsOpen = !docsOpen; if(docsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+                <div class="c1-section-header" @click="docsOpen = !docsOpen; if(docsOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
                     <div class="flex items-center gap-2.5">
-                        <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="docsOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
+                        <span class="c1-num c1-num-olive">03</span>
                         <h3 class="panel-title">Documents</h3>
                         <span class="panel-count" x-text="documents.length"></span>
                     </div>

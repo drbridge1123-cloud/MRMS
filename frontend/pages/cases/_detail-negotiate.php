@@ -1,10 +1,8 @@
-<div class="neg-panel" data-panel :class="{'panel-open': open}" x-data="negotiatePanel(caseId)" x-init="init()">
+<div class="neg-panel c1-section" data-panel x-data="negotiatePanel(caseId)" x-init="init()">
     <!-- Header -->
-    <div class="neg-header" @click="open = !open; if(open) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+    <div class="neg-header c1-section-header" @click="open = !open; if(open) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
         <div class="neg-header-left">
-            <svg class="neg-chevron w-4 h-4" :style="open ? 'transform:rotate(90deg)' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
+            <span class="c1-num c1-num-gold">07</span>
             <span class="neg-header-title">Negotiate</span>
             <template x-if="activeCoverages.length > 0">
                 <span class="neg-header-badge" x-text="activeCoverages.length + ' Coverage'"></span>

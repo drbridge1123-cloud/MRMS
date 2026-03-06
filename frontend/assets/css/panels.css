@@ -1,44 +1,35 @@
 /* ===== Shared Panel Components ===== */
 
-/* Collapsible panel wrapper (Providers, Activity, Documents) */
+/* Collapsible panel wrapper — gold top border card */
 .panel-section {
-    border: 1px solid #b5a070;
-    border-radius: 10px;
-    background: linear-gradient(to bottom, #ffffff 0%, #f9f8f6 100%);
-    box-shadow: 0 2px 8px rgba(15, 27, 45, 0.07), 0 1px 2px rgba(15, 27, 45, 0.04);
+    border: 1px solid #e5e2da;
+    border-top: 3px solid var(--gold, #C9A84C);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(15, 27, 45, 0.06);
     overflow: hidden;
     position: relative;
 }
 
-.panel-section::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #b5a070;
-    z-index: 1;
-}
-
 /* Panel header divider (Activity, Documents) */
 .panel-section > .panel-header-bordered {
-    border-bottom: 1px solid #d0cdc5;
+    border-bottom: 1px solid #e5e2da;
 }
 
 /* Panel title text */
 .panel-title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     color: #1a2535;
+    letter-spacing: 0.01em;
 }
 
 /* Gold count badge */
 .panel-count {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    color: #C9A84C;
-    background: rgba(201, 168, 76, 0.12);
+    color: var(--gold, #C9A84C);
+    background: rgba(201, 168, 76, 0.10);
     padding: 2px 8px;
     border-radius: 10px;
     min-width: 22px;
@@ -48,31 +39,37 @@
 /* Panel action button (gray + border) */
 .panel-btn {
     padding: 5px 14px;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
-    background: #F0F2F5;
-    color: #0F1B2D;
+    background: #f8f7f5;
+    color: #3D4F63;
     border: 1px solid #d0cdc6;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    transition: all 0.15s;
 }
 
 .panel-btn:hover {
-    background: #e4e6ea;
+    background: #eeecea;
+    border-color: #b0ada6;
 }
 
 /* Info card label (case header) */
 .info-label {
-    font-size: 13px;
-    color: var(--text-light);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted, #8a8a82);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     margin-bottom: 4px;
 }
 
 /* Info card value (case header) */
 .info-value {
     font-size: 15px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text, #0F1B2D);
 }

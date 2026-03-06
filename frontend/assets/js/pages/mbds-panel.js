@@ -23,10 +23,14 @@ function mbdsPanel(caseId) {
         mbdsImporting: false,
         _mbdsImportFile: null,
 
+
         async init() {
             this._debounceSave = createDebouncedSave((line) => this.saveLine(line), 500);
             await this.loadReport();
             this.loading = false;
+
+            // Reload when providers are activated or changed externally
+            window.addEventListener('providers-changed', () => this.loadReport());
         },
 
         async loadReport() {
@@ -247,9 +251,61 @@ function mbdsPanel(caseId) {
             this.saving = false;
         },
 
-        async addLine(type) {
+        // Provider search for Add Line
+        showProviderSearch: false,
+        providerSearchQuery: '',
+        providerSearchResults: [],
+        _providerSearchTimeout: null,
+
+        openProviderSearch() {
+            this.showProviderSearch = true;
+            this.providerSearchQuery = '';
+            this.providerSearchResults = [];
+            this.$nextTick(() => {
+                const input = document.getElementById('mbds-provider-search-input');
+                if (input) input.focus();
+            });
+        },
+
+        async searchProviders() {
+            clearTimeout(this._providerSearchTimeout);
+            const q = this.providerSearchQuery.trim();
+            if (q.length < 1) { this.providerSearchResults = []; return; }
+            this._providerSearchTimeout = setTimeout(async () => {
+                try {
+                    const res = await api.get('providers/search?q=' + encodeURIComponent(q));
+                    this.providerSearchResults = res.data || [];
+                } catch (e) {
+                    this.providerSearchResults = [];
+                }
+            }, 200);
+        },
+
+        async selectProvider(provider) {
+            this.showProviderSearch = false;
             try {
-                const name = type === 'rx' ? 'RX' : prompt('Provider/line name:');
+                await api.post('mbds/' + this.report.id + '/lines', {
+                    line_type: 'provider',
+                    provider_id: provider.id,
+                    provider_name: provider.name
+                });
+                await this.loadReport();
+                window.dispatchEvent(new CustomEvent('mbds-updated'));
+                window.dispatchEvent(new CustomEvent('providers-changed'));
+                window.dispatchEvent(new CustomEvent('costs-changed'));
+                showToast('Added: ' + provider.name);
+            } catch (e) {
+                showToast('Failed to add provider', 'error');
+            }
+        },
+
+        async addLine(type) {
+            if (type === 'provider') {
+                this.openProviderSearch();
+                return;
+            }
+            try {
+                const name = type === 'rx' ? 'RX' : prompt('Line name:');
                 if (!name) return;
                 await api.post('mbds/' + this.report.id + '/lines', {
                     line_type: type,
@@ -275,7 +331,6 @@ function mbdsPanel(caseId) {
         },
 
         async markComplete() {
-            if (!confirm('Mark this Medical Balance report as complete? This will move the case to Completed status.')) return;
             try {
                 await api.post('mbds/' + this.report.id + '/complete');
                 showToast('Report marked as completed');

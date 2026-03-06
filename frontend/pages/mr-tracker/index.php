@@ -4,6 +4,7 @@ requireAuth();
 $pageTitle = 'Tracker';
 $currentPage = 'tracker';
 $pageScripts = [
+    '/MRMS/frontend/components/document-selector.js',
     '/MRMS/frontend/assets/js/pages/mr-tracker.js',
     '/MRMS/frontend/assets/js/pages/health-tracker.js'
 ];
@@ -48,6 +49,75 @@ ob_start();
 
     <!-- ===================== MR TRACKER TAB ===================== -->
     <div x-show="activeTab === 'mr'" x-data="trackerPage()" x-init="init()">
+
+        <!-- Case Filter Banner -->
+        <div x-show="caseIdFilter" class="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 mb-3 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-sm text-blue-800">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                <span class="font-medium">Filtered by case</span>
+                <span class="text-blue-600" x-text="items.length ? '#' + items[0].case_number : ''"></span>
+                <span class="text-blue-500" x-text="'(' + items.length + ' provider' + (items.length !== 1 ? 's' : '') + ')'"></span>
+            </div>
+            <button @click="resetFilters()" class="text-xs text-blue-600 hover:text-blue-800 font-medium underline">Show All</button>
+        </div>
+
+        <!-- New Assignments Panel -->
+        <template x-if="pendingAssignments.length > 0">
+            <div class="bg-amber-50 rounded-lg border border-amber-300 mb-3 overflow-hidden">
+                <div class="px-4 py-2.5 bg-amber-100 border-b border-amber-300 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        <span class="text-sm font-semibold text-amber-800">New Assignments</span>
+                        <span class="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full" x-text="pendingAssignments.length"></span>
+                    </div>
+                </div>
+                <div class="divide-y divide-amber-200">
+                    <template x-for="pa in pendingAssignments" :key="pa.id">
+                        <div class="px-4 py-2.5 flex items-center justify-between hover:bg-amber-100/50">
+                            <div class="flex items-center gap-4 flex-1 min-w-0">
+                                <div class="min-w-0">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-semibold text-v2-text" x-text="pa.provider_name"></span>
+                                        <span class="text-xs text-v2-text-light">|</span>
+                                        <span class="text-xs text-v2-text-mid" x-text="'Case #' + pa.case_number"></span>
+                                        <span class="text-xs text-v2-text-light">|</span>
+                                        <span class="text-xs text-v2-text-mid" x-text="pa.client_name"></span>
+                                    </div>
+                                    <div class="flex items-center gap-3 mt-0.5">
+                                        <span class="text-[11px] text-v2-text-light" x-text="'Deadline: ' + formatDate(pa.deadline)"></span>
+                                        <template x-if="pa.activated_by_name">
+                                            <span class="text-[11px] text-v2-text-light" x-text="'From: ' + pa.activated_by_name"></span>
+                                        </template>
+                                        <template x-if="pa.request_mr || pa.request_bill || pa.request_chart || pa.request_img || pa.request_op">
+                                            <span class="text-[11px] text-v2-text-light">
+                                                Records:
+                                                <template x-if="pa.request_mr"><span class="font-medium">MR </span></template>
+                                                <template x-if="pa.request_bill"><span class="font-medium">Bill </span></template>
+                                                <template x-if="pa.request_chart"><span class="font-medium">Chart </span></template>
+                                                <template x-if="pa.request_img"><span class="font-medium">Img </span></template>
+                                                <template x-if="pa.request_op"><span class="font-medium">OP </span></template>
+                                            </span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2 flex-shrink-0">
+                                <button @click="acceptAssignment(pa.id)"
+                                        class="px-3 py-1 text-xs font-semibold text-white bg-emerald-500 rounded-md hover:bg-emerald-600 transition-colors">
+                                    Accept
+                                </button>
+                                <button @click="declineAssignment(pa.id)"
+                                        class="px-3 py-1 text-xs font-semibold text-white bg-red-500 rounded-md hover:bg-red-600 transition-colors">
+                                    Decline
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </template>
 
         <!-- Summary Cards -->
         <div class="grid grid-cols-4 gap-3 mb-3">
@@ -228,50 +298,49 @@ ob_start();
                                 </th>
                                 <th>Escalation</th>
                                 <th>Assigned</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <template x-if="items.length === 0">
-                                <tr><td colspan="12" class="text-center text-v2-text-light py-12">No records found</td></tr>
-                            </template>
+                        <tbody x-show="items.length === 0">
+                            <tr><td colspan="13" class="text-center text-v2-text-light py-12">No records found</td></tr>
+                        </tbody>
                             <template x-for="item in items" :key="item.id">
+                                <tbody>
                                 <tr class="cursor-pointer"
                                     :class="{
                                         'bg-blue-50': selectedItems.includes(item.id),
-                                        'tracker-row-overdue': item.is_overdue && !selectedItems.includes(item.id),
-                                        'tracker-row-followup': !item.is_overdue && item.is_followup_due && !selectedItems.includes(item.id)
-                                    }">
+                                        'ring-2 ring-gold bg-white': expandedId === item.id,
+                                        'tracker-row-overdue': item.is_overdue && !selectedItems.includes(item.id) && expandedId !== item.id,
+                                        'tracker-row-followup': !item.is_overdue && item.is_followup_due && !selectedItems.includes(item.id) && expandedId !== item.id
+                                    }"
+                                    @click="toggleExpand(item.id)">
                                     <td @click.stop>
                                         <input type="checkbox"
                                                :checked="selectedItems.includes(item.id)"
                                                @click="toggleSelect(item.id, $event)"
                                                class="cursor-pointer">
                                     </td>
-                                    <td @click="goToCase(item.case_id, item.id)" class="font-medium text-gold whitespace-nowrap" x-text="item.case_number"></td>
-                                    <td @click="goToCase(item.case_id, item.id)" class="max-w-[150px] truncate" x-text="item.client_name"></td>
-                                    <td @click="goToCase(item.case_id, item.id)" class="max-w-[180px] truncate" x-text="item.provider_name"></td>
-                                    <td @click="goToCase(item.case_id, item.id)">
+                                    <td class="font-medium text-gold whitespace-nowrap" x-text="item.case_number"></td>
+                                    <td class="max-w-[150px] truncate" x-text="item.client_name"></td>
+                                    <td class="max-w-[180px] truncate" x-text="item.provider_name"></td>
+                                    <td>
                                         <span class="status-badge" :class="'status-' + item.overall_status" x-text="getStatusLabel(item.overall_status)"></span>
                                     </td>
-                                    <td @click="goToCase(item.case_id, item.id)" class="whitespace-nowrap">
+                                    <td class="whitespace-nowrap">
                                         <template x-if="item.last_request_date">
                                             <div class="flex items-center gap-2">
                                                 <span class="text-sm" x-text="formatDate(item.last_request_date)"></span>
                                                 <span class="text-xs px-1.5 py-0.5 rounded bg-v2-bg text-v2-text-mid" x-text="getMethodLabel(item.last_request_method)"></span>
                                             </div>
                                         </template>
-                                        <template x-if="!item.last_request_date">
-                                            <span class="text-gray-300">-</span>
-                                        </template>
+                                        <template x-if="!item.last_request_date"><span class="text-gray-300">-</span></template>
                                     </td>
                                     <td class="text-center" x-text="item.request_count || '-'"></td>
                                     <td class="whitespace-nowrap">
                                         <template x-if="item.next_followup_date">
                                             <span :class="item.is_followup_due ? 'text-amber-600 font-medium' : 'text-v2-text-mid'" x-text="formatDate(item.next_followup_date)"></span>
                                         </template>
-                                        <template x-if="!item.next_followup_date">
-                                            <span class="text-gray-300">-</span>
-                                        </template>
+                                        <template x-if="!item.next_followup_date"><span class="text-gray-300">-</span></template>
                                     </td>
                                     <td class="whitespace-nowrap">
                                         <template x-if="item.deadline">
@@ -281,18 +350,14 @@ ob_start();
                                                 'text-v2-text-mid': item.days_until_deadline > 7
                                             }" x-text="formatDate(item.deadline)"></span>
                                         </template>
-                                        <template x-if="!item.deadline">
-                                            <span class="text-gray-300">-</span>
-                                        </template>
+                                        <template x-if="!item.deadline"><span class="text-gray-300">-</span></template>
                                     </td>
                                     <td class="text-center">
                                         <template x-if="item.days_since_request !== null">
                                             <span :class="item.days_since_request > 30 ? 'text-red-500 font-medium' : item.days_since_request > 14 ? 'text-amber-600' : 'text-v2-text-mid'"
                                                   x-text="item.days_since_request + 'd'"></span>
                                         </template>
-                                        <template x-if="item.days_since_request === null">
-                                            <span class="text-gray-300">-</span>
-                                        </template>
+                                        <template x-if="item.days_since_request === null"><span class="text-gray-300">-</span></template>
                                     </td>
                                     <td class="px-4 py-3">
                                         <template x-if="item.escalation_tier !== 'normal'">
@@ -303,9 +368,77 @@ ob_start();
                                         </template>
                                     </td>
                                     <td class="text-sm text-v2-text-mid max-w-[100px] truncate" x-text="item.assigned_name || '-'"></td>
+                                    <td @click.stop class="whitespace-nowrap">
+                                        <div class="flex gap-1 items-center">
+                                            <button @click="openRequestModal(item)" class="px-2 py-1 text-xs bg-gold/10 text-gold rounded hover:bg-gold/20 font-medium" title="New Request">Request</button>
+                                            <button @click="openReceiptModal(item)" class="p-1 text-v2-text-light hover:text-green-600 rounded" title="Log Receipt"
+                                                    x-show="item.overall_status !== 'received_complete' && item.overall_status !== 'verified'">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            </button>
+                                            <button @click="goToCase(item.case_id, item.id)" class="p-1 text-v2-text-light hover:text-blue-600 rounded" title="Open Case">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
+                                <!-- Expanded Request History -->
+                                <tr x-show="expandedId === item.id">
+                                    <td colspan="13" class="!p-0 !border-t-0">
+                                        <div class="bg-stone-50 border-t border-b-2 border-gold/30 px-6 py-4">
+                                            <div class="flex items-center justify-between mb-3">
+                                                <div class="flex items-center gap-3">
+                                                    <h4 class="text-sm font-bold text-v2-text">Request History</h4>
+                                                    <span class="text-xs text-v2-text-light" x-text="requestHistory.length + ' request(s)'"></span>
+                                                </div>
+                                                <button @click="openRequestModal(item)" class="px-3 py-1.5 text-xs bg-gold text-white rounded-lg hover:bg-gold-dark font-semibold flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                                    New Request
+                                                </button>
+                                            </div>
+                                            <template x-if="requestHistory.length === 0">
+                                                <p class="text-center text-v2-text-light py-4 text-xs">No requests yet. Click "New Request" to create one.</p>
+                                            </template>
+                                            <template x-if="requestHistory.length > 0">
+                                                <div class="space-y-1.5">
+                                                    <template x-for="req in requestHistory" :key="req.id">
+                                                        <div class="flex items-center justify-between bg-white rounded-lg border border-v2-card-border px-4 py-2.5">
+                                                            <div class="flex items-center gap-4 text-sm">
+                                                                <span class="font-medium" x-text="formatDate(req.request_date)"></span>
+                                                                <span class="text-xs px-1.5 py-0.5 rounded bg-v2-bg text-v2-text-mid" x-text="getMethodLabel(req.request_method)"></span>
+                                                                <span class="text-xs text-v2-text-light capitalize" x-text="(req.request_type || '').replace('_', ' ')"></span>
+                                                                <span class="text-xs px-1.5 py-0.5 rounded font-medium"
+                                                                      :class="{
+                                                                          'bg-gray-100 text-gray-600': req.send_status === 'draft',
+                                                                          'bg-green-100 text-green-700': req.send_status === 'sent',
+                                                                          'bg-red-100 text-red-600': req.send_status === 'failed',
+                                                                          'bg-blue-100 text-blue-600': req.send_status === 'sending'
+                                                                      }"
+                                                                      x-text="getSendStatusLabel(req.send_status)"></span>
+                                                                <template x-if="req.sent_to">
+                                                                    <span class="text-xs text-v2-text-light" x-text="'→ ' + req.sent_to"></span>
+                                                                </template>
+                                                            </div>
+                                                            <div class="flex items-center gap-1" @click.stop>
+                                                                <template x-if="(req.request_method === 'email' || req.request_method === 'fax')">
+                                                                    <button @click="openPreviewModal(req)"
+                                                                            class="px-2 py-1 text-xs rounded font-medium"
+                                                                            :class="req.send_status === 'draft' || req.send_status === 'failed' ? 'bg-gold/10 text-gold hover:bg-gold/20' : 'bg-v2-bg text-v2-text-mid hover:bg-v2-bg/80'"
+                                                                            x-text="req.send_status === 'draft' ? 'Preview & Send' : req.send_status === 'failed' ? 'Retry' : 'Preview'">
+                                                                    </button>
+                                                                </template>
+                                                                <button @click="deleteRequest(req)" class="p-1 text-v2-text-light hover:text-red-500 rounded" title="Delete">
+                                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                                </tbody>
                             </template>
-                        </tbody>
                     </table>
             </div>
         </template>
@@ -696,6 +829,424 @@ ob_start();
             </div>
         </div>
 
+        <!-- MR Request Modal -->
+        <div x-show="showRequestModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style="display:none;" @keydown.escape.window="showRequestModal = false">
+            <div class="fixed inset-0 mrt-backdrop" @click="showRequestModal = false"></div>
+            <div class="mrt-modal relative w-full max-w-lg z-10" @click.stop>
+                <div class="mrt-header">
+                    <div>
+                        <div class="mrt-title">New Request</div>
+                        <div class="mrt-subtitle" x-text="reqForm._carrierLabel"></div>
+                    </div>
+                    <button type="button" class="mrt-close" @click="showRequestModal = false">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mrt-body">
+                    <div class="mrt-row">
+                        <div>
+                            <label class="mrt-label">Request Date <span class="mrt-req">*</span></label>
+                            <input type="date" x-model="reqForm.request_date" class="mrt-input">
+                        </div>
+                        <div>
+                            <label class="mrt-label">Method <span class="mrt-req">*</span></label>
+                            <select x-model="reqForm.request_method" @change="updateRecipient()" class="mrt-select">
+                                <option value="">Select...</option>
+                                <option value="email">Email</option>
+                                <option value="fax">Fax</option>
+                                <option value="portal">Portal</option>
+                                <option value="phone">Phone</option>
+                                <option value="mail">Mail</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mrt-row">
+                        <div>
+                            <label class="mrt-label">Type</label>
+                            <select x-model="reqForm.request_type" class="mrt-select">
+                                <option value="initial">Initial</option>
+                                <option value="follow_up">Follow Up</option>
+                                <option value="re_request">Re-Request</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="mrt-label">Send To</label>
+                            <input type="text" x-model="reqForm.sent_to" class="mrt-input" placeholder="Email or fax #">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mrt-label">Template</label>
+                        <select x-model="reqForm.template_id" class="mrt-select">
+                            <option value="">Default (no template)</option>
+                            <template x-for="t in hlTemplates" :key="t.id">
+                                <option :value="t.id" x-text="t.name + (t.is_default ? ' (Default)' : '')"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="mrt-label">Notes</label>
+                        <textarea x-model="reqForm.notes" rows="2" class="mrt-textarea"></textarea>
+                    </div>
+                    <!-- Document Attachments (email/fax only) -->
+                    <div x-show="reqForm.request_method === 'email' || reqForm.request_method === 'fax'"
+                         x-data="{
+                            docs: [],
+                            selectedIds: [],
+                            docLoading: false,
+                            showDocs: false,
+                            uploading: false,
+                            async loadDocs() {
+                                if (!reqForm._caseId) return;
+                                this.docLoading = true;
+                                try {
+                                    const res = await api.get('documents?case_id=' + reqForm._caseId);
+                                    this.docs = res.success ? (res.data.documents || []) : [];
+                                } catch(e) { this.docs = []; }
+                                this.docLoading = false;
+                            },
+                            toggleDoc(id) {
+                                const i = this.selectedIds.indexOf(id);
+                                if (i > -1) this.selectedIds.splice(i, 1);
+                                else this.selectedIds.push(id);
+                                reqForm.document_ids = [...this.selectedIds];
+                            },
+                            selectAllDocs() {
+                                this.selectedIds = this.docs.map(d => d.id);
+                                reqForm.document_ids = [...this.selectedIds];
+                            },
+                            clearDocs() {
+                                this.selectedIds = [];
+                                reqForm.document_ids = [];
+                            },
+                            async quickUpload(event) {
+                                const file = event.target.files[0];
+                                if (!file) return;
+                                this.uploading = true;
+                                try {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    formData.append('case_id', reqForm._caseId);
+                                    formData.append('document_type', 'other');
+                                    const res = await api.upload('documents/upload', formData);
+                                    if (res.success && res.data) {
+                                        await this.loadDocs();
+                                        this.selectedIds.push(res.data.id);
+                                        reqForm.document_ids = [...this.selectedIds];
+                                        showToast('File uploaded & selected');
+                                    }
+                                } catch(e) { showToast(e.data?.message || 'Upload failed', 'error'); }
+                                this.uploading = false;
+                                event.target.value = '';
+                            }
+                         }"
+                         x-effect="if (showRequestModal && reqForm._caseId && docs.length === 0 && !docLoading) loadDocs()">
+                        <button type="button" @click="showDocs = !showDocs" class="w-full flex items-center justify-between py-2 text-left">
+                            <div class="flex items-center gap-2">
+                                <label class="mrt-label" style="margin:0; cursor:pointer;">Attachments</label>
+                                <span x-show="selectedIds.length > 0" class="text-[10px] font-bold bg-gold/20 text-gold px-1.5 py-0.5 rounded-full" x-text="selectedIds.length + ' selected'"></span>
+                            </div>
+                            <svg class="w-4 h-4 text-v2-text-light transition-transform" :class="showDocs ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        <div x-show="showDocs" x-collapse>
+                            <!-- Toolbar: Upload + Select All / Clear -->
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-gold bg-gold/10 rounded-lg cursor-pointer hover:bg-gold/20 transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                                    <span x-text="uploading ? 'Uploading...' : 'Upload'"></span>
+                                    <input type="file" class="hidden" @change="quickUpload($event)" :disabled="uploading"
+                                           accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.tiff,.xls,.xlsx">
+                                </label>
+                                <div class="flex items-center gap-2 text-[11px]">
+                                    <button type="button" @click="selectAllDocs()" :disabled="docs.length === 0"
+                                            class="font-bold text-gold hover:opacity-70 disabled:opacity-30">Select All</button>
+                                    <span class="text-v2-text-light">|</span>
+                                    <button type="button" @click="clearDocs()" :disabled="selectedIds.length === 0"
+                                            class="font-bold text-gold hover:opacity-70 disabled:opacity-30">Clear</button>
+                                </div>
+                            </div>
+                            <div x-show="docLoading" class="text-center py-3 text-xs text-v2-text-light">Loading documents...</div>
+                            <div x-show="!docLoading && docs.length === 0" class="text-center py-3 text-xs text-v2-text-light">
+                                No documents yet. Upload a file above.
+                            </div>
+                            <div x-show="!docLoading && docs.length > 0" class="space-y-1 max-h-[160px] overflow-y-auto">
+                                <template x-for="doc in docs" :key="doc.id">
+                                    <label class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors text-sm"
+                                           :class="selectedIds.includes(doc.id) ? 'border-gold bg-gold/5' : 'border-v2-card-border hover:bg-v2-bg'">
+                                        <input type="checkbox" :checked="selectedIds.includes(doc.id)" @change="toggleDoc(doc.id)" class="rounded">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="truncate text-v2-text" x-text="doc.original_file_name"></div>
+                                            <div class="text-[11px] text-v2-text-light" x-text="doc.file_size_formatted"></div>
+                                        </div>
+                                    </label>
+                                </template>
+                            </div>
+                            <div class="mt-2 text-[10px] text-v2-text-light">
+                                For PDF field overlay, use <a :href="'/MRMS/frontend/pages/cases/detail.php?id=' + reqForm._caseId" class="text-gold underline" target="_blank">Case Detail</a> &rarr; Documents
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mrt-footer">
+                    <button @click="showRequestModal = false" class="mrt-btn-cancel">Cancel</button>
+                    <button @click="submitRequest()" :disabled="saving" class="mrt-btn-primary">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span x-text="saving ? 'Creating...' : 'Create Request'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Receipt Modal -->
+        <div x-show="showReceiptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+             style="display:none;" @keydown.escape.window="showReceiptModal = false">
+            <div class="fixed inset-0 mrt-backdrop" @click="showReceiptModal = false"></div>
+            <div class="mrt-modal relative w-full max-w-lg z-10" @click.stop>
+                <div class="mrt-header">
+                    <div>
+                        <div class="mrt-title">Log Receipt</div>
+                        <div class="mrt-subtitle" x-text="receiptForm._label"></div>
+                    </div>
+                    <button type="button" class="mrt-close" @click="showReceiptModal = false">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <div class="mrt-body">
+                    <div class="mrt-row">
+                        <div>
+                            <label class="mrt-label">Received Date <span class="mrt-req">*</span></label>
+                            <input type="date" x-model="receiptForm.received_date" class="mrt-input">
+                        </div>
+                        <div>
+                            <label class="mrt-label">Received Via <span class="mrt-req">*</span></label>
+                            <select x-model="receiptForm.received_method" class="mrt-select">
+                                <option value="">Select...</option>
+                                <option value="email">Email</option>
+                                <option value="fax">Fax</option>
+                                <option value="portal">Portal</option>
+                                <option value="mail">Mail</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Record Types Received -->
+                    <div class="mb-4">
+                        <label class="mrt-label mb-2">Records Received</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <template x-if="receiptForm._needsMr">
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+                                       :class="receiptForm.has_medical_records ? 'bg-green-50 border-green-300' : 'border-v2-card-border hover:bg-v2-bg'">
+                                    <input type="checkbox" x-model="receiptForm.has_medical_records" class="rounded">
+                                    <span class="text-sm">Medical Records</span>
+                                </label>
+                            </template>
+                            <template x-if="receiptForm._needsBill">
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+                                       :class="receiptForm.has_billing ? 'bg-green-50 border-green-300' : 'border-v2-card-border hover:bg-v2-bg'">
+                                    <input type="checkbox" x-model="receiptForm.has_billing" class="rounded">
+                                    <span class="text-sm">Billing</span>
+                                </label>
+                            </template>
+                            <template x-if="receiptForm._needsChart">
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+                                       :class="receiptForm.has_chart ? 'bg-green-50 border-green-300' : 'border-v2-card-border hover:bg-v2-bg'">
+                                    <input type="checkbox" x-model="receiptForm.has_chart" class="rounded">
+                                    <span class="text-sm">Chart Notes</span>
+                                </label>
+                            </template>
+                            <template x-if="receiptForm._needsImg">
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+                                       :class="receiptForm.has_imaging ? 'bg-green-50 border-green-300' : 'border-v2-card-border hover:bg-v2-bg'">
+                                    <input type="checkbox" x-model="receiptForm.has_imaging" class="rounded">
+                                    <span class="text-sm">Imaging</span>
+                                </label>
+                            </template>
+                            <template x-if="receiptForm._needsOp">
+                                <label class="flex items-center gap-2 px-3 py-2 rounded-lg border cursor-pointer transition-colors"
+                                       :class="receiptForm.has_op_report ? 'bg-green-50 border-green-300' : 'border-v2-card-border hover:bg-v2-bg'">
+                                    <input type="checkbox" x-model="receiptForm.has_op_report" class="rounded">
+                                    <span class="text-sm">OP Report</span>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Mark as Complete -->
+                    <div class="mb-4">
+                        <label class="flex items-center gap-2 px-3 py-2.5 rounded-lg border cursor-pointer transition-colors"
+                               :class="receiptForm.is_complete ? 'bg-emerald-50 border-emerald-400' : 'border-v2-card-border hover:bg-v2-bg'">
+                            <input type="checkbox" x-model="receiptForm.is_complete" class="rounded">
+                            <span class="text-sm font-semibold" :class="receiptForm.is_complete ? 'text-emerald-700' : ''">All records received (mark complete)</span>
+                        </label>
+                    </div>
+
+                    <!-- Incomplete reason -->
+                    <template x-if="!receiptForm.is_complete">
+                        <div class="mb-4">
+                            <label class="mrt-label">What's still missing?</label>
+                            <input type="text" x-model="receiptForm.incomplete_reason" class="mrt-input" placeholder="e.g., Still waiting for billing records">
+                        </div>
+                    </template>
+
+                    <div>
+                        <label class="mrt-label">Notes</label>
+                        <textarea x-model="receiptForm.notes" rows="2" class="mrt-textarea" placeholder="Optional notes..."></textarea>
+                    </div>
+                </div>
+                <div class="mrt-footer" style="justify-content:space-between;">
+                    <button type="button" @click="setProviderOnHold()" :disabled="saving" class="rcm-btn-hold" style="background:#fff; border:1.5px solid #d0cdc5; border-radius:7px; padding:6px 14px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px;">
+                        <span style="font-size:14px; line-height:1;">⏸</span>
+                        <span style="font-size:9px; font-weight:700; color:#8a8a82; text-transform:uppercase; letter-spacing:.05em;">On Hold</span>
+                    </button>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                    <button @click="showReceiptModal = false" class="mrt-btn-cancel">Cancel</button>
+                    <button @click="submitReceipt()" :disabled="saving" class="mrt-btn-primary" style="background:#059669;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span x-text="saving ? 'Saving...' : 'Log Receipt'"></span>
+                    </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview & Send Modal (PSM) Styles -->
+        <style>
+        .psm { width: 800px; border-radius: 12px; box-shadow: 0 24px 64px rgba(0,0,0,.24); overflow: hidden; background: #fff; max-height: 90vh; display: flex; flex-direction: column; }
+        .psm-header { background: #0F1B2D; padding: 18px 24px 16px; display: flex; align-items: flex-start; justify-content: space-between; flex-shrink: 0; }
+        .psm-header h3 { font-size: 15px; font-weight: 700; color: #fff; margin: 0; line-height: 1.3; }
+        .psm-header .psm-subtitle { font-size: 12px; font-weight: 500; color: var(--gold, #C9A84C); margin-top: 2px; }
+        .psm-header-actions { display: flex; align-items: center; gap: 10px; }
+        .psm-edit-btn {
+            padding: 5px 12px; font-size: 12px; font-weight: 600; border-radius: 6px;
+            border: 1.5px solid rgba(255,255,255,.2); background: none; color: rgba(255,255,255,.6);
+            cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all .15s;
+        }
+        .psm-edit-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+        .psm-edit-btn.active { color: #fff; background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.3); }
+        .psm-close { background: none; border: none; color: rgba(255,255,255,.35); cursor: pointer; padding: 4px; transition: color .15s; }
+        .psm-close:hover { color: rgba(255,255,255,.75); }
+        .psm-toolbar { padding: 12px 24px; border-bottom: 1px solid var(--border, #d0cdc5); background: #fafafa; flex-shrink: 0; }
+        .psm-label { display: block; font-size: 9.5px; font-weight: 700; color: var(--muted, #8a8a82); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 5px; }
+        .psm-input {
+            width: 100%; background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+            padding: 9px 12px; font-size: 13px; color: #1a2535; transition: all .15s; outline: none; font-family: inherit;
+        }
+        .psm-input:focus { border-color: var(--gold, #C9A84C); background: #fff; box-shadow: 0 0 0 3px rgba(201,168,76,.1); }
+        .psm-input::placeholder { color: #c5c5c5; }
+        .psm-input[readonly] { background: #f5f5f0; color: var(--muted, #8a8a82); cursor: default; }
+        .psm-content { flex: 1; overflow-y: auto; padding: 16px 24px; }
+        .psm-iframe-wrap {
+            border: 1.5px solid var(--border, #d0cdc5); border-radius: 8px; background: #fff;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,.05); overflow: hidden; transition: border-color .2s;
+        }
+        .psm-iframe-wrap.editing { border-color: var(--gold, #C9A84C); box-shadow: inset 0 1px 3px rgba(0,0,0,.05), 0 0 0 3px rgba(201,168,76,.1); }
+        .psm-iframe-wrap iframe { width: 100%; border: 0; min-height: 600px; }
+        .psm-footer { padding: 14px 24px; border-top: 1px solid var(--border, #d0cdc5); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .psm-footer-info { font-size: 12px; color: var(--muted, #8a8a82); display: flex; align-items: center; gap: 10px; }
+        .psm-footer-info .psm-reset-btn { text-decoration: underline; color: var(--muted, #8a8a82); background: none; border: none; cursor: pointer; font-size: 12px; }
+        .psm-footer-info .psm-modified { display: inline-flex; align-items: center; gap: 4px; color: #d97706; font-size: 11px; font-weight: 500; }
+        .psm-btn-cancel {
+            background: #fff; border: 1.5px solid var(--border, #d0cdc5); border-radius: 7px;
+            padding: 9px 18px; font-size: 13px; font-weight: 500; color: #5A6B82; cursor: pointer; transition: all .15s;
+        }
+        .psm-btn-cancel:hover { background: #f8f7f4; border-color: #ccc; }
+        .psm-btn-send {
+            background: #1a9e6a; color: #fff; border: none; border-radius: 7px;
+            padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 2px 8px rgba(26,158,106,.3); display: flex; align-items: center; gap: 6px; transition: all .15s;
+        }
+        .psm-btn-send:hover { filter: brightness(1.08); box-shadow: 0 4px 12px rgba(26,158,106,.4); }
+        .psm-btn-send:disabled { opacity: .55; cursor: not-allowed; }
+        </style>
+
+        <!-- Preview & Send Modal -->
+        <div x-show="showPreviewModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="display:none;" @keydown.escape.window="showPreviewModal && closePreviewModal()">
+            <div class="fixed inset-0" style="background:rgba(0,0,0,.45);" @click="closePreviewModal()"></div>
+            <div class="psm relative z-10" @click.stop>
+
+                <!-- Header -->
+                <div class="psm-header">
+                    <div>
+                        <h3 x-text="isEditingLetter ? 'Edit Request Letter' : 'Preview Request Letter'"></h3>
+                        <div class="psm-subtitle">
+                            Sending via <span style="font-weight:600;" x-text="previewData.method === 'email' ? 'Email' : 'Fax'"></span>
+                            to <span style="font-weight:600;" x-text="previewData.provider_name"></span>
+                        </div>
+                    </div>
+                    <div class="psm-header-actions">
+                        <button @click="toggleLetterEdit()" class="psm-edit-btn" :class="isEditingLetter ? 'active' : ''">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            <span x-text="isEditingLetter ? 'Editing' : 'Edit Letter'"></span>
+                        </button>
+                        <button class="psm-close" @click="closePreviewModal()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Toolbar (Recipient / Subject) -->
+                <div class="psm-toolbar">
+                    <div style="display:flex; gap:12px;">
+                        <div style="flex:1;">
+                            <label class="psm-label" x-text="previewData.method === 'email' ? 'Recipient Email' : 'Recipient Fax Number'"></label>
+                            <input type="text" x-model="previewData.recipient" class="psm-input"
+                                :placeholder="previewData.method === 'email' ? 'provider@example.com' : '(212) 555-1234'">
+                        </div>
+                        <div style="flex:1;" x-show="previewData.method === 'email'">
+                            <label class="psm-label">Subject</label>
+                            <input type="text" x-model="previewData.subject" :readonly="!isEditingLetter" class="psm-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Letter Content -->
+                <div class="psm-content">
+                    <div class="psm-iframe-wrap" :class="isEditingLetter ? 'editing' : ''">
+                        <iframe x-ref="letterIframe" :srcdoc="previewData.letter_html"></iframe>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="psm-footer">
+                    <div class="psm-footer-info">
+                        <template x-if="previewData.send_status === 'failed'">
+                            <span style="color:#dc2626;">Previous attempt failed. You can retry.</span>
+                        </template>
+                        <template x-if="isEditingLetter && originalLetterHtml">
+                            <button @click="resetLetterToOriginal()" class="psm-reset-btn">Reset to Original</button>
+                        </template>
+                        <template x-if="originalLetterHtml && !isEditingLetter">
+                            <span class="psm-modified">
+                                <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"/></svg>
+                                Letter has been modified
+                            </span>
+                        </template>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button @click="closePreviewModal()" class="psm-btn-cancel">Cancel</button>
+                        <button @click="confirmAndSend()" :disabled="sending || !previewData.recipient" class="psm-btn-send">
+                            <template x-if="sending">
+                                <div class="spinner" style="width:15px;height:15px;border-width:2px;"></div>
+                            </template>
+                            <span x-text="sending ? 'Sending...' : (previewData.method === 'email' ? 'Send Email' : 'Send Fax')"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div><!-- /MR Tracker Tab -->
 
     <!-- ===================== HEALTH TRACKER TAB ===================== -->
@@ -870,6 +1421,11 @@ ob_start();
                                                     <div class="col-span-1 truncate text-v2-text-mid" x-text="item.assigned_name || '-'"></div>
                                                     <div class="col-span-1 flex gap-1" @click.stop>
                                                         <button @click="openRequestModal(item)" class="px-2 py-1 text-xs bg-gold/10 text-gold rounded hover:bg-gold/20" title="New Request">Request</button>
+                                                        <template x-if="item.case_id">
+                                                            <button @click="window.location.href='/MRMS/frontend/pages/cases/detail.php?id=' + item.case_id" class="p-1 text-v2-text-light hover:text-blue-600 rounded" title="Open Case">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                            </button>
+                                                        </template>
                                                         <button @click="updateStatus(item.id, 'received')" class="p-1 text-v2-text-light hover:text-green-600 rounded" title="Mark Received" x-show="item.overall_status !== 'received' && item.overall_status !== 'done'">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                                         </button>

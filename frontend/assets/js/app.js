@@ -169,6 +169,7 @@ function daysElapsed(dateStr) {
 
 // Status label mapping
 const STATUS_LABELS = {
+    treating: 'Treating',
     not_started: 'Not Started',
     requesting: 'Requesting',
     follow_up: 'Follow Up',

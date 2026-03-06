@@ -119,6 +119,33 @@ if (empty($data)) {
 
 dbUpdate('cases', $data, 'id = ?', [$caseId]);
 
+// If INI Completed is off, revert not_started providers back to treating
+if (isset($data['ini_completed']) && $data['ini_completed'] === 0) {
+    $revertedProviders = dbFetchAll(
+        "SELECT id FROM case_providers WHERE case_id = ? AND overall_status = 'not_started'",
+        [$caseId]
+    );
+    if (!empty($revertedProviders)) {
+        foreach ($revertedProviders as $rp) {
+            dbUpdate('case_providers', [
+                'overall_status' => 'treating',
+                'deadline' => null,
+                'assigned_to' => null
+            ], 'id = ?', [$rp['id']]);
+        }
+        // Revert MBR lines back to pending
+        dbQuery(
+            "UPDATE mbds_lines SET ini_status = 'pending'
+             WHERE case_provider_id IN (SELECT id FROM case_providers WHERE case_id = ? AND overall_status = 'treating')
+             AND ini_status = 'complete'",
+            [$caseId]
+        );
+        logActivity($userId, 'reverted_providers', 'case', $caseId, [
+            'reverted_count' => count($revertedProviders)
+        ]);
+    }
+}
+
 logActivity($userId, 'update', 'case', $caseId, [
     'case_number' => $existingCase['case_number'],
     'changes' => $changes

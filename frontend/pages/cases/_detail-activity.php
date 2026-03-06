@@ -1,10 +1,8 @@
             <!-- Activity Log section -->
-            <div class="act-panel panel-section bg-white mb-4" data-panel :class="{'panel-open': logOpen}" x-data="{logOpen: false}">
-                <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer panel-header-bordered" @click="logOpen = !logOpen; if(logOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+            <div class="act-panel c1-section c1-group-start" data-panel x-data="{logOpen: false}">
+                <div class="c1-section-header" @click="logOpen = !logOpen; if(logOpen) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
                     <div class="flex items-center gap-2.5">
-                        <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform" :class="logOpen ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                        </svg>
+                        <span class="c1-num c1-num-olive">02</span>
                         <h3 class="panel-title">Activity Log</h3>
                         <span class="panel-count" x-text="notes.length"></span>
                     </div>

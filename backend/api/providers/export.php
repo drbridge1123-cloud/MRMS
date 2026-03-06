@@ -28,6 +28,7 @@ $typeLabels = [
     'massage' => 'Massage',
     'pain_management' => 'Pain Management',
     'pt' => 'Physical Therapy',
+    'police' => 'Police',
     'other' => 'Other',
 ];
 $allowedTypes = array_keys($typeLabels);

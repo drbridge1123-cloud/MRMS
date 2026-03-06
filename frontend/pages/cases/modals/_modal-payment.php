@@ -113,7 +113,7 @@
     /* Split panel */
     .lpm-split-panel {
         border: 1.5px solid rgba(201,168,76,.3); background: rgba(201,168,76,.04);
-        border-radius: 8px; overflow: hidden;
+        border-radius: 8px;
     }
     .lpm-split-inner { padding: 12px 16px; }
     .lpm-split-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -201,7 +201,7 @@
                     <div style="flex:1;">
                         <label class="lpm-label">Category</label>
                         <select x-model="paymentForm.expense_category"
-                            @change="if(paymentForm.expense_category === 'litigation' && !paymentForm.id) fetchRelatedCases(); else resetSplitState();"
+                            @change="$nextTick(() => { if(paymentForm.expense_category === 'litigation' && !paymentForm.id) fetchRelatedCases(); else resetSplitState(); })"
                             class="lpm-select">
                             <option value="mr_cost">Records Fee</option>
                             <option value="litigation">Litigation</option>
@@ -211,59 +211,54 @@
                 </div>
 
                 <!-- Litigation Cost Split Panel -->
-                <template x-if="paymentForm.expense_category === 'litigation' && !paymentForm.id && relatedCases.length > 0">
-                    <div class="lpm-split-panel">
-                        <div class="lpm-split-inner">
-                            <div class="lpm-split-header">
-                                <label class="lpm-split-toggle">
-                                    <input type="checkbox" x-model="splitEnabled"
-                                        @change="if(splitEnabled && splitSelectedCaseIds.length === 0) { splitSelectedCaseIds = [parseInt(caseId), ...relatedCases.map(c => c.id)]; }">
-                                    <span>Split cost across related cases</span>
+                <div x-show="showSplitPanel"
+                    class="lpm-split-panel">
+                    <div class="lpm-split-inner">
+                        <div class="lpm-split-header">
+                            <label class="lpm-split-toggle">
+                                <input type="checkbox" x-model="splitEnabled"
+                                    @change="if(splitEnabled && splitSelectedCaseIds.length === 0) { splitSelectedCaseIds = [parseInt(caseId), ...relatedCases.map(c => c.id)]; }">
+                                <span>Split cost across related cases</span>
+                            </label>
+                            <span class="lpm-split-count"
+                                x-text="(relatedCases.length + 1) + ' cases with #' + (caseData?.case_number || '')"></span>
+                        </div>
+                        <div x-show="splitEnabled" x-transition>
+                            <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
+                                <label class="lpm-split-case current">
+                                    <input type="checkbox" checked disabled>
+                                    <span style="font-weight:500;" x-text="caseData?.client_name || 'Current case'"></span>
+                                    <span class="lpm-case-tag">(current)</span>
                                 </label>
-                                <span class="lpm-split-count"
-                                    x-text="(relatedCases.length + 1) + ' cases with #' + (caseData?.case_number || '')"></span>
+                                <template x-for="rc in relatedCases" :key="rc.id">
+                                    <label class="lpm-split-case" style="cursor:pointer;">
+                                        <input type="checkbox"
+                                            :checked="splitSelectedCaseIds.includes(rc.id)"
+                                            @change="toggleSplitCase(rc.id)">
+                                        <span x-text="rc.client_name"></span>
+                                        <span class="lpm-case-tag"
+                                            x-text="rc.client_dob ? '(DOB: ' + formatDate(rc.client_dob) + ')' : ''"></span>
+                                    </label>
+                                </template>
                             </div>
-                            <template x-if="splitEnabled">
-                                <div>
-                                    <div style="display:flex; flex-direction:column; gap:4px; margin-bottom:10px;">
-                                        <label class="lpm-split-case current">
-                                            <input type="checkbox" checked disabled>
-                                            <span style="font-weight:500;" x-text="caseData?.client_name || 'Current case'"></span>
-                                            <span class="lpm-case-tag">(current)</span>
-                                        </label>
-                                        <template x-for="rc in relatedCases" :key="rc.id">
-                                            <label class="lpm-split-case" style="cursor:pointer;">
-                                                <input type="checkbox"
-                                                    :checked="splitSelectedCaseIds.includes(rc.id)"
-                                                    @change="toggleSplitCase(rc.id)">
-                                                <span x-text="rc.client_name"></span>
-                                                <span class="lpm-case-tag"
-                                                    x-text="rc.client_dob ? '(DOB: ' + formatDate(rc.client_dob) + ')' : ''"></span>
-                                            </label>
-                                        </template>
-                                    </div>
-                                    <div class="lpm-split-calc">
-                                        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                        <span>
-                                            $<span x-text="(paymentForm.billed_amount || 0).toFixed(2)"></span>
-                                            &divide; <span x-text="splitSelectedCaseIds.length"></span>
-                                            = <strong>$<span x-text="splitPerPersonAmount.toFixed(2)"></span></strong>
-                                            per person
-                                        </span>
-                                    </div>
-                                </div>
-                            </template>
+                            <div class="lpm-split-calc">
+                                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                <span>
+                                    $<span x-text="(paymentForm.billed_amount || 0).toFixed(2)"></span>
+                                    &divide; <span x-text="splitSelectedCaseIds.length"></span>
+                                    = <strong>$<span x-text="splitPerPersonAmount().toFixed(2)"></span></strong>
+                                    per person
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </template>
+                </div>
 
                 <!-- Loading related cases -->
-                <template x-if="loadingRelatedCases">
-                    <div class="lpm-hint" style="display:flex; align-items:center; gap:6px;">
-                        <span class="spinner" style="width:14px; height:14px; border-width:2px;"></span>
-                        Checking for related cases...
-                    </div>
-                </template>
+                <div x-show="loadingRelatedCases" class="lpm-hint" style="display:flex; align-items:center; gap:6px;">
+                    <span class="spinner" style="width:14px; height:14px; border-width:2px;"></span>
+                    Checking for related cases...
+                </div>
 
                 <!-- Amounts & Dates -->
                 <div class="lpm-section"><span>Amounts &amp; Dates</span></div>

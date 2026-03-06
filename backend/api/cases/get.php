@@ -28,4 +28,10 @@ $pendingCount = dbCount(
 $caseData['provider_count'] = $providerCount;
 $caseData['pending_count'] = $pendingCount;
 
+// Auto-calculate ini_completed: false if any provider is still treating
+$treatingCount = dbCount('case_providers', "case_id = ? AND overall_status = 'treating'", [$caseId]);
+if ($treatingCount > 0) {
+    $caseData['ini_completed'] = 0;
+}
+
 successResponse($caseData);

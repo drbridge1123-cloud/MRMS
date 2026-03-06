@@ -1,15 +1,12 @@
 <!-- Health Insurance Ledger Panel -->
-<div class="panel-section bg-white mb-4" data-panel :class="{'panel-open': open}"
+<div class="c1-section" data-panel
      x-data="healthLedgerPanel(caseId, caseData?.case_number)" x-init="init()">
 
     <!-- Header -->
-    <div class="px-5 py-3.5 flex items-center justify-between cursor-pointer"
+    <div class="c1-section-header"
          @click="open = !open">
         <div class="flex items-center gap-2.5">
-            <svg class="w-3.5 h-3.5 text-v2-text-light transition-transform"
-                 :class="open ? 'rotate-90' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
+            <span class="c1-num c1-num-gold">06</span>
             <h3 class="panel-title">Health Insurance Ledger</h3>
             <span class="panel-count" x-text="items.length" x-show="!loading"></span>
             <template x-if="!loading && receivedCount > 0">

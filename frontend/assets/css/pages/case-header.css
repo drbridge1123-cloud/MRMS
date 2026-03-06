@@ -147,3 +147,32 @@
                 .stage-cur .stage-label {
                     color: rgba(255,255,255,0.9);
                 }
+
+                /* ── Info Strip (5 cards) ── */
+                .info-strip {
+                    display: grid;
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 0;
+                    margin: 16px 0 20px;
+                    background: #fff;
+                    border: 1px solid #e5e2da;
+                    border-top: 3px solid var(--gold, #C9A84C);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    box-shadow: 0 1px 4px rgba(15,27,45,0.06);
+                }
+                .info-strip-card {
+                    padding: 14px 18px;
+                    border-right: 1px solid #e5e2da;
+                }
+                .info-strip-card:last-child {
+                    border-right: none;
+                }
+                @media (max-width: 768px) {
+                    .info-strip {
+                        grid-template-columns: repeat(2, 1fr);
+                    }
+                    .info-strip-card {
+                        border-bottom: 1px solid #e5e2da;
+                    }
+                }

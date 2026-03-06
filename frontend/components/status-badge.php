@@ -2,6 +2,7 @@
 function renderStatusBadge($status) {
     $label = str_replace('_', ' ', ucfirst($status));
     $labels = [
+        'treating' => 'Treating',
         'not_started' => 'Not Started',
         'requesting' => 'Requesting',
         'follow_up' => 'Follow Up',

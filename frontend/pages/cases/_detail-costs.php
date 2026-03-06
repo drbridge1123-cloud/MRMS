@@ -1,11 +1,9 @@
 <!-- Cost Ledger Panel -->
-<div class="cost-panel" data-panel :class="{'panel-open': showCostLedger}">
+<div class="cost-panel c1-section" data-panel>
     <!-- Header -->
-    <div class="cost-header" @click="showCostLedger = !showCostLedger; if(showCostLedger) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+    <div class="cost-header c1-section-header" @click="showCostLedger = !showCostLedger; if(showCostLedger) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
         <div class="cost-header-left">
-            <svg class="cost-chevron" :style="showCostLedger ? 'transform:rotate(90deg)' : ''" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-            </svg>
+            <span class="c1-num c1-num-gold">04</span>
             <span class="cost-header-title">Cost Ledger</span>
             <template x-if="allCosts.length > 0">
                 <span class="cost-header-badge" x-text="allCosts.length"></span>

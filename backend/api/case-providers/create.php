@@ -39,7 +39,7 @@ if ($existing) {
 $data = [
     'case_id' => $caseId,
     'provider_id' => $providerId,
-    'overall_status' => 'not_started'
+    'overall_status' => 'treating'
 ];
 
 if (!empty($input['treatment_start_date'])) {
@@ -79,6 +79,18 @@ if (isset($input['notes'])) {
 }
 
 $newId = dbInsert('case_providers', $data);
+
+// Auto-create MBR line if report exists
+$mbdsReport = dbFetchOne("SELECT id FROM mbds_reports WHERE case_id = ? ORDER BY id DESC LIMIT 1", [$caseId]);
+if ($mbdsReport) {
+    dbInsert('mbds_lines', [
+        'report_id' => $mbdsReport['id'],
+        'line_type' => 'provider',
+        'provider_name' => $provider['name'],
+        'case_provider_id' => $newId,
+        'charges' => 0
+    ]);
+}
 
 logActivity($userId, 'created', 'case_provider', $newId, [
     'case_id' => $caseId,

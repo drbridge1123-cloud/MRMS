@@ -9,7 +9,7 @@ $params = [];
 
 // Filter by type
 if (!empty($_GET['type'])) {
-    $allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'acupuncture', 'massage', 'pain_management', 'pt', 'other'];
+    $allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'acupuncture', 'massage', 'pain_management', 'pt', 'police', 'other'];
     if (validateEnum($_GET['type'], $allowedTypes)) {
         $where .= ' AND p.type = ?';
         $params[] = $_GET['type'];

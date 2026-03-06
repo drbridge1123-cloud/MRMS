@@ -65,8 +65,15 @@ foreach ($sendableRequests as $request) {
         continue;
     }
 
-    // Render letter
-    $html = renderRequestLetter($letterData);
+    // Render letter using template if available
+    $subject = '';
+    if (!empty($letterData['template_id'])) {
+        $rendered = renderLetterFromTemplate($letterData['template_id'], $letterData);
+        $html = $rendered['html'];
+        $subject = $rendered['subject'];
+    } else {
+        $html = renderRequestLetter($letterData);
+    }
 
     // Load attachments (HIPAA, releases, etc.)
     $attachments = [];
@@ -96,10 +103,13 @@ foreach ($sendableRequests as $request) {
     $result = ['success' => false, 'error' => 'Unknown method'];
 
     if ($request['request_method'] === 'email') {
-        $doiFormatted = !empty($letterData['doi']) ? date('m/d/Y', strtotime($letterData['doi'])) : '';
-        $subject = 'Medical Records Request - ' . $letterData['client_name'];
-        if ($doiFormatted) {
-            $subject .= ' (DOI: ' . $doiFormatted . ')';
+        // Use subject from template, or build default
+        if (empty($subject)) {
+            $doiFormatted = !empty($letterData['doi']) ? date('m/d/Y', strtotime($letterData['doi'])) : '';
+            $subject = 'Medical Records Request - ' . $letterData['client_name'];
+            if ($doiFormatted) {
+                $subject .= ' (DOI: ' . $doiFormatted . ')';
+            }
         }
 
         // Use per-user SMTP if configured

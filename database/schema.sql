@@ -143,9 +143,16 @@ CREATE TABLE IF NOT EXISTS case_providers (
     treatment_start_date DATE NULL,
     treatment_end_date DATE NULL,
     record_types_needed SET('medical_records','billing','chart','imaging','op_report') NULL,
-    overall_status ENUM('not_started','requesting','follow_up','action_needed','received_partial','on_hold','no_records','received_complete','verified') NOT NULL DEFAULT 'not_started',
+    overall_status ENUM('treating','not_started','requesting','follow_up','action_needed','received_partial','on_hold','no_records','received_complete','verified') NOT NULL DEFAULT 'treating',
+    request_mr TINYINT(1) NOT NULL DEFAULT 0,
+    request_bill TINYINT(1) NOT NULL DEFAULT 0,
+    request_chart TINYINT(1) NOT NULL DEFAULT 0,
+    request_img TINYINT(1) NOT NULL DEFAULT 0,
+    request_op TINYINT(1) NOT NULL DEFAULT 0,
     received_date DATE NULL,
     assigned_to INT NULL,
+    assignment_status ENUM('pending','accepted','declined') DEFAULT NULL,
+    activated_by INT NULL,
     deadline DATE NULL,
     notes TEXT NULL,
     is_on_hold TINYINT(1) NOT NULL DEFAULT 0,
@@ -265,6 +272,23 @@ CREATE TABLE IF NOT EXISTS activity_log (
 CREATE INDEX idx_activity_log_entity ON activity_log(entity_type, entity_id);
 CREATE INDEX idx_activity_log_user ON activity_log(user_id);
 
+-- Internal Messages
+CREATE TABLE IF NOT EXISTS messages (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    from_user_id INT NOT NULL,
+    to_user_id INT NOT NULL,
+    subject VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    read_at DATETIME NULL,
+    FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_messages_to_user (to_user_id),
+    INDEX idx_messages_from_user (from_user_id),
+    INDEX idx_messages_is_read (is_read)
+) ENGINE=InnoDB;
+
 -- Send Log (email/fax audit trail)
 CREATE TABLE IF NOT EXISTS send_log (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -346,6 +370,8 @@ CREATE TABLE IF NOT EXISTS mbds_lines (
     treatment_dates VARCHAR(100) NULL,
     visits VARCHAR(50) NULL,
     note TEXT NULL,
+    record_types_needed SET('medical_records','billing','chart','imaging','op_report') NULL,
+    ini_status ENUM('pending','complete') NOT NULL DEFAULT 'pending',
     sort_order INT DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

@@ -1,34 +1,98 @@
-    /* Expanded provider highlight */
-    .provider-expanded-row {
-        border-left: 4px solid #C8A951;
-        background-color: #FDFBF5;
+    /* ── C1 Main Card — single wrapper for all accordion sections ── */
+    .c1-card {
+        background: #fff;
+        border: 1px solid #e5e2da;
+        border-top: 3px solid var(--gold, #C9A84C);
+        border-radius: 8px;
+        box-shadow: 0 1px 6px rgba(15, 27, 45, 0.07);
+        overflow: hidden;
     }
 
-    .provider-expanded-row>td {
-        border-left: none;
+    /* Accordion section inside c1-card — no own border/shadow/margin */
+    .c1-section {
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        background: #fff !important;
+        overflow: visible;
+        position: relative;
+    }
+    /* Remove any ::before left-border strips */
+    .c1-section::before {
+        display: none !important;
+    }
+    /* Default divider between sections */
+    .c1-section + .c1-section {
+        border-top: 1px solid #f5f2ee !important;
     }
 
-    .history-panel {
-        background: linear-gradient(135deg, #FBF9F1 0%, #F7F4EA 100%);
-        border-left: 4px solid #C8A951;
-        border-top: 1px solid #E8E0C8;
+    /* Group boundary — thick divider after group-end */
+    .c1-group-end + .c1-section,
+    .c1-group-end + .c1-workflow-divider {
+        border-top: 2px solid #edeae4 !important;
     }
 
-    /* Scroll highlight flash */
-    @keyframes historyFlash {
-        0% {
-            box-shadow: inset 0 0 0 2px #C8A951;
-        }
-
-        50% {
-            box-shadow: inset 0 0 0 2px #C8A951, 0 0 12px rgba(200, 169, 81, 0.3);
-        }
-
-        100% {
-            box-shadow: none;
-        }
+    /* Group start — extra top padding */
+    .c1-group-start > .c1-section-header {
+        padding-top: 20px;
     }
 
-    .history-flash {
-        animation: historyFlash 1.5s ease-out;
+    /* Group end — extra bottom padding */
+    .c1-group-end > .c1-section-header {
+        padding-bottom: 20px;
     }
+
+    /* Section number badge */
+    .c1-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 6px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        background: #6b7a5a;
+        flex-shrink: 0;
+    }
+    .c1-num-navy { background: #3d4f3d; }
+    .c1-num-olive { background: #6b7a5a; }
+    .c1-num-gold  { background: #8a7d4a; }
+
+    /* Accordion header row inside c1-card */
+    .c1-section-header {
+        padding: 14px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        user-select: none;
+        background: #fff;
+        transition: background 0.12s;
+    }
+    .c1-section-header:hover {
+        background: #faf9f7;
+    }
+
+    /* Workflow divider inside c1-card */
+    .c1-workflow-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 20px;
+        background: #f8f6f2;
+        border-top: 1px solid #e5e2da;
+    }
+    .c1-workflow-label {
+        font-family: 'IBM Plex Sans', sans-serif;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--gold-hover, #B8973F);
+        padding: 3px 20px;
+    }
+

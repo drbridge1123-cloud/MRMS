@@ -38,27 +38,27 @@
                 </div>
             </div>
 
-            <!-- Client info cards (light bg) -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6" style="margin-top: 16px;">
-                <div class="info-card bg-white rounded-lg border border-v2-card-border p-4">
+            <!-- Info Strip (5 cards) -->
+            <div class="info-strip">
+                <div class="info-strip-card">
                     <p class="info-label">Date of Birth</p>
                     <p class="info-value" x-text="formatDate(caseData.client_dob) || '-'"></p>
                 </div>
-                <div class="info-card bg-white rounded-lg border border-v2-card-border p-4">
+                <div class="info-strip-card">
                     <p class="info-label">Date of Injury</p>
                     <p class="info-value" x-text="formatDate(caseData.doi) || '-'"></p>
                 </div>
-                <div class="info-card bg-white rounded-lg border border-v2-card-border p-4">
+                <div class="info-strip-card">
                     <p class="info-label">Attorney</p>
                     <p class="info-value" x-text="caseData.attorney_name || '-'"></p>
                 </div>
-                <div class="info-card bg-white rounded-lg border border-v2-card-border p-4">
+                <div class="info-strip-card">
                     <p class="info-label">Assigned To</p>
                     <p class="info-value" x-text="caseData.assigned_name || '-'"></p>
                 </div>
-                <div class="info-card bg-white rounded-lg border border-v2-card-border p-4">
-                    <p class="info-label">INI Completed</p>
-                    <p class="info-value" x-text="caseData.ini_completed ? 'Yes' : 'No'"></p>
+                <div class="info-strip-card" @click="toggleIniCompleted()" style="cursor:pointer;" :title="caseData.ini_completed ? 'Click to undo Treating Completed' : 'Click to activate all treating providers'">
+                    <p class="info-label">Treating Completed</p>
+                    <p class="info-value" :class="caseData.ini_completed ? 'text-green-600' : 'text-red-500'" x-text="caseData.ini_completed ? 'Yes' : 'No'"></p>
                 </div>
             </div>
 

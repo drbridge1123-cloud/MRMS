@@ -9,9 +9,12 @@ $userId = requireAuth();
 $where = ["c.status NOT IN ('closed')"];
 $params = [];
 
-// By default hide completed providers (unless explicitly filtered)
-if (empty($_GET['status']) || !in_array($_GET['status'], ['received_complete','verified'])) {
-    $where[] = "cp.overall_status NOT IN ('received_complete','verified')";
+// When viewing a specific case, show ALL providers; otherwise hide treating/completed
+if (empty($_GET['case_id'])) {
+    $where[] = "cp.overall_status != 'treating'";
+    if (empty($_GET['status']) || !in_array($_GET['status'], ['received_complete','verified'])) {
+        $where[] = "cp.overall_status NOT IN ('received_complete','verified')";
+    }
 }
 
 // Filter: search (case_number, client_name, provider_name)
@@ -36,6 +39,12 @@ if (!empty($_GET['status'])) {
 if (!empty($_GET['assigned_to'])) {
     $where[] = 'cp.assigned_to = ?';
     $params[] = (int)$_GET['assigned_to'];
+}
+
+// Filter: case_id (from "Manage in Tracker" link)
+if (!empty($_GET['case_id'])) {
+    $where[] = 'cp.case_id = ?';
+    $params[] = (int)$_GET['case_id'];
 }
 
 // Filter: escalation tier (deadline-based)
@@ -111,8 +120,12 @@ $total = (int)$countResult['cnt'];
 $sql = "SELECT
     cp.id, cp.case_id, cp.overall_status, cp.deadline,
     cp.assigned_to AS assigned_to_id,
+    cp.assignment_status, cp.activated_by,
+    cp.request_mr, cp.request_bill, cp.request_chart, cp.request_img, cp.request_op,
+    cp.record_types_needed,
     c.case_number, c.client_name,
     p.name AS provider_name, p.type AS provider_type,
+    p.fax AS provider_fax, p.email AS provider_email,
     u.full_name AS assigned_name,
     lr.request_date AS last_request_date,
     lr.request_method AS last_request_method,
@@ -171,18 +184,20 @@ LEFT JOIN (
 
 $summaryResult = dbFetchOne("
     SELECT
-        COUNT(*) AS total,
+        COUNT(CASE WHEN cp.overall_status != 'treating' THEN 1 END) AS total,
         SUM(CASE WHEN cp.deadline < CURDATE()
-            AND cp.overall_status NOT IN ('received_complete','verified')
+            AND cp.overall_status NOT IN ('treating','received_complete','verified')
             THEN 1 ELSE 0 END) AS overdue_count,
         SUM(CASE WHEN slr.next_followup_date <= CURDATE()
             AND cp.overall_status IN ('requesting','follow_up','action_needed')
             THEN 1 ELSE 0 END) AS followup_due_count,
         SUM(CASE WHEN cp.overall_status = 'not_started'
-            THEN 1 ELSE 0 END) AS not_started_count
+            THEN 1 ELSE 0 END) AS not_started_count,
+        SUM(CASE WHEN cp.assignment_status = 'pending' AND cp.assigned_to = ?
+            THEN 1 ELSE 0 END) AS pending_assignments
     {$summaryJoins}
     WHERE c.status NOT IN ('closed')
-", []);
+", [$userId]);
 
 // Custom response with summary
 jsonResponse([
@@ -198,6 +213,7 @@ jsonResponse([
         'total' => (int)$summaryResult['total'],
         'overdue' => (int)$summaryResult['overdue_count'],
         'followup_due' => (int)$summaryResult['followup_due_count'],
-        'not_started' => (int)$summaryResult['not_started_count']
+        'not_started' => (int)$summaryResult['not_started_count'],
+        'pending_assignments' => (int)$summaryResult['pending_assignments']
     ]
 ]);

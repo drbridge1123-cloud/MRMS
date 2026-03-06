@@ -53,6 +53,7 @@ if ($customTextOverride !== null) {
 $result = generateProviderDocument($documentId, $providerName, $outputDir, $overrides);
 
 if (!$result['success']) {
+    error_log("[generate-provider-version] FAILED doc_id=$documentId provider=$providerName error=" . $result['error']);
     errorResponse($result['error'], 422);
 }
 

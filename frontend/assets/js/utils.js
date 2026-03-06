@@ -1,5 +1,11 @@
 // MRMS - Utility Functions
 
+// Local today's date in YYYY-MM-DD format (avoids UTC timezone shift from toISOString)
+function todayLocal() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
 // Provider type labels
 const PROVIDER_TYPES = {
     hospital: 'Hospital',
@@ -13,6 +19,7 @@ const PROVIDER_TYPES = {
     massage: 'Massage',
     pain_management: 'Pain Management',
     pt: 'Physical Therapy',
+    police: 'Police',
     other: 'Other',
 };
 

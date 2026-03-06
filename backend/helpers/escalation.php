@@ -45,17 +45,17 @@ function generateEscalationNotifications() {
 
         $managers = dbFetchAll("SELECT id, email FROM users WHERE role = 'manager' AND is_active = 1");
         foreach ($managers as $mgr) {
+            $subject = "[System] Action Needed: {$provName} — Case #{$item['case_number']}";
             $exists = dbFetchOne(
-                "SELECT id FROM notifications WHERE case_provider_id = ? AND type = 'escalation_action_needed' AND user_id = ? AND DATE(created_at) = ?",
-                [$item['id'], $mgr['id'], $today]
+                "SELECT id FROM messages WHERE to_user_id = ? AND subject = ? AND DATE(created_at) = ?",
+                [$mgr['id'], $subject, $today]
             );
             if (!$exists) {
-                dbInsert('notifications', [
-                    'user_id' => (int)$mgr['id'],
-                    'case_provider_id' => $item['id'],
-                    'type' => 'escalation_action_needed',
-                    'message' => "Action Needed (deadline reached): {$provName} for {$clientInfo}",
-                    'due_date' => $today
+                dbInsert('messages', [
+                    'from_user_id' => (int)$mgr['id'],
+                    'to_user_id' => (int)$mgr['id'],
+                    'subject' => $subject,
+                    'message' => "Action Needed (deadline reached): {$provName} for {$clientInfo}.\n\nThis provider has reached the 30-day deadline with no records received."
                 ]);
                 $created++;
 
@@ -88,17 +88,17 @@ function generateEscalationNotifications() {
 
         $admins = dbFetchAll("SELECT id, email FROM users WHERE role = 'admin' AND is_active = 1");
         foreach ($admins as $adm) {
+            $subject = "[System] Admin Escalation ({$daysPast}d): {$provName} — Case #{$item['case_number']}";
             $exists = dbFetchOne(
-                "SELECT id FROM notifications WHERE case_provider_id = ? AND type = 'escalation_admin' AND user_id = ? AND DATE(created_at) = ?",
-                [$item['id'], $adm['id'], $today]
+                "SELECT id FROM messages WHERE to_user_id = ? AND subject = ? AND DATE(created_at) = ?",
+                [$adm['id'], $subject, $today]
             );
             if (!$exists) {
-                dbInsert('notifications', [
-                    'user_id' => (int)$adm['id'],
-                    'case_provider_id' => $item['id'],
-                    'type' => 'escalation_admin',
-                    'message' => "Admin Escalation ({$daysPast}d past deadline): {$provName} for {$clientInfo}",
-                    'due_date' => $today
+                dbInsert('messages', [
+                    'from_user_id' => (int)$adm['id'],
+                    'to_user_id' => (int)$adm['id'],
+                    'subject' => $subject,
+                    'message' => "Admin Escalation: {$provName} for {$clientInfo} is {$daysPast} days past deadline.\n\nImmediate admin attention required."
                 ]);
                 $created++;
 

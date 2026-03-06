@@ -82,6 +82,7 @@
                             <option value="massage">Massage</option>
                             <option value="pain_management">Pain Mgmt</option>
                             <option value="pt">Physical Therapy</option>
+                            <option value="police">Police</option>
                             <option value="other">Other</option>
                         </select>
                     </div>

@@ -10,6 +10,7 @@
     letter-spacing: 0.05em;
 }
 
+.status-treating { background-color: #EDE9FE; color: #7C3AED; }
 .status-not_started { background-color: #F5F5F0; color: #5A6B82; }
 .status-requesting { background-color: #EFF6FF; color: #1E40AF; }
 .status-follow_up { background-color: #FFFBEB; color: #D97706; }

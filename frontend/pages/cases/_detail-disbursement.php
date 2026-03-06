@@ -1,10 +1,8 @@
-<div class="disb-panel" data-panel :class="{'panel-open': open}" x-data="disbursementPanel(caseId)" x-init="init()">
+<div class="disb-panel c1-section" data-panel x-data="disbursementPanel(caseId)" x-init="init()">
     <!-- Header -->
-    <div class="disb-header" @click="open = !open; if(open) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
+    <div class="disb-header c1-section-header" @click="open = !open; if(open) $nextTick(() => $el.closest('[data-panel]').scrollIntoView({behavior:'smooth',block:'start'}))">
         <div class="disb-header-left">
-            <svg class="disb-chevron w-4 h-4" :style="open ? 'transform:rotate(90deg)' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
+            <span class="c1-num c1-num-gold">08</span>
             <span class="disb-header-title">Settlement & Disbursement</span>
             <template x-if="calculated && calculated.clientNet !== 0">
                 <span style="color:var(--gold); font-size:12px; font-family:'IBM Plex Mono',monospace; font-weight:600;"

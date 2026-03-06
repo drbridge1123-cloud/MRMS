@@ -68,9 +68,9 @@ $sql = "SELECT c.*, u.full_name AS assigned_name,
         LEFT JOIN users u ON c.assigned_to = u.id
         LEFT JOIN (
             SELECT cp.case_id,
-                COUNT(*) AS provider_total,
+                SUM(CASE WHEN cp.overall_status != 'treating' THEN 1 ELSE 0 END) AS provider_total,
                 SUM(CASE WHEN cp.overall_status IN ('received_complete','verified') THEN 1 ELSE 0 END) AS provider_done,
-                SUM(CASE WHEN cp.deadline < CURDATE() AND cp.overall_status NOT IN ('received_complete','verified') THEN 1 ELSE 0 END) AS provider_overdue,
+                SUM(CASE WHEN cp.deadline < CURDATE() AND cp.overall_status NOT IN ('treating','received_complete','verified') THEN 1 ELSE 0 END) AS provider_overdue,
                 SUM(CASE WHEN cp.overall_status IN ('requesting','follow_up') AND EXISTS (
                     SELECT 1 FROM record_requests rr
                     WHERE rr.case_provider_id = cp.id
@@ -110,7 +110,7 @@ $summary = dbFetchOne("
 
 $providerStats = dbFetchOne("
     SELECT
-        COUNT(CASE WHEN cp.deadline < CURDATE() AND cp.overall_status NOT IN ('received_complete','verified') THEN 1 END) as overdue_providers,
+        COUNT(CASE WHEN cp.deadline < CURDATE() AND cp.overall_status NOT IN ('treating','received_complete','verified') THEN 1 END) as overdue_providers,
         COUNT(CASE WHEN cp.overall_status IN ('not_started') THEN 1 END) as not_started_providers
     FROM case_providers cp
     JOIN cases c ON cp.case_id = c.id

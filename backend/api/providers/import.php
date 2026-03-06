@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../helpers/csv.php';
 
 $csv = parseCSV('file');
 
-$allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'acupuncture', 'massage', 'pain_management', 'pt', 'other'];
+$allowedTypes = ['hospital', 'er', 'chiro', 'imaging', 'physician', 'surgery_center', 'pharmacy', 'acupuncture', 'massage', 'pain_management', 'pt', 'police', 'other'];
 // Map display names back to DB values (for re-importing exported CSVs)
 $typeAliases = [
     'hospital' => 'hospital',
@@ -19,6 +19,7 @@ $typeAliases = [
     'massage' => 'massage',
     'pain management' => 'pain_management',
     'physical therapy' => 'pt',
+    'police' => 'police',
     'other' => 'other',
 ];
 $allowedMethods = ['email', 'fax', 'portal', 'phone', 'mail'];
